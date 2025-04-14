@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        margin-top: 80px;
+        max-width: 600px;
+    }
+
+    .card {
+        padding: 2rem;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .card h1 {
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+
+    .card p {
+        font-size: 1.2rem;
+        color: #555;
+    }
+
+    .actions {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .btn-cancel,
+    .btn-delete {
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-cancel {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-cancel:hover {
+        background-color: #5a6268;
+    }
+</style>
+
+<div class="container">
+    <div class="card">
+        <h1>Delete Member</h1>
+        <p>Are you sure you want to delete <strong>{{ person.name }}</strong>?</p>
+        <div class="actions">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-delete">Yes, Delete</button>
+                <a href="{% url 'person_detail' person.pk %}" class="btn-cancel">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

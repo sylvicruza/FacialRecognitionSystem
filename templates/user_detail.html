@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    body {
+        background-color: #eef1f7;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        margin-top: 80px;
+        max-width: 750px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        padding: 2.5rem 2rem;
+        background-color: #ffffff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #0d6efd;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .detail {
+        font-size: 1.1rem;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        color: #333;
+    }
+
+    .badge {
+        padding: 5px 12px;
+        font-size: 0.9rem;
+        border-radius: 1rem;
+    }
+
+    .actions {
+        margin-top: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .actions a {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 12px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        color: white;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .actions a i {
+        margin-right: 8px;
+    }
+
+    .btn-list {
+        background-color: #6c757d;
+    }
+
+    .btn-list:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-auth {
+        background-color: #198754;
+    }
+
+    .btn-auth:hover {
+        background-color: #157347;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="container">
+    <div class="card">
+        <h1 class="card-title">Member Details</h1>
+
+        <div class="detail"><strong>Name:</strong> {{ person.name }}</div>
+        <div class="detail"><strong>Portal ID:</strong> {{ person.portal_id }}</div>
+        <div class="detail"><strong>Address:</strong> {{ user_data.Address }}</div>
+        <div class="detail"><strong>Email:</strong> {{ user_data.Email }}</div>
+        <div class="detail"><strong>Phone:</strong> {{ user_data.CellPhone }}</div>
+        <div class="detail">
+            <strong>Authorized:</strong>
+            {% if person.authorized %}
+                <span class="badge bg-success">Yes</span>
+            {% else %}
+                <span class="badge bg-secondary">No</span>
+            {% endif %}
+        </div>
+
+        <div class="actions">
+            <a href="{% url 'person_list' %}" class="btn-list"><i class="fas fa-arrow-left"></i> Back to List</a>
+            <a href="{% url 'person_authorize' pk=person.pk %}" class="btn-auth"><i class="fas fa-user-check"></i> Authorize</a>
+            <a href="{% url 'person_delete' pk=person.pk %}" class="btn-delete"><i class="fas fa-trash-alt"></i> Delete</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

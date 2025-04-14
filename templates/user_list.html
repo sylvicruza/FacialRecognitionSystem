@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        margin-top: 60px;
+    }
+
+    .title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #343a40;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .table-container {
+        background: #ffffff;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+        background-color: #28a745;
+        color: white;
+        font-weight: 600;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .actions a {
+        background-color: #28a745;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+
+    .actions a:hover {
+        background-color: #218838;
+    }
+
+    .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-weight: bold;
+        color: #28a745;
+        cursor: pointer;
+    }
+
+    .footer i {
+        margin-right: 5px;
+    }
+
+    .footer:hover {
+        color: #218838;
+    }
+</style>
+
+<div class="container">
+    <h1 class="title">Member List</h1>
+    <div class="table-container">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Portal ID</th>
+                    <th>Authorized</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for person in persons %}
+                <tr>
+                    <td>{{ person.name }}</td>
+                    <td>{{ person.portal_id }}</td>
+                    <td>
+                        {% if person.authorized %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{% url 'person_authorize' pk=person.pk %}"><i class="fas fa-eye"></i> View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Back to home -->
+    <div class="footer" onclick="location.href='{% url 'home' %}'">
+        <i class="fas fa-home"></i> Back to Home
+    </div>
+</div>
+{% endblock %}

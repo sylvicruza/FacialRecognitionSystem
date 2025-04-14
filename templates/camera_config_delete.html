@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<body>
+
+    <div class="container">
+        <h1>Delete Camera Configuration</h1>
+        <p>Are you sure you want to delete "<strong>{{ config.name }}</strong>"?</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="button-container">
+                <button type="submit">Yes, Delete</button>
+                <a href="{% url 'camera_config_list' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</body>
+{% endblock %}

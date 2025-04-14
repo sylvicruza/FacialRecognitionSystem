@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    body {
+        background-color: #f4f6f9;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 60px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0d6efd;
+        margin-bottom: 30px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    thead {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 14px 16px;
+        border-bottom: 1px solid #dee2e6;
+        font-size: 0.95rem;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    tr:hover {
+        background-color: #e9ecef;
+    }
+
+    .actions a {
+        text-decoration: none;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+        margin-right: 8px;
+    }
+
+    .actions a:hover {
+        opacity: 0.85;
+    }
+
+    .edit-btn {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .delete-btn {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .create-new-btn,
+    .back-home-btn {
+        display: inline-block;
+        text-align: center;
+        padding: 12px 20px;
+        margin-right: 10px;
+        font-weight: bold;
+        font-size: 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .create-new-btn {
+        background-color: #198754;
+        color: white;
+    }
+
+    .create-new-btn:hover {
+        background-color: #157347;
+    }
+
+    .back-home-btn {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .back-home-btn:hover {
+        background-color: #5a6268;
+    }
+</style>
+
+<div class="container">
+    <h1>Saved Camera Configurations</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Camera Source</th>
+                <th>Threshold</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for config in configs %}
+            <tr>
+                <td>{{ config.name }}</td>
+                <td>{{ config.camera_source }}</td>
+                <td>{{ config.threshold }}</td>
+                <td class="actions">
+                    <a href="{% url 'camera_config_update' config.id %}" class="edit-btn">Edit</a>
+                    <a href="{% url 'camera_config_delete' config.id %}" class="delete-btn">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'camera_config_create' %}" class="create-new-btn"><i class="fas fa-plus"></i> Create New Configuration</a>
+    <a href="{% url 'home' %}" class="back-home-btn"><i class="fas fa-home"></i> Back to Home</a>
+</div>
+
+{% endblock %}

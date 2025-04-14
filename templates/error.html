@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<body>
+    <h1>An Error Occurred</h1>
+    <p>{{ error_message }}</p>
+    <p><a href="{% url 'home' %}">Return to Home</a></p>
+    <div class="suggestion">
+        <h2>Suggested Fixes:</h2>
+        <p>It seems there is an issue with the camera configuration.</p>
+        <ul>
+            <li>Ensure that the camera is connected properly.</li>
+            <li>Check the IP address and port settings in the camera configuration.</li>
+            <li>Make sure the camera is powered on and accessible from your network.</li>
+            <li>Verify that the required permissions are granted to access the camera.</li>
+            <li>Consult the camera's manual for troubleshooting steps.</li>
+        </ul>
+    </div>
+</body>
+{% endblock %}

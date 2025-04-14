@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+        margin-top: 60px;
+        max-width: 700px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        background-color: #fff;
+    }
+
+    .card-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .student-details .detail {
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .form-group {
+        margin: 1.5rem 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-group input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    button[type="submit"] {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #218838;
+    }
+
+    .actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .actions a {
+        text-decoration: none;
+        color: #28a745;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+    .actions a:hover {
+        color: #218838;
+    }
+</style>
+
+<div class="container">
+    <div class="card">
+        <h1 class="card-title">Authorize Member</h1>
+
+        <div class="student-details">
+            <div class="detail"><strong>Name:</strong> {{ person.name }}</div>
+            <div class="detail"><strong>Portal ID:</strong> {{ person.portal_id }}</div>
+            <div class="detail"><strong>Authorized:</strong>
+                {% if person.authorized %}
+                    <span class="badge bg-success">Yes</span>
+                {% else %}
+                    <span class="badge bg-secondary">No</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="checkbox" id="authorized" name="authorized" {% if person.authorized %} checked {% endif %}>
+                <label for="authorized">Authorize Member</label>
+            </div>
+            <button type="submit">Update Authorization</button>
+        </form>
+
+        <div class="actions">
+            <a href="{% url 'person_list' %}"><i class="fas fa-list"></i> Back to List</a>
+            <a href="{% url 'person_detail' pk=person.pk %}"><i class="fas fa-user"></i> View Details</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
