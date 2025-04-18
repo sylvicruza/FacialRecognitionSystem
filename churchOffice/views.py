@@ -45,7 +45,7 @@ def detect_and_encode(image):
 
 # Encode uploaded images only once
 def encode_uploaded_images():
-    from .models import Person  # Ensure models import here to avoid circular deps
+    from .models import Person
     known_face_encodings, known_face_names = [], []
     for person in Person.objects.filter(authorized=True):
         image_path = os.path.join(settings.MEDIA_ROOT, str(person.image))
@@ -59,7 +59,7 @@ def encode_uploaded_images():
             known_face_names.extend([person.name] * len(encodings))
     return known_face_encodings, known_face_names
 
-# Face recognition
+# Face recognition logic
 def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6):
     recognized_names = []
     for test_encoding in test_encodings:
@@ -71,6 +71,30 @@ def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6)
         recognized_names.append(known_names[min_idx] if distances[min_idx] < threshold else 'Not Recognized')
     return recognized_names
 
+# Threaded camera stream reader
+class CameraStream:
+    def __init__(self, source):
+        self.cap = cv2.VideoCapture(source)
+        self.ret, self.frame = self.cap.read()
+        self.lock = threading.Lock()
+        self.running = True
+        threading.Thread(target=self.update, daemon=True).start()
+
+    def update(self):
+        while self.running:
+            ret, frame = self.cap.read()
+            with self.lock:
+                self.ret = ret
+                self.frame = frame
+
+    def read(self):
+        with self.lock:
+            return self.ret, self.frame.copy() if self.frame is not None else None
+
+    def stop(self):
+        self.running = False
+        self.cap.release()
+
 # View for recognition
 def capture_and_recognize(request):
     from .models import CameraConfiguration, Person, Attendance
@@ -78,29 +102,32 @@ def capture_and_recognize(request):
     known_face_encodings, known_face_names = encode_uploaded_images()
 
     def process_frame(cam_config, stop_event):
-        cap = None
+        cam_source = int(cam_config.camera_source) if cam_config.camera_source.isdigit() else cam_config.camera_source
+        stream = CameraStream(cam_source)
+        if not stream.cap.isOpened():
+            error_messages.append(f"Cannot open camera {cam_config.name}")
+            return
+
+        pygame.mixer.init()
+        success_sound = pygame.mixer.Sound('churchOffice/suc.wav')
+        window_name = f"Face Recognition - {cam_config.name}"
+        camera_windows.append(window_name)
+
         try:
-            source = int(cam_config.camera_source) if cam_config.camera_source.isdigit() else cam_config.camera_source
-            cap = cv2.VideoCapture(source)
-            if not cap.isOpened():
-                raise Exception(f"Cannot open camera {cam_config.name}")
-
-            pygame.mixer.init()
-            success_sound = pygame.mixer.Sound('churchOffice/suc.wav')
-            window_name = f"Face Recognition - {cam_config.name}"
-            camera_windows.append(window_name)
-
             while not stop_event.is_set():
-                ret, frame = cap.read()
-                if not ret:
-                    break
+                ret, frame = stream.read()
+                if not ret or frame is None:
+                    continue
 
+                frame = cv2.resize(frame, (640, 480))  # Resize for faster processing
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 test_face_encodings = detect_and_encode(frame_rgb)
 
                 if test_face_encodings and known_face_encodings:
+                    boxes, _ = mtcnn.detect(frame_rgb)
                     names = recognize_faces(np.array(known_face_encodings), known_face_names, test_face_encodings, cam_config.threshold)
-                    for name, box in zip(names, mtcnn.detect(frame_rgb)[0]):
+
+                    for name, box in zip(names, boxes):
                         if box is None:
                             continue
                         x1, y1, x2, y2 = map(int, map(round, box))
@@ -114,8 +141,8 @@ def capture_and_recognize(request):
 
                             today = datetime.now().date()
                             attendance, created = Attendance.objects.get_or_create(person=person, date=today)
-
                             now = timezone.now()
+
                             if created:
                                 attendance.mark_checked_in()
                                 success_sound.play()
@@ -136,11 +163,10 @@ def capture_and_recognize(request):
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     stop_event.set()
                     break
-
         except Exception as e:
             error_messages.append(str(e))
         finally:
-            if cap: cap.release()
+            stream.stop()
             cv2.destroyWindow(window_name)
 
     try:
