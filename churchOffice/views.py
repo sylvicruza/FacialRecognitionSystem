@@ -16,185 +16,146 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import threading
 import time
+from django.http import StreamingHttpResponse
+import pygame
 
-# Use GPU if available
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+pygame.mixer.init()
+
 
 # Load models once
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 mtcnn = MTCNN(keep_all=True, device=device)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-# Detect and encode faces
+# Face detection & encoding
 def detect_and_encode(image):
     with torch.no_grad():
         boxes, _ = mtcnn.detect(image)
+        faces = []
         if boxes is not None:
-            faces = []
             for box in boxes:
                 x1, y1, x2, y2 = map(int, map(round, box))
                 face = image[y1:y2, x1:x2]
                 if face.size == 0:
                     continue
-                face = cv2.resize(face, (160, 160), interpolation=cv2.INTER_LINEAR)
+                face = cv2.resize(face, (160, 160))
                 face = np.transpose(face, (2, 0, 1)).astype(np.float32) / 255.0
                 face_tensor = torch.tensor(face).unsqueeze(0).to(device)
                 encoding = resnet(face_tensor).cpu().numpy().flatten()
-                faces.append(encoding)
-            return faces
-    return []
+                faces.append((encoding, box))
+    return faces
 
-# Encode uploaded images only once
+# Preload known encodings
 def encode_uploaded_images():
-    from .models import Person
-    known_face_encodings, known_face_names = [], []
+    encodings, names = [], []
     for person in Person.objects.filter(authorized=True):
-        image_path = os.path.join(settings.MEDIA_ROOT, str(person.image))
-        known_image = cv2.imread(image_path)
-        if known_image is None:
+        img_path = os.path.join(settings.MEDIA_ROOT, str(person.image))
+        img = cv2.imread(img_path)
+        if img is None:
             continue
-        known_image_rgb = cv2.cvtColor(known_image, cv2.COLOR_BGR2RGB)
-        encodings = detect_and_encode(known_image_rgb)
-        if encodings:
-            known_face_encodings.extend(encodings)
-            known_face_names.extend([person.name] * len(encodings))
-    return known_face_encodings, known_face_names
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        for encoding, _ in detect_and_encode(img_rgb):
+            encodings.append(encoding)
+            names.append(person.name)
+    return np.array(encodings), names
 
-# Face recognition logic
+# Face recognition
 def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6):
-    recognized_names = []
-    for test_encoding in test_encodings:
+    recognized = []
+    for test_encoding, box in test_encodings:
         distances = np.linalg.norm(known_encodings - test_encoding, axis=1)
         if len(distances) == 0:
-            recognized_names.append('Not Recognized')
+            recognized.append(('Not Recognized', box))
             continue
         min_idx = np.argmin(distances)
-        recognized_names.append(known_names[min_idx] if distances[min_idx] < threshold else 'Not Recognized')
-    return recognized_names
+        name = known_names[min_idx] if distances[min_idx] < threshold else 'Not Recognized'
+        recognized.append((name, box))
+    return recognized
 
-# Threaded camera stream reader
-class CameraStream:
-    def __init__(self, source):
-        self.cap = cv2.VideoCapture(source)
-        self.ret, self.frame = self.cap.read()
-        self.lock = threading.Lock()
-        self.running = True
-        threading.Thread(target=self.update, daemon=True).start()
+# MJPEG stream generator with FPS limiting
+def gen_frames(source, cam_config, known_encodings, known_names, max_fps=10):
+    cap = cv2.VideoCapture(source)
+    prev = 0
+    delay = 1 / max_fps
 
-    def update(self):
-        while self.running:
-            ret, frame = self.cap.read()
-            with self.lock:
-                self.ret = ret
-                self.frame = frame
+    while cap.isOpened():
+        now = cv2.getTickCount() / cv2.getTickFrequency()
+        if now - prev < delay:
+            continue
+        prev = now
 
-    def read(self):
-        with self.lock:
-            return self.ret, self.frame.copy() if self.frame is not None else None
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    def stop(self):
-        self.running = False
-        self.cap.release()
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        test_encodings = detect_and_encode(frame_rgb)
 
-# View for recognition
-def capture_and_recognize(request):
-    from .models import CameraConfiguration, Person, Attendance
-    stop_events, camera_threads, camera_windows, error_messages = [], [], [], []
-    known_face_encodings, known_face_names = encode_uploaded_images()
-
-    def process_frame(cam_config, stop_event):
-        cam_source = int(cam_config.camera_source) if cam_config.camera_source.isdigit() else cam_config.camera_source
-        stream = CameraStream(cam_source)
-        if not stream.cap.isOpened():
-            error_messages.append(f"Cannot open camera {cam_config.name}")
-            return
-
-        pygame.mixer.init()
-        success_sound = pygame.mixer.Sound('churchOffice/suc.wav')
-        window_name = f"Face Recognition - {cam_config.name}"
-        camera_windows.append(window_name)
-
-        try:
-            while not stop_event.is_set():
-                ret, frame = stream.read()
-                if not ret or frame is None:
+        if test_encodings and len(known_encodings) > 0:
+            recognized = recognize_faces(known_encodings, known_names, test_encodings, cam_config.threshold)
+            for name, box in recognized:
+                if box is None:
                     continue
+                x1, y1, x2, y2 = map(int, map(round, box))
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(frame, name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1)
 
-                frame = cv2.resize(frame, (640, 480))  # Resize for faster processing
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                test_face_encodings = detect_and_encode(frame_rgb)
+                print(f"[FRAME] Processing camera {cam_config.name} at {datetime.now()}")
+                print(f"[INFO] Detected faces: {len(test_encodings)}")
 
-                if test_face_encodings and known_face_encodings:
-                    boxes, _ = mtcnn.detect(frame_rgb)
-                    names = recognize_faces(np.array(known_face_encodings), known_face_names, test_face_encodings, cam_config.threshold)
+                if name != 'Not Recognized':
+                    print(f"[MATCH] Recognized {name}")
 
-                    for name, box in zip(names, boxes):
-                        if box is None:
-                            continue
-                        x1, y1, x2, y2 = map(int, map(round, box))
-                        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                        cv2.putText(frame, name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    person = Person.objects.filter(name=name).first()
+                    if person:
+                        today = timezone.now().date()  # always use timezone-aware value
+                        now = timezone.now()
+                        attendance, created = Attendance.objects.get_or_create(person=person, date=today)
 
-                        if name != 'Not Recognized':
-                            person = Person.objects.filter(name=name).first()
-                            if not person:
-                                continue
+                        if created:
+                            attendance.mark_checked_in()
+                            play_success_sound()
+                        elif attendance.check_in_time and not attendance.check_out_time:
+                            if now >= attendance.check_in_time + timedelta(seconds=60):
+                                attendance.mark_checked_out()
+                                play_success_sound()
 
-                            today = datetime.now().date()
-                            attendance, created = Attendance.objects.get_or_create(person=person, date=today)
-                            now = timezone.now()
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
 
-                            if created:
-                                attendance.mark_checked_in()
-                                success_sound.play()
-                                msg = f"{name}, checked in."
-                            elif attendance.check_in_time and not attendance.check_out_time:
-                                if now >= attendance.check_in_time + timedelta(seconds=60):
-                                    attendance.mark_checked_out()
-                                    success_sound.play()
-                                    msg = f"{name}, checked out."
-                                else:
-                                    msg = f"{name}, already checked in."
-                            else:
-                                msg = f"{name}, already checked out."
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-                            cv2.putText(frame, msg, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    cap.release()
 
-                cv2.imshow(window_name, frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    stop_event.set()
-                    break
-        except Exception as e:
-            error_messages.append(str(e))
-        finally:
-            stream.stop()
-            cv2.destroyWindow(window_name)
-
+def play_success_sound():
     try:
-        cam_configs = CameraConfiguration.objects.all()
-        if not cam_configs.exists():
-            raise Exception("No camera configurations found.")
-
-        for cam_config in cam_configs:
-            stop_event = threading.Event()
-            stop_events.append(stop_event)
-            t = threading.Thread(target=process_frame, args=(cam_config, stop_event))
-            camera_threads.append(t)
-            t.start()
-
-        while any(t.is_alive() for t in camera_threads):
-            time.sleep(1)
-
+        path = os.path.join(settings.BASE_DIR, 'media/audio/suc.wav')  # or wherever your sound is
+        pygame.mixer.music.load(path)
+        pygame.mixer.music.play()
     except Exception as e:
-        error_messages.append(str(e))
-    finally:
-        for e in stop_events: e.set()
-        for w in camera_windows:
-            if cv2.getWindowProperty(w, cv2.WND_PROP_VISIBLE) >= 1:
-                cv2.destroyWindow(w)
+        print("[ERROR] Sound playback failed:", e)
 
-    if error_messages:
-        return render(request, 'error.html', {'error_message': "\n".join(error_messages)})
-    return redirect('person_attendance_list')
+
+
+# Streaming view
+def video_feed(request, cam_id):
+    cam_config = get_object_or_404(CameraConfiguration, id=cam_id)
+    known_encodings, known_names = encode_uploaded_images()
+    source = int(cam_config.camera_source) if cam_config.camera_source.isdigit() else cam_config.camera_source
+    return StreamingHttpResponse(
+        gen_frames(source, cam_config, known_encodings, known_names),
+        content_type='multipart/x-mixed-replace; boundary=frame'
+    )
+
+# Controller view to load camera page
+def camera_stream(request, cam_id):
+    config = get_object_or_404(CameraConfiguration, id=cam_id)
+    return render(request, 'camera_stream.html', {'config': config})
+
+def stream_all_cameras(request):
+    configs = CameraConfiguration.objects.all()
+    return render(request, 'stream_all_cameras.html', {'configs': configs})
 
 # this is for showing Attendance list
 def person_attendance_list(request):
@@ -423,3 +384,9 @@ def camera_config_delete(request, pk):
 
     # Render the delete confirmation template with the configuration data
     return render(request, 'camera_config_delete.html', {'config': config})
+
+
+def capture_and_recognize(request):
+    return None
+
+

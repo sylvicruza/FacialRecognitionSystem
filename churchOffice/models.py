@@ -23,8 +23,21 @@ class Attendance(models.Model):
         return f"{self.person.name} - {self.date}"
 
     def mark_checked_in(self):
-        self.check_in_time = timezone.now()
-        self.save()
+        today = timezone.now().date()
+
+        # Check if there's already an attendance record for today
+        attendance_record = Attendance.objects.filter(person=self.person, date=today).first()
+
+        if attendance_record:
+            # If the record exists, update it
+            attendance_record.check_in_time = timezone.now()
+            attendance_record.save()
+            print(f"[ATTENDANCE] Checked in: {self.person.name} at {attendance_record.check_in_time}")
+        else:
+            # If no record exists, create a new one
+            new_attendance = Attendance(person=self.person, date=today, check_in_time=timezone.now())
+            new_attendance.save()
+            print(f"[ATTENDANCE] New record created. Checked in: {self.person.name} at {new_attendance.check_in_time}")
 
     def mark_checked_out(self):
         if self.check_in_time:
@@ -42,11 +55,9 @@ class Attendance(models.Model):
         return None
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Only on creation
+        if not self.pk:
             self.date = timezone.now().date()
         super().save(*args, **kwargs)
-
-
 
 
 class CameraConfiguration(models.Model):

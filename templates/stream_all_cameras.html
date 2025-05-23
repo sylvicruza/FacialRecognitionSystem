@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto p-4">
+  <h1 class="text-3xl font-bold mb-6 text-center">🎥 Live Attendance Streams</h1>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for config in configs %}
+    <div class="bg-white shadow-md rounded-2xl overflow-hidden border border-gray-200">
+      <div class="p-4">
+        <h2 class="text-lg font-semibold text-center mb-2">{{ config.name }}</h2>
+        <img id="cam-{{ config.id }}" src="{% url 'video_feed' config.id %}" class="w-full aspect-video object-cover rounded">
+        <div class="text-center mt-2">
+          <button onclick="toggleStream({{ config.id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full text-sm shadow">
+            ⏯ Pause / Resume
+          </button>
+        </div>
+        <div id="status-{{ config.id }}" class="text-center text-sm text-gray-500 mt-1">Recognizing...</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  const streamState = {};
+  function toggleStream(id) {
+    const img = document.getElementById(`cam-${id}`);
+    if (streamState[id]) {
+      img.src = img.dataset.src;
+      streamState[id] = false;
+    } else {
+      img.dataset.src = img.src;
+      img.src = '';
+      streamState[id] = true;
+    }
+  }
+</script>
+{% endblock %}

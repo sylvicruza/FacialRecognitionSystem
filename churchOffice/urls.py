@@ -17,4 +17,7 @@ urlpatterns = [
     path('camera-config/list/', views.camera_config_list, name='camera_config_list'),
     path('camera-config/update/<int:pk>/', views.camera_config_update, name='camera_config_update'),
     path('camera-config/delete/<int:pk>/', views.camera_config_delete, name='camera_config_delete'),
+    path('stream/<int:cam_id>/', views.camera_stream, name='camera_stream'),
+    path('video_feed/<int:cam_id>/', views.video_feed, name='video_feed'),
+    path('stream/all/', views.stream_all_cameras, name='stream_all_cameras'),
 ]
