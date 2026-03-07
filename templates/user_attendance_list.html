@@ -2,150 +2,916 @@
 {% block content %}
 
 <style>
-    body {
-        background-color: #f8f9fa;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  :root{
+    --brandA:#0b3c5d;
+    --brandB:#1c5874;
+    --gold:#fddb3a;
 
-    .container {
-        margin-top: 60px;
-    }
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
 
-    .heading {
-        text-align: center;
-        color: #0d6efd;
-        margin-bottom: 30px;
-        font-weight: 700;
-    }
+    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
+    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
 
-    .filter-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 30px;
-    }
+    --ok:#16a34a;
+    --warn:#f59e0b;
+    --bad:#ef4444;
 
-    .btn-custom {
-        background-color: #0d6efd;
-        color: white;
-        font-weight: 600;
-    }
+    --radius: 20px;
+  }
 
-    .btn-custom:hover {
-        background-color: #0b5ed7;
-    }
+  .page-wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+  }
 
-    .attendance-table {
-        background-color: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-    }
+  .hero{
+    border-radius: 24px;
+    padding: 18px 18px 16px;
+    background:
+      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.16), transparent 55%),
+      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.16), transparent 55%),
+      linear-gradient(180deg, var(--brandA), var(--brandB));
+    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
+    color: rgba(255,255,255,.94);
+    position:relative;
+    overflow:hidden;
+    animation: reveal .35s ease-out both;
+  }
 
-    .table th {
-        background-color: #0d6efd;
-        color: white;
-        text-align: center;
-        vertical-align: middle;
-    }
+  @keyframes reveal{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
 
-    .table td {
-        text-align: center;
-        vertical-align: middle;
-    }
+  .hero-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 12px;
+    flex-wrap:wrap;
+  }
 
-    .footer {
-        margin-top: 30px;
-        text-align: center;
-    }
+  .title{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-width: 280px;
+  }
 
-    .back-icon {
-        font-size: 1.5rem;
-        color: #0d6efd;
-        cursor: pointer;
-        transition: color 0.3s;
-    }
+  .avatar{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display:grid;
+    place-items:center;
+    font-weight: 900;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.10);
+    color: var(--gold);
+    flex: 0 0 auto;
+  }
 
-    .back-icon:hover {
-        color: #0b5ed7;
+  .title h1{
+    margin:0;
+    font-size: 18px;
+    line-height:1.15;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+  }
+
+  .title p{
+    margin:4px 0 0;
+    font-size: 12px;
+    line-height:1.45;
+    color: rgba(255,255,255,.72);
+  }
+
+  .hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .chip-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 13px;
+    border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.20);
+    backdrop-filter: blur(10px);
+    transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+    white-space:nowrap;
+    font-weight:700;
+  }
+
+  .chip-link:hover{
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.24);
+  }
+
+  .chip-link:active{
+    transform: scale(.98);
+  }
+
+  .cardx{
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: reveal2 .38s ease-out both;
+  }
+
+  @keyframes reveal2{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .cardx-head{
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .cardx-head .h{
+    font-size:15px;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+    color: var(--text);
+  }
+
+  .cardx-head .s{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .controls{
+    padding: 16px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  @media (min-width: 992px){
+    .controls{
+      grid-template-columns: 1.35fr .65fr;
+      align-items:start;
     }
+  }
+
+  .filter-grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  @media (min-width: 768px){
+    .filter-grid{
+      grid-template-columns: 1.35fr .85fr auto;
+      align-items:end;
+    }
+  }
+
+  .fgroup{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .fgroup label{
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .soft{
+    border-radius: 16px !important;
+    border: 1px solid var(--border) !important;
+    padding: 12px 12px !important;
+    background:#fff !important;
+    box-shadow: var(--softShadow);
+    min-height: 46px;
+  }
+
+  .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration:none;
+    border: 1px solid var(--border);
+    background:#fff;
+    color:#0f172a;
+    box-shadow: var(--softShadow);
+    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    user-select:none;
+    white-space: nowrap;
+  }
+
+  .btnx:hover{ background: rgba(2,6,23,.02); }
+  .btnx:active{ transform: scale(.98); }
+
+  .btnx.primary{
+    border: none;
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #061225;
+    box-shadow: 0 20px 40px rgba(37,99,235,.18);
+  }
+
+  .btnx.success{
+    border: none;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #052012;
+    box-shadow: 0 20px 40px rgba(34,197,94,.18);
+  }
+
+  .btnx.ghost{
+    background: #f8fafc;
+  }
+
+  .btn-stack{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+  }
+
+  @media (max-width: 767.98px){
+    .btn-stack{ justify-content:flex-start; }
+  }
+
+  .export-panel{
+    border: 1px solid rgba(226,232,240,.95);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(248,250,252,.92), rgba(255,255,255,.98));
+    box-shadow: var(--softShadow);
+    padding: 14px;
+    display:flex;
+    flex-direction:column;
+    gap: 12px;
+  }
+
+  .export-panel .head .t{
+    font-weight: 800;
+    letter-spacing:-0.02em;
+    color: var(--text);
+  }
+
+  .export-panel .head .d{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .export-row{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .export-row .form-select{
+    height:44px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    box-shadow: var(--softShadow);
+    font-weight: 800;
+  }
+
+  .export-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .export-actions .btnx{
+    flex:1 1 0;
+    min-width: 150px;
+  }
+
+  .table-shell{
+    border-radius: 18px;
+    overflow: hidden;
+    margin: 0 16px 16px;
+    border: 1px solid rgba(226,232,240,.95);
+  }
+
+  table.table{
+    margin:0;
+  }
+
+  .table thead th{
+    background: linear-gradient(135deg, rgba(11,60,93,1), rgba(28,88,116,1)) !important;
+    color: rgba(255,255,255,.95) !important;
+    font-weight: 800;
+    border-color: rgba(255,255,255,.12) !important;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 12px;
+    letter-spacing: .02em;
+  }
+
+  .table tbody td{
+    text-align:center;
+    vertical-align: middle;
+    color: var(--text);
+    border-color: rgba(226,232,240,.85);
+  }
+
+  .table tbody tr:hover{
+    background: rgba(14,165,233,.06);
+  }
+
+  .member-cell{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+    text-align:left;
+  }
+
+  .pimg{
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid rgba(226,232,240,.95);
+    box-shadow: 0 12px 30px rgba(2,6,23,.10);
+    flex: 0 0 auto;
+  }
+
+  .pimg-ph{
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    display:grid;
+    place-items:center;
+    font-weight: 900;
+    color: rgba(15,23,42,.75);
+    background: rgba(148,163,184,.20);
+    border: 2px solid rgba(226,232,240,.95);
+    flex: 0 0 auto;
+  }
+
+  .member-meta{
+    min-width:0;
+  }
+
+  .member-meta .name{
+    font-weight:800;
+    letter-spacing:-0.01em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 260px;
+  }
+
+  .member-meta .sub{
+    font-size:12px;
+    color: var(--muted);
+    margin-top:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 260px;
+  }
+
+  .badge-pill{
+    border-radius: 999px;
+    padding: 9px 12px;
+    font-weight: 800;
+    font-size: 12px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    white-space: nowrap;
+    line-height:1;
+  }
+
+  .badge-ok{
+    background: rgba(22,163,74,.12);
+    border:1px solid rgba(22,163,74,.25);
+    color:#065f46;
+  }
+
+  .badge-warn{
+    background: rgba(245,158,11,.12);
+    border:1px solid rgba(245,158,11,.25);
+    color:#92400e;
+  }
+
+  .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: var(--warn);
+    flex: 0 0 auto;
+  }
+
+  .badge-ok .dot{ background: var(--ok); }
+  .badge-warn .dot{ background: var(--warn); }
+
+  .row-actions{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+
+  .iconbtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid rgba(226,232,240,.95);
+    background:#fff;
+    box-shadow: var(--softShadow);
+    transition: transform .06s ease, background .2s ease;
+    user-select:none;
+    white-space: nowrap;
+  }
+
+  .iconbtn:active{ transform: scale(.98); }
+
+  .iconbtn.danger{
+    border-color: rgba(239,68,68,.30);
+    background: rgba(239,68,68,.08);
+    color: #991b1b;
+  }
+
+  .iconbtn.danger:hover{
+    background: rgba(239,68,68,.12);
+  }
+
+  .empty{
+    padding: 28px 16px 16px;
+    text-align:center;
+    color: var(--muted);
+  }
+
+  .empty .ic{
+    width: 52px;
+    height: 52px;
+    border-radius: 20px;
+    margin: 0 auto 10px;
+    display:grid;
+    place-items:center;
+    background: rgba(148,163,184,.16);
+    border: 1px solid rgba(226,232,240,.95);
+    box-shadow: var(--softShadow);
+  }
+
+  .empty h3{
+    margin: 6px 0 4px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .empty p{
+    margin:0;
+    font-size: 13px;
+  }
+
+  .pager{
+    padding: 0 16px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .pager .meta{
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .pills{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .pill{
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--softShadow);
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--text);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+  }
+
+  .pill:hover{
+    background: rgba(2,6,23,.02);
+  }
+
+  .pill.disabled{
+    pointer-events:none;
+    opacity:.55;
+  }
+
+  .modal .btn{
+    border-radius: 14px;
+    font-weight: 800;
+    height: 42px;
+    padding: 0 16px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
 </style>
 
-<div class="container">
-    <h2 class="heading">Member Attendance Records</h2>
+<div class="page-wrap">
 
-    <!-- Filter Form -->
-    <form method="get" class="filter-container">
-        <div class="input-group" style="max-width: 300px;">
-            <input type="text" name="search" class="form-control" placeholder="Search for member..." value="{{ search_query }}">
-            <div class="input-group-append">
-                <button class="btn btn-custom" type="submit"><i class="fas fa-search"></i></button>
-            </div>
+  <div class="hero">
+    <div class="hero-top">
+      <div class="title">
+        <div class="avatar" aria-hidden="true">
+          <i class="fa-solid fa-calendar-check"></i>
         </div>
-
-        <div class="input-group" style="max-width: 220px;">
-            <input type="date" name="attendance_date" class="form-control" value="{{ date_filter }}">
-            <div class="input-group-append">
-                <button class="btn btn-custom" type="submit"><i class="fas fa-calendar-alt"></i></button>
-            </div>
+        <div>
+          <h1>Attendance Logs</h1>
+          <p>Review records and export the current view.</p>
         </div>
-    </form>
+      </div>
 
-    <!-- Attendance Table -->
-    <div class="table-responsive attendance-table">
-        <table class="table table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Check-In</th>
-                    <th>Check-Out</th>
-                    <th>Duration</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in person_attendance_data %}
-                    {% for attendance in data.attendance_records %}
-                    <tr>
-                        <td>
-                            {% if data.person.image %}
-                                <img src="{{ data.person.image.url }}" alt="{{ data.person.name }}"
-                                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
-                            {% else %}
-                                <span class="text-muted">No Image</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ data.person.name }}</td>
-                        <td>{{ attendance.date }}</td>
-                        <td>{{ attendance.check_in_time|date:"h:i:s A" }}</td>
-                        <td>{{ attendance.check_out_time|date:"h:i:s A" }}</td>
-                        <td>
-                            {% if attendance.check_in_time and attendance.check_out_time %}
-                                {{ attendance.calculate_duration }}
-                            {% else %}
-                                <span class="text-danger">Not Checked Out</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">No attendance records found.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <div class="hero-actions">
+        <a class="chip-link" href="{% url 'home' %}">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a class="chip-link" href="{% url 'stream_all_cameras' %}">
+          <i class="fa-solid fa-camera"></i> Mark Attendance
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <div class="cardx-head">
+      <div>
+        <div class="h">Filters & Export</div>
+        <div class="s">Use the current filters for download or email.</div>
+      </div>
     </div>
 
-    <div class="footer">
-        <i class="fas fa-arrow-left back-icon" onclick="location.href='/'"></i>
+    <div class="controls">
+      <div>
+        <form method="get" id="filterForm">
+          <div class="filter-grid">
+
+            <div class="fgroup">
+              <label for="search">
+                <i class="fa-solid fa-user"></i> Member
+              </label>
+              <input
+                id="search"
+                type="text"
+                name="search"
+                value="{{ search_query }}"
+                class="form-control soft"
+                placeholder="Search by name"
+              >
+            </div>
+
+            <div class="fgroup">
+              <label for="attendance_date">
+                <i class="fa-solid fa-calendar-day"></i> Date
+              </label>
+              <input
+                id="attendance_date"
+                type="date"
+                name="attendance_date"
+                value="{{ date_filter }}"
+                class="form-control soft"
+              >
+            </div>
+
+            <div class="btn-stack">
+              <button type="submit" class="btnx primary" title="Apply filters">
+                <i class="fa-solid fa-filter"></i> Apply
+              </button>
+
+              <a class="btnx ghost" href="{% url 'person_attendance_list' %}" title="Clear filters">
+                <i class="fa-solid fa-rotate-left"></i> Clear
+              </a>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="export-panel">
+        <div class="head">
+          <div>
+            <div class="t">Export</div>
+            <div class="d">Download or send the filtered result.</div>
+          </div>
+        </div>
+
+        <div class="export-row">
+          <form method="get" action="{% url 'attendance_export_download' %}" class="w-100 d-flex flex-column gap-2">
+            <input type="hidden" name="search" value="{{ search_query }}">
+            <input type="hidden" name="attendance_date" value="{{ date_filter }}">
+
+            <select name="format" class="form-select" aria-label="Export format">
+              <option value="csv">CSV</option>
+              <option value="xlsx">Excel (XLSX)</option>
+              <option value="pdf">PDF</option>
+            </select>
+
+            <div class="export-actions">
+              <button type="submit" class="btnx">
+                <i class="fa-solid fa-download"></i> Download
+              </button>
+
+              <button type="button" class="btnx success" data-bs-toggle="modal" data-bs-target="#emailModal">
+                <i class="fa-solid fa-envelope"></i> Email
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="cardx">
+    <div class="cardx-head">
+      <div>
+        <div class="h">Records</div>
+        <div class="s">Newest first.</div>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <span class="badge-pill badge-ok"><span class="dot"></span> Completed</span>
+        <span class="badge-pill badge-warn"><span class="dot"></span> Open</span>
+      </div>
+    </div>
+
+    <div class="table-shell table-responsive">
+      <table class="table table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th style="min-width:280px;">Member</th>
+            <th style="width:140px;">Date</th>
+            <th style="width:150px;">Check-In</th>
+            <th style="width:150px;">Check-Out</th>
+            <th style="width:170px;">Duration</th>
+            <th style="width:150px;">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if attendance_page and attendance_page.object_list %}
+            {% for attendance in attendance_page.object_list %}
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    {% if attendance.person and attendance.person.image %}
+                      <img class="pimg" src="{{ attendance.person.image.url }}" alt="{{ attendance.person.name }}">
+                    {% else %}
+                      <div class="pimg-ph" title="No image">
+                        {{ attendance.person.name|default:"?"|slice:":1"|upper }}
+                      </div>
+                    {% endif %}
+
+                    <div class="member-meta">
+                      <div class="name">{{ attendance.person.name|default:"Unknown" }}</div>
+                      <div class="sub">Portal ID: {{ attendance.person.portal_id|default:"—" }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <td>{{ attendance.date }}</td>
+
+                <td>
+                  {% if attendance.check_in_time %}
+                    {{ attendance.check_in_time|date:"h:i:s A" }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if attendance.check_out_time %}
+                    {{ attendance.check_out_time|date:"h:i:s A" }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if attendance.check_in_time and attendance.check_out_time %}
+                    <span class="badge-pill badge-ok">
+                      <span class="dot"></span> {{ attendance.calculate_duration }}
+                    </span>
+                  {% else %}
+                    <span class="badge-pill badge-warn">
+                      <span class="dot"></span> Not Checked Out
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="row-actions">
+                    <button type="button"
+                            class="iconbtn danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#delModal-{{ attendance.id }}">
+                      <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6">
+                <div class="empty">
+                  <div class="ic"><i class="fa-solid fa-circle-info"></i></div>
+                  <h3>No records found</h3>
+                  <p>Try another search or clear the filters.</p>
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if attendance_page %}
+      <div class="pager">
+        <div class="meta">
+          Showing <strong>{{ attendance_page.start_index }}</strong> – <strong>{{ attendance_page.end_index }}</strong>
+          of <strong>{{ attendance_page.paginator.count }}</strong>
+        </div>
+
+        <div class="pills">
+          {% with sp=search_query|urlencode df=date_filter|urlencode ps=page_size %}
+            {% if attendance_page.has_previous %}
+              <a class="pill" href="?page=1&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+                <i class="fa-solid fa-angles-left"></i> First
+              </a>
+              <a class="pill" href="?page={{ attendance_page.previous_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+              </a>
+            {% else %}
+              <span class="pill disabled"><i class="fa-solid fa-angles-left"></i> First</span>
+              <span class="pill disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
+            {% endif %}
+
+            <span class="pill" style="background:#f8fafc;">
+              Page <strong>{{ attendance_page.number }}</strong> of <strong>{{ attendance_page.paginator.num_pages }}</strong>
+            </span>
+
+            {% if attendance_page.has_next %}
+              <a class="pill" href="?page={{ attendance_page.next_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+                Next <i class="fa-solid fa-chevron-right"></i>
+              </a>
+              <a class="pill" href="?page={{ attendance_page.paginator.num_pages }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+                Last <i class="fa-solid fa-angles-right"></i>
+              </a>
+            {% else %}
+              <span class="pill disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+              <span class="pill disabled">Last <i class="fa-solid fa-angles-right"></i></span>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">
+          <i class="fa-solid fa-envelope me-2 text-primary"></i>
+          Send Report
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" action="{% url 'attendance_email_export' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Recipient Email</label>
+            <input type="email" name="to_email" class="form-control" placeholder="e.g. admin@ohc.org" required>
+            <div class="form-text">The current filtered report will be attached.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Format</label>
+            <select name="format" class="form-select">
+              <option value="csv">CSV</option>
+              <option value="xlsx">Excel (XLSX)</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+
+          <input type="hidden" name="search" value="{{ search_query }}">
+          <input type="hidden" name="attendance_date" value="{{ date_filter }}">
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Send
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if attendance_page and attendance_page.object_list %}
+  {% for attendance in attendance_page.object_list %}
+    <div class="modal fade" id="delModal-{{ attendance.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold">
+              <i class="fa-solid fa-triangle-exclamation me-2 text-danger"></i>
+              Delete Record
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-2">Delete this attendance record?</div>
+            <div class="p-3 rounded-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
+              <div class="fw-bold">{{ attendance.person.name|default:"Unknown" }}</div>
+              <div class="text-muted" style="font-size: 0.9rem;">
+                Date: {{ attendance.date }}
+                {% if attendance.check_in_time %} • In: {{ attendance.check_in_time|date:"h:i:s A" }}{% endif %}
+                {% if attendance.check_out_time %} • Out: {{ attendance.check_out_time|date:"h:i:s A" }}{% endif %}
+              </div>
+            </div>
+            <div class="mt-3 text-muted" style="font-size:0.9rem;">This action cannot be undone.</div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <form method="POST" action="{% url 'attendance_delete' attendance.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-danger">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
 
 {% endblock %}

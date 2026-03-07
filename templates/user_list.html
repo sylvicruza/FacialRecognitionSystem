@@ -1,119 +1,690 @@
 {% extends "base.html" %}
 {% block content %}
+
 <style>
-    body {
-        background-color: #f8f9fa;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  :root{
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --shadow: 0 18px 45px rgba(2, 6, 23, .08);
+    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
+    --brand:#22c55e;
+    --brand2:#16a34a;
+    --accent:#38bdf8;
+    --radius:18px;
+  }
+
+  .page-wrap{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+  }
+
+  .hero{
+    border-radius: 22px;
+    padding: 18px 18px 16px;
+    background:
+      radial-gradient(900px 260px at 12% 0%, rgba(34,197,94,.16), transparent 55%),
+      radial-gradient(900px 260px at 86% 30%, rgba(56,189,248,.16), transparent 55%),
+      linear-gradient(180deg, #0b3c5d, #1c5874);
+    color: rgba(255,255,255,.94);
+    box-shadow: 0 20px 55px rgba(2, 6, 23, .18);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hero:before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    background: linear-gradient(90deg, rgba(253,219,58,.12), transparent 35%, rgba(34,197,94,.14));
+    opacity:.6;
+    pointer-events:none;
+  }
+
+  .hero-top{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .hero-title{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    min-width: 0;
+  }
+
+  .hero-badge{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    display:grid;
+    place-items:center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.10);
+    flex: 0 0 auto;
+  }
+
+  .hero-badge i{
+    color:#fddb3a;
+    font-size:16px;
+  }
+
+  .hero-copy{
+    min-width:0;
+  }
+
+  .hero-copy h1{
+    margin:0;
+    font-size:18px;
+    line-height:1.15;
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+
+  .hero-copy p{
+    margin:4px 0 0;
+    font-size:12px;
+    line-height:1.45;
+    color: rgba(255,255,255,.72);
+  }
+
+  .hero-actions{
+    position:relative;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .chip-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 13px;
+    border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.20);
+    backdrop-filter: blur(10px);
+    transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+    white-space:nowrap;
+    font-weight:700;
+  }
+
+  .chip-link:hover{
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.24);
+  }
+
+  .chip-link:active{
+    transform: scale(.98);
+  }
+
+  .hero-bottom{
+    position:relative;
+    margin-top: 14px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .kpis{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .kpi{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+  }
+
+  .kpi .num{
+    font-size:16px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1;
+  }
+
+  .kpi .lab{
+    font-size:11px;
+    color: rgba(255,255,255,.72);
+    line-height:1.2;
+  }
+
+  .search{
+    min-width: 280px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+  }
+
+  .search i{
+    color: rgba(255,255,255,.8);
+    flex: 0 0 auto;
+  }
+
+  .search input{
+    border:none;
+    outline:none;
+    background: transparent;
+    color: rgba(255,255,255,.92);
+    width: 260px;
+    font-size: 13px;
+  }
+
+  .search input::placeholder{
+    color: rgba(255,255,255,.55);
+  }
+
+  .flash-wrap{
+    margin-top:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .flash{
+    padding:14px 16px;
+    border-radius:16px;
+    font-weight:700;
+    box-shadow: var(--softShadow);
+    border:1px solid rgba(34,197,94,.25);
+    background: rgba(34,197,94,.10);
+    color:#065f46;
+  }
+
+  .cardx{
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  .cardx-head{
+    padding: 14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,.92));
+    flex-wrap:wrap;
+  }
+
+  .cardx-head .left{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .cardx-head .left .h{
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    color: var(--text);
+  }
+
+  .cardx-head .left .s{
+    font-size:12px;
+    color: var(--muted);
+  }
+
+  .card-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .table-wrap{
+    width:100%;
+    overflow:auto;
+  }
+
+  table.premium{
+    width:100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 720px;
+  }
+
+  table.premium thead th{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #0f172a;
+    color: rgba(255,255,255,.92);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: .02em;
+    padding: 14px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+
+  table.premium tbody td{
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  table.premium tbody tr{
+    transition: background .18s ease;
+    background: #fff;
+  }
+
+  table.premium tbody tr:hover{
+    background: rgba(34,197,94,.035);
+  }
+
+  .person{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .avatar{
+    width: 38px;
+    height:38px;
+    border-radius: 14px;
+    display:grid;
+    place-items:center;
+    font-weight: 900;
+    letter-spacing:-0.02em;
+    background: rgba(34,197,94,.12);
+    color: #065f46;
+    border: 1px solid rgba(34,197,94,.25);
+    flex: 0 0 auto;
+  }
+
+  .pmeta{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  .pmeta .name{
+    font-weight: 800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 380px;
+  }
+
+  .pmeta .sub{
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .badge-soft{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    color: #0f172a;
+    white-space:nowrap;
+  }
+
+  .badge-soft .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: var(--muted);
+  }
+
+  .badge-soft.ok{
+    background: rgba(34,197,94,.10);
+    border-color: rgba(34,197,94,.22);
+    color: #065f46;
+  }
+
+  .badge-soft.ok .dot{
+    background: var(--brand2);
+  }
+
+  .badge-soft.no{
+    background: rgba(100,116,139,.10);
+    border-color: rgba(100,116,139,.22);
+    color: #334155;
+  }
+
+  .btn-mini{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 12px;
+    text-decoration:none;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: #0f172a;
+    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    box-shadow: var(--softShadow);
+    user-select:none;
+    white-space:nowrap;
+  }
+
+  .btn-mini:hover{
+    background: rgba(34,197,94,.06);
+  }
+
+  .btn-mini:active{
+    transform: scale(.98);
+  }
+
+  .empty{
+    padding: 34px 18px;
+    text-align:center;
+    color: var(--muted);
+  }
+
+  .empty .icon{
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    margin: 0 auto 12px;
+    display:grid;
+    place-items:center;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    color: #0f172a;
+    box-shadow: var(--softShadow);
+  }
+
+  .pagination-wrap{
+    padding: 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .pagination-text{
+    color: var(--muted);
+    font-size:13px;
+  }
+
+  .pagination-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .reveal{
+    animation: reveal .35s ease-out both;
+  }
+
+  @keyframes reveal{
+    from{ opacity:0; transform: translateY(8px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  @media (max-width: 768px){
+    .page-wrap{
+      padding: 8px 0 28px;
     }
 
-    .container {
-        margin-top: 60px;
+    .hero{
+      padding: 16px;
     }
 
-    .title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #343a40;
-        margin-bottom: 30px;
-        text-align: center;
+    .search{
+      min-width: 100%;
     }
 
-    .table-container {
-        background: #ffffff;
-        border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    .search input{
+      width: 100%;
     }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    th {
-        background-color: #28a745;
-        color: white;
-        font-weight: 600;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-
-    .actions a {
-        background-color: #28a745;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 5px;
-        text-decoration: none;
-        transition: background-color 0.3s;
-    }
-
-    .actions a:hover {
-        background-color: #218838;
-    }
-
-    .footer {
-        margin-top: 30px;
-        text-align: center;
-        font-weight: bold;
-        color: #28a745;
-        cursor: pointer;
-    }
-
-    .footer i {
-        margin-right: 5px;
-    }
-
-    .footer:hover {
-        color: #218838;
-    }
+  }
 </style>
 
-<div class="container">
-    <h1 class="title">Member List</h1>
-    <div class="table-container">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Portal ID</th>
-                    <th>Authorized</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for person in persons %}
-                <tr>
-                    <td>{{ person.name }}</td>
-                    <td>{{ person.portal_id }}</td>
-                    <td>
-                        {% if person.authorized %}
-                            <span class="badge bg-success">Yes</span>
-                        {% else %}
-                            <span class="badge bg-secondary">No</span>
-                        {% endif %}
-                    </td>
-                    <td class="actions">
-                        <a href="{% url 'person_authorize' pk=person.pk %}"><i class="fas fa-eye"></i> View</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="page-wrap reveal">
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-title">
+        <div class="hero-badge">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="hero-copy">
+          <h1>Members</h1>
+          <p>View and manage registered members.</p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a class="chip-link" href="{% url 'search_user' %}">
+          <i class="fa-solid fa-user-plus"></i> Register Member
+        </a>
+        <a class="chip-link" href="{% url 'home' %}">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+      </div>
     </div>
 
-    <!-- Back to home -->
-    <div class="footer" onclick="location.href='{% url 'home' %}'">
-        <i class="fas fa-home"></i> Back to Home
+    <div class="hero-bottom">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="num">{{ persons.paginator.count }}</div>
+          <div class="lab">Total Members</div>
+        </div>
+
+        <div class="kpi">
+          <div class="num" id="kpiAuthorized">—</div>
+          <div class="lab">Authorized</div>
+        </div>
+
+        <div class="kpi">
+          <div class="num" id="kpiNotAuthorized">—</div>
+          <div class="lab">Not Authorized</div>
+        </div>
+      </div>
+
+      <div class="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="tableSearch" type="text" placeholder="Search by name or portal ID…" autocomplete="off">
+      </div>
     </div>
+  </div>
+
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for message in messages %}
+        <div class="flash">
+          <i class="fa-solid fa-circle-check"></i> {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="cardx">
+    <div class="cardx-head">
+      <div class="left">
+        <div class="h">All Members</div>
+        <div class="s">Select a member to view details.</div>
+      </div>
+
+      <div class="card-actions">
+        <a class="btn-mini" href="{% url 'stream_all_cameras' %}">
+          <i class="fa-solid fa-camera"></i> Mark Attendance
+        </a>
+        <a class="btn-mini" href="{% url 'person_attendance_list' %}">
+          <i class="fa-solid fa-clipboard-list"></i> Attendance Logs
+        </a>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="premium" id="memberTable">
+        <thead>
+          <tr>
+            <th style="min-width: 320px;">Member</th>
+            <th style="min-width: 140px;">Portal ID</th>
+            <th style="min-width: 160px;">Authorized</th>
+            <th style="min-width: 160px;">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for person in persons %}
+            <tr>
+              <td>
+                <div class="person">
+                  <div class="avatar" aria-hidden="true">
+                    {{ person.name|default:"?"|slice:":1"|upper }}
+                  </div>
+                  <div class="pmeta">
+                    <div class="name">{{ person.name }}</div>
+                    <div class="sub">Member Profile</div>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge-soft">
+                  <i class="fa-solid fa-id-card-clip"></i> {{ person.portal_id }}
+                </span>
+              </td>
+
+              <td>
+                {% if person.authorized %}
+                  <span class="badge-soft ok">
+                    <span class="dot"></span> Yes
+                  </span>
+                {% else %}
+                  <span class="badge-soft no">
+                    <span class="dot"></span> No
+                  </span>
+                {% endif %}
+              </td>
+
+              <td>
+                <a class="btn-mini" href="{% url 'person_detail' pk=person.pk %}">
+                  <i class="fa-solid fa-eye"></i> View
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty">
+                  <div class="icon">
+                    <i class="fa-solid fa-circle-info"></i>
+                  </div>
+                  <div>No members yet. Register a member to get started.</div>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if persons.paginator.num_pages > 1 %}
+      <div class="pagination-wrap">
+        <div class="pagination-text">
+          Page {{ persons.number }} of {{ persons.paginator.num_pages }}
+        </div>
+
+        <div class="pagination-actions">
+          {% if persons.has_previous %}
+            <a class="btn-mini" href="?page=1">
+              <i class="fa-solid fa-angles-left"></i> First
+            </a>
+            <a class="btn-mini" href="?page={{ persons.previous_page_number }}">
+              <i class="fa-solid fa-chevron-left"></i> Previous
+            </a>
+          {% endif %}
+
+          {% if persons.has_next %}
+            <a class="btn-mini" href="?page={{ persons.next_page_number }}">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            <a class="btn-mini" href="?page={{ persons.paginator.num_pages }}">
+              Last <i class="fa-solid fa-angles-right"></i>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
 </div>
+
+<script>
+  (function initKPIs(){
+    const rows = Array.from(document.querySelectorAll("#memberTable tbody tr"));
+    let ok = 0, no = 0;
+
+    rows.forEach(r => {
+      if (r.querySelector("td[colspan]")) return;
+
+      const badge = r.querySelector("td:nth-child(3) .badge-soft");
+      if (!badge) return;
+
+      if (badge.classList.contains("ok")) ok++;
+      else no++;
+    });
+
+    const authorized = document.getElementById("kpiAuthorized");
+    const notAuthorized = document.getElementById("kpiNotAuthorized");
+
+    if (authorized) authorized.textContent = ok;
+    if (notAuthorized) notAuthorized.textContent = no;
+  })();
+
+  const input = document.getElementById("tableSearch");
+  const tbody = document.querySelector("#memberTable tbody");
+  const rows = tbody ? Array.from(tbody.querySelectorAll("tr")) : [];
+
+  let t = null;
+
+  input?.addEventListener("input", () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const q = (input.value || "").trim().toLowerCase();
+
+      rows.forEach(r => {
+        if (r.querySelector("td[colspan]")) return;
+        const text = (r.innerText || "").toLowerCase();
+        r.style.display = text.includes(q) ? "" : "none";
+      });
+    }, 80);
+  });
+</script>
+
 {% endblock %}

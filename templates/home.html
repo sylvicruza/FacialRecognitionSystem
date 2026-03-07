@@ -1,137 +1,664 @@
 {% extends "base.html" %}
+
+{% block page_title %}OHC Dashboard{% endblock %}
+{% block page_subtitle %}Monitor attendance, manage members, and oversee camera setups.{% endblock %}
+
 {% block content %}
 <style>
-    .hero-section {
-        background: linear-gradient(to bottom right, #ffffff, #f4f7fa);
-        border-radius: 16px;
-        padding: 50px 35px;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.06);
-        text-align: center;
-        margin-bottom: 40px;
-        animation: fadeIn 1s ease-in-out;
-    }
+  .home-wrap{
+    max-width:1240px;
+    margin:0 auto;
+  }
 
-    .hero-section h1 {
-        font-size: 2.8rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        color: #0b3c5d;
-    }
+  .hero, .glass-card, .topbar{
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 
-    .hero-section p {
-        font-size: 1.2rem;
-        color: #666;
-        margin-bottom: 35px;
-    }
+  .hero, .glass-card{
+    contain: paint;
+  }
 
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 25px;
-    }
+  .fadeUp{
+    opacity:0;
+    transform: translateY(10px);
+    animation: fadeUp .55s ease forwards;
+  }
+  .d1{ animation-delay: .04s; }
+  .d2{ animation-delay: .08s; }
+  .d3{ animation-delay: .12s; }
+  .d4{ animation-delay: .16s; }
 
-    .card {
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 25px 20px;
-        text-align: center;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
-        transition: all 0.3s ease-in-out;
-        position: relative;
-    }
+  @keyframes fadeUp{
+    to{ opacity:1; transform: translateY(0); }
+  }
 
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
+  .hero{
+    border-radius:22px;
+    padding:20px;
+    background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+    border: 1px solid rgba(255,255,255,.14);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 50px rgba(2,6,23,.18);
+    overflow:hidden;
+    position:relative;
+    margin-bottom:14px;
+  }
 
-    .card a {
-        color: inherit;
-        text-decoration: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+  .hero:before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    background:
+      radial-gradient(600px 240px at 20% 0%, rgba(34,197,94,.20), transparent 55%),
+      radial-gradient(520px 260px at 85% 10%, rgba(56,189,248,.18), transparent 60%);
+    pointer-events:none;
+  }
 
-    .card i {
-        font-size: 2.5rem;
-        color: #fddb3a;
-        margin-bottom: 12px;
-        transition: transform 0.3s ease-in-out;
-    }
+  .hero-inner{
+    position:relative;
+    display:flex;
+    gap:18px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
 
-    .card:hover i {
-        transform: scale(1.1);
-    }
+  .hero-title{
+    min-width:260px;
+  }
 
-    .card p {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #333;
-    }
+  .hero-title h2{
+    margin:0;
+    font-weight:800;
+    letter-spacing:-0.03em;
+    color: rgba(255,255,255,.95);
+    font-size:20px;
+    line-height:1.1;
+  }
 
-    @media (max-width: 768px) {
-        .hero-section h1 {
-            font-size: 2rem;
-        }
+  .hero-title p{
+    margin:6px 0 0;
+    color: rgba(255,255,255,.72);
+    font-size:12px;
+    line-height:1.45;
+    max-width:620px;
+  }
 
-        .card i {
-            font-size: 2rem;
-        }
+  .hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
 
-        .card p {
-            font-size: 1rem;
-        }
-    }
+  .hbtn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border-radius:14px;
+    padding:10px 12px;
+    font-weight:800;
+    font-size:13px;
+    text-decoration:none;
+    transition: transform .05s ease, opacity .2s ease, background .2s ease, box-shadow .2s ease;
+    user-select:none;
+    white-space:nowrap;
+  }
 
-    @keyframes fadeIn {
-        0% {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+  .hbtn:hover{
+    box-shadow: 0 16px 34px rgba(2,6,23,.18);
+  }
+
+  .hbtn:active{
+    transform: scale(.98);
+  }
+
+  .hbtn.primary{
+    background: linear-gradient(135deg, rgba(34,197,94,1), rgba(22,163,74,1));
+    color:#052012;
+    box-shadow: 0 18px 40px rgba(34,197,94,.18);
+  }
+
+  .hbtn.glass{
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    color: rgba(255,255,255,.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .hbtn.glass:hover{
+    background: rgba(255,255,255,.10);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.6fr .9fr;
+    gap:14px;
+    align-items:start;
+  }
+
+  @media (max-width: 1100px){
+    .grid{ grid-template-columns:1fr; }
+  }
+
+  .glass-card{
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius:22px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 50px rgba(2,6,23,.16);
+    overflow:hidden;
+  }
+
+  .card-head{
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+
+  .card-head .t{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .card-head .t b{
+    color: rgba(255,255,255,.95);
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+
+  .card-head .t span{
+    color: rgba(255,255,255,.70);
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.85);
+    font-size:12px;
+    white-space:nowrap;
+  }
+
+  .kpis{
+    padding:14px;
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:12px;
+  }
+
+  @media (max-width: 560px){
+    .kpis{ grid-template-columns:1fr; }
+  }
+
+  .kpi{
+    background: rgba(255,255,255,.94);
+    border: 1px solid rgba(226,232,240,.9);
+    border-radius:18px;
+    padding:14px;
+    box-shadow: 0 12px 24px rgba(15,23,42,.08);
+    transition: transform .08s ease, box-shadow .2s ease;
+    cursor:pointer;
+    position: relative;
+    overflow:hidden;
+  }
+
+  .kpi:before{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    background:
+      radial-gradient(320px 120px at 20% 0%, rgba(34,197,94,.18), transparent 55%),
+      radial-gradient(260px 140px at 90% 20%, rgba(56,189,248,.14), transparent 60%);
+    opacity:0;
+    transition: opacity .25s ease;
+  }
+
+  .kpi:hover:before{ opacity:1; }
+
+  .kpi:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(15,23,42,.12);
+  }
+
+  .kpi a{
+    text-decoration:none;
+    color:inherit;
+    display:block;
+    position:relative;
+  }
+
+  .kpi-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+
+  .ico{
+    width:42px;
+    height:42px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    color:#06121d;
+    font-size:16px;
+    background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(56,189,248,.18));
+    border: 1px solid rgba(226,232,240,.8);
+  }
+
+  .label{
+    margin-top:10px;
+    color:#334155;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+
+  .val{
+    margin-top:4px;
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:-0.03em;
+    color:#0f172a;
+    line-height:1;
+  }
+
+  .sub{
+    margin-top:6px;
+    color:#64748b;
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .quick{
+    padding:14px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+
+  @media (max-width: 640px){
+    .quick{ grid-template-columns:1fr; }
+  }
+
+  .qa{
+    background: rgba(255,255,255,.94);
+    border: 1px solid rgba(226,232,240,.9);
+    border-radius:18px;
+    padding:14px;
+    box-shadow: 0 12px 24px rgba(15,23,42,.08);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition: transform .08s ease, box-shadow .2s ease;
+  }
+
+  .qa:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px rgba(15,23,42,.12);
+  }
+
+  .qa a{
+    text-decoration:none;
+    color:inherit;
+  }
+
+  .qa .row1{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .qa .title{
+    font-weight:800;
+    letter-spacing:-0.02em;
+    color:#0f172a;
+  }
+
+  .qa .desc{
+    color:#64748b;
+    font-size:12px;
+    line-height:1.45;
+    margin-top:-6px;
+  }
+
+  .side{
+    position: sticky;
+    top: 92px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  @media (max-width:1100px){
+    .side{ position:static; }
+  }
+
+  .mini{
+    padding:14px;
+  }
+
+  .mini .line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    color: rgba(255,255,255,.85);
+    font-size:13px;
+    gap:12px;
+  }
+
+  .mini .line:last-child{
+    border-bottom:none;
+  }
+
+  .pill2{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    color: rgba(255,255,255,.92);
+    white-space:nowrap;
+  }
+
+  .note{
+    padding:14px;
+    color: rgba(255,255,255,.78);
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .note .tip{
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+
+  .note .tip:last-child{
+    border-bottom:none;
+    margin-bottom:0;
+    padding-bottom:0;
+  }
+
+  .note b{
+    color: rgba(255,255,255,.95);
+  }
+
+  .pulseDot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34,197,94,.55);
+    animation: pulse 1.6s infinite;
+    display:inline-block;
+  }
+
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
+    70%{ box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
 </style>
 
-<div class="hero-section">
-    <h1>Welcome to Opened Heavens Chapel Dashboard</h1>
-    <p>Monitor attendance, manage members, and oversee camera setups — all in one place.</p>
+<div class="home-wrap">
 
-    <div class="dashboard-grid">
-        <div class="card">
-            <a href="{% url 'person_list' %}">
-                <i class="fas fa-users"></i>
-                <p>Total Members: {{ total_persons }}</p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="{% url 'person_attendance_list' %}">
-                <i class="fas fa-calendar-check"></i>
-                <p>Total Attendance Records: {{ total_attendance }}</p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="{% url 'person_attendance_list' %}">
-                <i class="fas fa-sign-in-alt"></i>
-                <p>Total Check-Ins: {{ total_checkins }}</p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="{% url 'person_attendance_list' %}">
-                <i class="fas fa-sign-out-alt"></i>
-                <p>Total Check-Outs: {{ total_checkouts }}</p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="{% url 'camera_config_list' %}">
-                <i class="fas fa-video"></i>
-                <p>Total Cameras: {{ total_cameras }}</p>
-            </a>
-        </div>
+  <div class="hero fadeUp d1">
+    <div class="hero-inner">
+      <div class="hero-title">
+        <h2>Welcome back 👋</h2>
+        <p>Fast access to registration, attendance, and camera setup.</p>
+      </div>
+
+      <div class="hero-actions">
+        <a class="hbtn primary" href="{% url 'search_user' %}">
+          <i class="fa-solid fa-user-plus"></i> Register Member
+        </a>
+        <a class="hbtn glass" href="{% url 'stream_all_cameras' %}">
+          <span class="pulseDot"></span> Mark Attendance
+        </a>
+        <a class="hbtn glass" href="{% url 'camera_config_list' %}">
+          <i class="fa-solid fa-gear"></i> Camera Setup
+        </a>
+      </div>
     </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="glass-card fadeUp d2">
+      <div class="card-head">
+        <div class="t">
+          <b>Overview</b>
+          <span>Key system numbers</span>
+        </div>
+        <div class="chip">
+          <i class="fa-regular fa-calendar"></i>
+          <span id="todayDate"></span>
+        </div>
+      </div>
+
+      <div class="kpis">
+
+        <div class="kpi" onclick="location.href='{% url 'person_list' %}'">
+          <a href="{% url 'person_list' %}">
+            <div class="kpi-top">
+              <div class="ico"><i class="fa-solid fa-users"></i></div>
+              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+            <div class="label">Members</div>
+            <div class="val" data-count="{{ total_persons }}">0</div>
+            <div class="sub">All registered members</div>
+          </a>
+        </div>
+
+        <div class="kpi" onclick="location.href='{% url 'person_attendance_list' %}'">
+          <a href="{% url 'person_attendance_list' %}">
+            <div class="kpi-top">
+              <div class="ico"><i class="fa-solid fa-calendar-check"></i></div>
+              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+            <div class="label">Attendance</div>
+            <div class="val" data-count="{{ total_attendance }}">0</div>
+            <div class="sub">Attendance records</div>
+          </a>
+        </div>
+
+        <div class="kpi" onclick="location.href='{% url 'camera_config_list' %}'">
+          <a href="{% url 'camera_config_list' %}">
+            <div class="kpi-top">
+              <div class="ico"><i class="fa-solid fa-camera-retro"></i></div>
+              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+            <div class="label">Cameras</div>
+            <div class="val" data-count="{{ total_cameras }}">0</div>
+            <div class="sub">Saved camera setups</div>
+          </a>
+        </div>
+
+        <div class="kpi" onclick="location.href='{% url 'stream_all_cameras' %}'">
+          <a href="{% url 'stream_all_cameras' %}">
+            <div class="kpi-top">
+              <div class="ico"><i class="fa-solid fa-video"></i></div>
+              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+            <div class="label">Mark Attendance</div>
+            <div class="val">Open</div>
+            <div class="sub">Open live monitor</div>
+          </a>
+        </div>
+
+      </div>
+
+      <div class="card-head" style="border-top:1px solid rgba(255,255,255,.10); border-bottom:none;">
+        <div class="t">
+          <b>Quick Actions</b>
+          <span>Common tasks</span>
+        </div>
+      </div>
+
+      <div class="quick">
+        <div class="qa">
+          <a href="{% url 'search_user' %}">
+            <div class="row1">
+              <div class="ico"><i class="fa-solid fa-user-plus"></i></div>
+              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
+            </div>
+            <div class="title">Register Member</div>
+            <div class="desc">Search a portal record and capture a face photo.</div>
+          </a>
+        </div>
+
+        <div class="qa">
+          <a href="{% url 'stream_all_cameras' %}">
+            <div class="row1">
+              <div class="ico"><i class="fa-solid fa-camera"></i></div>
+              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
+            </div>
+            <div class="title">Mark Attendance</div>
+            <div class="desc">Open live streams and record attendance.</div>
+          </a>
+        </div>
+
+        <div class="qa">
+          <a href="{% url 'person_attendance_list' %}">
+            <div class="row1">
+              <div class="ico"><i class="fa-solid fa-clipboard-list"></i></div>
+              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
+            </div>
+            <div class="title">Attendance Logs</div>
+            <div class="desc">Search and review attendance history.</div>
+          </a>
+        </div>
+
+        <div class="qa">
+          <a href="{% url 'camera_config_list' %}">
+            <div class="row1">
+              <div class="ico"><i class="fa-solid fa-gear"></i></div>
+              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
+            </div>
+            <div class="title">Camera Setup</div>
+            <div class="desc">Add sources and tune thresholds.</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="side fadeUp d3">
+      <div class="glass-card">
+        <div class="card-head">
+          <div class="t">
+            <b>Status</b>
+            <span>Current snapshot</span>
+          </div>
+          <div class="chip"><i class="fa-solid fa-shield-halved"></i> Secure</div>
+        </div>
+
+        <div class="mini">
+          <div class="line">
+            <span><i class="fa-solid fa-clock"></i> Time</span>
+            <span class="pill2" id="clock"></span>
+          </div>
+          <div class="line">
+            <span><i class="fa-solid fa-users"></i> Members</span>
+            <span class="pill2">{{ total_persons }}</span>
+          </div>
+          <div class="line">
+            <span><i class="fa-solid fa-camera-retro"></i> Cameras</span>
+            <span class="pill2">{{ total_cameras }}</span>
+          </div>
+          <div class="line">
+            <span><i class="fa-solid fa-clipboard-check"></i> Attendance</span>
+            <span class="pill2">{{ total_attendance }}</span>
+          </div>
+          <div class="line">
+            <span><i class="fa-solid fa-right-to-bracket"></i> Check-Ins</span>
+            <span class="pill2">{{ total_check_ins }}</span>
+          </div>
+          <div class="line">
+            <span><i class="fa-solid fa-right-from-bracket"></i> Check-Outs</span>
+            <span class="pill2">{{ total_check_outs }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card fadeUp d4">
+        <div class="card-head">
+          <div class="t">
+            <b>Tips</b>
+            <span>Better capture and smoother flow</span>
+          </div>
+          <div class="chip"><i class="fa-solid fa-lightbulb"></i> Guide</div>
+        </div>
+
+        <div class="note">
+          <div class="tip"><b>Registration:</b> Use a well-lit spot near the entrance.</div>
+          <div class="tip"><b>Face capture:</b> Keep the face clear and centered.</div>
+          <div class="tip"><b>Attendance:</b> Keep the live monitor open during service.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<script>
+  const pad = (n)=> String(n).padStart(2,'0');
+
+  const dateEl = document.getElementById("todayDate");
+  const clockEl = document.getElementById("clock");
+
+  let lastDate = "";
+  function tick(){
+    const now = new Date();
+    const d = now.toISOString().slice(0,10);
+    if(d !== lastDate){
+      dateEl.textContent = d;
+      lastDate = d;
+    }
+    clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  function animateCount(el, target){
+    const start = 0;
+    const dur = 900;
+    const t0 = performance.now();
+    const fmt = new Intl.NumberFormat();
+
+    function step(t){
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = Math.floor(start + (target - start) * eased);
+      el.textContent = fmt.format(val);
+      if(p < 1) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll(".val[data-count]").forEach(el=>{
+      const raw = el.getAttribute("data-count") || "0";
+      const target = parseInt(raw, 10) || 0;
+      animateCount(el, target);
+    });
+  });
+</script>
 {% endblock %}

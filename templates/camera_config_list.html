@@ -2,138 +2,530 @@
 {% block content %}
 
 <style>
-    body {
-        background-color: #f4f6f9;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  :root{
+    --brandA:#0b3c5d;
+    --brandB:#1c5874;
+    --gold:#fddb3a;
 
-    .container {
-        max-width: 900px;
-        margin: 60px auto;
-        padding: 30px;
-        background-color: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
-    }
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
 
-    h1 {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: bold;
-        color: #0d6efd;
-        margin-bottom: 30px;
-    }
+    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
+    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 30px;
-    }
+    --ok:#16a34a;
+    --warn:#f59e0b;
+    --bad:#ef4444;
 
-    thead {
-        background-color: #0d6efd;
-        color: white;
-    }
+    --radius: 20px;
+  }
 
-    th, td {
-        text-align: left;
-        padding: 14px 16px;
-        border-bottom: 1px solid #dee2e6;
-        font-size: 0.95rem;
-    }
+  .page-wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+  }
 
-    tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
+  .hero{
+    border-radius: 24px;
+    padding: 18px 18px 16px;
+    background:
+      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.16), transparent 55%),
+      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.16), transparent 55%),
+      linear-gradient(180deg, var(--brandA), var(--brandB));
+    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
+    color: rgba(255,255,255,.94);
+    position:relative;
+    overflow:hidden;
+    animation: reveal .35s ease-out both;
+  }
 
-    tr:hover {
-        background-color: #e9ecef;
-    }
+  @keyframes reveal{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
 
-    .actions a {
-        text-decoration: none;
-        font-weight: 600;
-        padding: 6px 12px;
-        border-radius: 6px;
-        transition: background-color 0.3s ease;
-        margin-right: 8px;
-    }
+  .hero-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 12px;
+    flex-wrap:wrap;
+  }
 
-    .actions a:hover {
-        opacity: 0.85;
-    }
+  .title{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-width: 280px;
+  }
 
-    .edit-btn {
-        background-color: #ffc107;
-        color: #212529;
-    }
+  .avatar{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display:grid;
+    place-items:center;
+    font-weight: 900;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.10);
+    color: var(--gold);
+    flex: 0 0 auto;
+  }
 
-    .delete-btn {
-        background-color: #dc3545;
-        color: white;
-    }
+  .title h1{
+    margin:0;
+    font-size: 18px;
+    line-height:1.15;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+  }
 
-    .create-new-btn,
-    .back-home-btn {
-        display: inline-block;
-        text-align: center;
-        padding: 12px 20px;
-        margin-right: 10px;
-        font-weight: bold;
-        font-size: 1rem;
-        border-radius: 8px;
-        text-decoration: none;
-        transition: background-color 0.3s ease;
-    }
+  .title p{
+    margin:4px 0 0;
+    font-size: 12px;
+    line-height:1.45;
+    color: rgba(255,255,255,.72);
+    max-width: 680px;
+  }
 
-    .create-new-btn {
-        background-color: #198754;
-        color: white;
-    }
+  .hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
 
-    .create-new-btn:hover {
-        background-color: #157347;
-    }
+  .chip-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 13px;
+    border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.20);
+    backdrop-filter: blur(10px);
+    transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+    white-space: nowrap;
+    font-weight:700;
+  }
 
-    .back-home-btn {
-        background-color: #6c757d;
-        color: white;
-    }
+  .chip-link:hover{
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.24);
+  }
 
-    .back-home-btn:hover {
-        background-color: #5a6268;
-    }
+  .chip-link:active{ transform: scale(.98); }
+
+  .cardx{
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: reveal2 .38s ease-out both;
+  }
+
+  @keyframes reveal2{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .cardx-head{
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .cardx-head .h{
+    font-size:15px;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+    color: var(--text);
+  }
+
+  .cardx-head .s{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .table-shell{
+    border-radius: 18px;
+    overflow: hidden;
+    margin: 0 16px 16px;
+    border: 1px solid rgba(226,232,240,.95);
+  }
+
+  table.table{ margin:0; }
+
+  .table thead th{
+    background: linear-gradient(135deg, rgba(11,60,93,1), rgba(28,88,116,1)) !important;
+    color: rgba(255,255,255,.95) !important;
+    font-weight: 800;
+    border-color: rgba(255,255,255,.12) !important;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 12px;
+    letter-spacing: .02em;
+  }
+
+  .table tbody td{
+    color: var(--text);
+    border-color: rgba(226,232,240,.85);
+    vertical-align: middle;
+  }
+
+  .table tbody tr:hover{
+    background: rgba(14,165,233,.06);
+  }
+
+  .name-cell{
+    min-width: 170px;
+  }
+
+  .name-title{
+    font-weight: 800;
+    letter-spacing:-0.01em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 220px;
+  }
+
+  .name-sub{
+    margin-top:2px;
+    font-size:12px;
+    color: var(--muted);
+  }
+
+  .source-box{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .source-label{
+    font-size:11px;
+    font-weight:800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .mono{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    color: rgba(15,23,42,.88);
+    line-height:1.45;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    background:#f8fafc;
+    border:1px solid rgba(226,232,240,.95);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border-radius: 999px;
+    padding: 8px 10px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid rgba(226,232,240,.95);
+    background: #fff;
+    box-shadow: var(--softShadow);
+    white-space: nowrap;
+    line-height:1;
+  }
+
+  .pill.ok{
+    border-color: rgba(22,163,74,.30);
+    background: rgba(22,163,74,.10);
+    color: #065f46;
+  }
+
+  .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background: var(--ok);
+    flex: 0 0 auto;
+  }
+
+  .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration:none;
+    border: 1px solid var(--border);
+    background:#fff;
+    color:#0f172a;
+    box-shadow: var(--softShadow);
+    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    user-select:none;
+    white-space: nowrap;
+  }
+
+  .btnx:hover{ background: rgba(2,6,23,.02); }
+  .btnx:active{ transform: scale(.98); }
+
+  .btnx.success{
+    border: none;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #052012;
+    box-shadow: 0 20px 40px rgba(34,197,94,.18);
+  }
+
+  .btnx.ghost{
+    background: #f8fafc;
+  }
+
+  .row-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+
+  .iconbtn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid rgba(226,232,240,.95);
+    background:#fff;
+    box-shadow: var(--softShadow);
+    transition: transform .06s ease, background .2s ease;
+    user-select:none;
+    white-space: nowrap;
+    text-decoration:none;
+    color: var(--text);
+  }
+
+  .iconbtn:active{ transform: scale(.98); }
+
+  .iconbtn.warn{
+    border-color: rgba(245,158,11,.30);
+    background: rgba(245,158,11,.10);
+    color: #92400e;
+  }
+
+  .iconbtn.danger{
+    border-color: rgba(239,68,68,.30);
+    background: rgba(239,68,68,.10);
+    color: #991b1b;
+  }
+
+  .footerbar{
+    padding: 0 16px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .hint{
+    font-size: 12px;
+    color: var(--muted);
+    line-height:1.45;
+  }
+
+  .empty{
+    padding: 28px 16px 16px;
+    text-align:center;
+    color: var(--muted);
+  }
+
+  .empty .ic{
+    width: 52px;
+    height: 52px;
+    border-radius: 20px;
+    margin: 0 auto 10px;
+    display:grid;
+    place-items:center;
+    background: rgba(148,163,184,.16);
+    border: 1px solid rgba(226,232,240,.95);
+    box-shadow: var(--softShadow);
+  }
+
+  .empty h3{
+    margin: 6px 0 4px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .empty p{
+    margin:0;
+    font-size: 13px;
+  }
+
+  .modal .btn{
+    border-radius: 14px;
+    font-weight: 800;
+    height: 42px;
+    padding: 0 16px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
 </style>
 
-<div class="container">
-    <h1>Saved Camera Configurations</h1>
+<div class="page-wrap">
 
-    <table>
+  <div class="hero">
+    <div class="hero-top">
+      <div class="title">
+        <div class="avatar" aria-hidden="true">
+          <i class="fa-solid fa-video"></i>
+        </div>
+        <div>
+          <h1>Camera Setup</h1>
+          <p>Manage camera sources and recognition thresholds.</p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a class="chip-link" href="{% url 'home' %}">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a class="chip-link" href="{% url 'stream_all_cameras' %}">
+          <i class="fa-solid fa-eye"></i> Live View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cardx">
+    <div class="cardx-head">
+      <div>
+        <div class="h">Configurations</div>
+        <div class="s">Saved camera sources.</div>
+      </div>
+
+      <a class="btnx success" href="{% url 'camera_config_create' %}">
+        <i class="fa-solid fa-plus"></i> New Configuration
+      </a>
+    </div>
+
+    <div class="table-shell table-responsive">
+      <table class="table table-hover align-middle">
         <thead>
-            <tr>
-                <th>Name</th>
-                <th>Camera Source</th>
-                <th>Threshold</th>
-                <th>Actions</th>
-            </tr>
+          <tr>
+            <th style="width: 220px;">Name</th>
+            <th>Source</th>
+            <th style="width: 140px;">Threshold</th>
+            <th style="width: 220px; text-align:right;">Actions</th>
+          </tr>
         </thead>
-        <tbody>
-            {% for config in configs %}
-            <tr>
-                <td>{{ config.name }}</td>
-                <td>{{ config.camera_source }}</td>
-                <td>{{ config.threshold }}</td>
-                <td class="actions">
-                    <a href="{% url 'camera_config_update' config.id %}" class="edit-btn">Edit</a>
-                    <a href="{% url 'camera_config_delete' config.id %}" class="delete-btn">Delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
-    <a href="{% url 'camera_config_create' %}" class="create-new-btn"><i class="fas fa-plus"></i> Create New Configuration</a>
-    <a href="{% url 'home' %}" class="back-home-btn"><i class="fas fa-home"></i> Back to Home</a>
+        <tbody>
+          {% for config in configs %}
+          <tr>
+            <td class="name-cell">
+              <div class="name-title">{{ config.name }}</div>
+              <div class="name-sub">Camera Configuration</div>
+            </td>
+
+            <td>
+              {% if config.camera_source %}
+                <div class="source-box">
+                  <div class="source-label">Camera Source</div>
+                  <div class="mono">{{ config.camera_source }}</div>
+                </div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="pill ok">
+                <span class="dot"></span>
+                {{ config.threshold }}
+              </span>
+            </td>
+
+            <td>
+              <div class="row-actions">
+                <a href="{% url 'camera_config_update' config.id %}" class="iconbtn warn">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit
+                </a>
+
+                <form method="POST"
+                      action="{% url 'camera_config_delete' config.id %}"
+                      style="display:inline;"
+                      onsubmit="return confirm('Delete camera configuration &quot;{{ config.name|escapejs }}&quot;?');">
+                  {% csrf_token %}
+                  <button type="submit" class="iconbtn danger">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4">
+              <div class="empty">
+                <div class="ic"><i class="fa-solid fa-circle-info"></i></div>
+                <h3>No configurations yet</h3>
+                <p>Create one to start streaming.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footerbar">
+      <div class="hint">
+        Use <span class="mono" style="padding:2px 8px; border-radius:999px;">0</span>,
+        <span class="mono" style="padding:2px 8px; border-radius:999px;">1</span> for local webcams,
+        or paste an RTSP/HTTP URL for IP cameras.
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btnx ghost" href="{% url 'stream_all_cameras' %}">
+          <i class="fa-solid fa-camera"></i> Open Live View
+        </a>
+        <a class="btnx" href="{% url 'home' %}">
+          <i class="fa-solid fa-arrow-left"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 {% endblock %}

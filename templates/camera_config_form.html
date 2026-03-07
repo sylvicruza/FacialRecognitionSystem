@@ -2,147 +2,483 @@
 {% block content %}
 
 <style>
-    body {
-        background-color: #f0f2f5;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+  :root{
+    --brandA:#0b3c5d;
+    --brandB:#1c5874;
+    --gold:#fddb3a;
 
-    .form-container {
-        max-width: 600px;
-        margin: 60px auto;
-        background-color: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-        padding: 30px 40px;
-    }
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
 
-    .form-container h1 {
-        font-size: 1.8rem;
-        color: #0d6efd;
-        margin-bottom: 25px;
-        text-align: center;
-        font-weight: 700;
-    }
+    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
+    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
 
-    label {
-        font-weight: 600;
-        margin-top: 15px;
-        display: block;
-        color: #333;
-    }
+    --ok:#16a34a;
+    --warn:#f59e0b;
+    --bad:#ef4444;
 
-    input[type="text"],
-    input[type="number"] {
-        width: 100%;
-        padding: 12px 15px;
-        margin-top: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.3s ease;
-    }
+    --radius: 20px;
+  }
 
-    input:focus {
-        border-color: #0d6efd;
-        outline: none;
-    }
+  .page-wrap{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+  }
 
-    button[type="submit"] {
-        width: 100%;
-        margin-top: 25px;
-        padding: 12px;
-        background-color: #0d6efd;
-        border: none;
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
-    }
+  .hero{
+    border-radius: 24px;
+    padding: 18px 18px 16px;
+    background:
+      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.16), transparent 55%),
+      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.16), transparent 55%),
+      linear-gradient(180deg, var(--brandA), var(--brandB));
+    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
+    color: rgba(255,255,255,.94);
+    position:relative;
+    overflow:hidden;
+    animation: reveal .35s ease-out both;
+  }
 
-    button[type="submit"]:hover {
-        background-color: #0b5ed7;
-    }
+  @keyframes reveal{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
 
-    .nav-button {
-        margin-top: 15px;
-        width: 48%;
-        padding: 10px;
-        background-color: #6c757d;
-        border: none;
-        color: white;
-        font-weight: 600;
-        font-size: 0.95rem;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
-    }
+  .hero-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 12px;
+    flex-wrap:wrap;
+  }
 
-    .nav-button:hover {
-        background-color: #5a6268;
-    }
+  .title{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-width: 280px;
+  }
 
-    .nav-container {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-    }
+  .avatar{
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display:grid;
+    place-items:center;
+    font-weight: 900;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.10);
+    color: var(--gold);
+    flex: 0 0 auto;
+  }
 
-    .alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 15px;
-        font-weight: 500;
-    }
+  .title h1{
+    margin:0;
+    font-size: 18px;
+    line-height:1.15;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+  }
 
-    .alert-success {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
+  .title p{
+    margin:4px 0 0;
+    font-size: 12px;
+    line-height:1.45;
+    color: rgba(255,255,255,.72);
+    max-width: 640px;
+  }
 
-    .alert-error,
-    .alert-danger {
-        background-color: #f8d7da;
-        color: #842029;
-    }
+  .hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
 
-    .alert-info {
-        background-color: #cff4fc;
-        color: #055160;
-    }
+  .chip-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 13px;
+    border-radius: 999px;
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.20);
+    backdrop-filter: blur(10px);
+    transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+    white-space: nowrap;
+    font-weight:700;
+  }
 
+  .chip-link:hover{
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.24);
+  }
+
+  .chip-link:active{
+    transform: scale(.98);
+  }
+
+  .cardx{
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: reveal2 .38s ease-out both;
+  }
+
+  @keyframes reveal2{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .cardx-head{
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .cardx-head .h{
+    font-size:15px;
+    font-weight: 800;
+    letter-spacing:-0.02em;
+    color: var(--text);
+  }
+
+  .cardx-head .s{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .mini{
+    display:inline-flex;
+    align-items:flex-start;
+    gap:8px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(2,6,23,.03);
+    border: 1px solid rgba(226,232,240,.95);
+    max-width: 360px;
+  }
+
+  .mini .help{
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .form-wrap{
+    padding: 16px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 860px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .fgroup{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .fgroup.full{
+    grid-column: 1 / -1;
+  }
+
+  .fgroup label{
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .soft{
+    border-radius: 16px !important;
+    border: 1px solid var(--border) !important;
+    padding: 12px 12px !important;
+    background:#fff !important;
+    box-shadow: var(--softShadow);
+    outline: none !important;
+    min-height: 46px;
+  }
+
+  .soft:focus{
+    border-color: rgba(37,99,235,.55) !important;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12), var(--softShadow) !important;
+  }
+
+  .help{
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .mono{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+  }
+
+  .alertx{
+    margin: 16px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(226,232,240,.95);
+    box-shadow: var(--softShadow);
+    font-weight: 700;
+    font-size: 13px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+  }
+
+  .alertx.success{
+    background: rgba(22,163,74,.10);
+    border-color: rgba(22,163,74,.25);
+    color:#065f46;
+  }
+
+  .alertx.error,
+  .alertx.danger{
+    background: rgba(239,68,68,.10);
+    border-color: rgba(239,68,68,.25);
+    color:#991b1b;
+  }
+
+  .alertx.info{
+    background: rgba(14,165,233,.10);
+    border-color: rgba(14,165,233,.22);
+    color:#0b3c5d;
+  }
+
+  .alertx .ic{
+    width: 30px;
+    height: 30px;
+    border-radius: 12px;
+    display:grid;
+    place-items:center;
+    background: rgba(255,255,255,.65);
+    border: 1px solid rgba(255,255,255,.55);
+    flex: 0 0 auto;
+  }
+
+  .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration:none;
+    border: 1px solid var(--border);
+    background:#fff;
+    color:#0f172a;
+    box-shadow: var(--softShadow);
+    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    user-select:none;
+    white-space: nowrap;
+  }
+
+  .btnx:hover{ background: rgba(2,6,23,.02); }
+  .btnx:active{ transform: scale(.98); }
+
+  .btnx.primary{
+    border: none;
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #061225;
+    box-shadow: 0 20px 40px rgba(37,99,235,.18);
+  }
+
+  .btnx.ghost{
+    background: #f8fafc;
+  }
+
+  .actions{
+    padding: 0 16px 16px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .actions .left,
+  .actions .right{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
 </style>
 
-<div class="form-container">
-    <h1>{{ config.name|default:"Create Camera Configuration" }}</h1>
+<div class="page-wrap">
 
-    <!-- Display messages -->
-    {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
+  <div class="hero">
+    <div class="hero-top">
+      <div class="title">
+        <div class="avatar" aria-hidden="true">
+          <i class="fa-solid fa-sliders"></i>
         </div>
+        <div>
+          <h1>
+            {% if config and config.id %}
+              Edit Camera Setup
+            {% else %}
+              New Camera Setup
+            {% endif %}
+          </h1>
+          <p>Add a camera source and threshold.</p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a class="chip-link" href="{% url 'camera_config_list' %}">
+          <i class="fa-solid fa-list"></i> Config List
+        </a>
+        <a class="chip-link" href="{% url 'home' %}">
+          <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cardx">
+
+    <div class="cardx-head">
+      <div>
+        <div class="h">Details</div>
+        <div class="s">Save a webcam index or stream URL.</div>
+      </div>
+
+      <div class="mini">
+        <i class="fa-solid fa-circle-info"></i>
+        <div class="help">
+          Use <span class="mono">0</span>, <span class="mono">1</span>, etc. for local webcams.
+        </div>
+      </div>
+    </div>
+
+    {% for message in messages %}
+      <div class="alertx {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+        <div class="ic">
+          {% if 'success' in message.tags %}
+            <i class="fa-solid fa-check"></i>
+          {% elif 'error' in message.tags or 'danger' in message.tags %}
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          {% else %}
+            <i class="fa-solid fa-circle-info"></i>
+          {% endif %}
+        </div>
+        <div>{{ message }}</div>
+      </div>
     {% endfor %}
 
-    <form method="POST">
+    <div class="form-wrap">
+      <form method="POST" novalidate>
         {% csrf_token %}
 
-        <label for="name">Camera Name:</label>
-        <input type="text" id="name" name="name" value="{{ config.name|default:'' }}" placeholder="Enter camera name" required>
+        <div class="grid">
 
-        <label for="camera_source">Camera Source:</label>
-        <input type="text" id="camera_source" name="camera_source" value="{{ config.camera_source|default:'' }}"
-               placeholder="e.g., 0 or http://10.129.101.122:4747/video" required>
+          <div class="fgroup">
+            <label for="name">
+              <i class="fa-solid fa-tag"></i> Name
+            </label>
+            <input
+              class="form-control soft"
+              type="text"
+              id="name"
+              name="name"
+              value="{{ config.name|default:'' }}"
+              placeholder="e.g. Foyer Cam"
+              required
+            >
+          </div>
 
-        <label for="threshold">Threshold:</label>
-        <input type="number" step="0.01" id="threshold" name="threshold" value="{{ config.threshold|default:0.6 }}"
-               placeholder="0.0 to 1.0" required>
+          <div class="fgroup">
+            <label for="threshold">
+              <i class="fa-solid fa-bullseye"></i> Threshold
+            </label>
+            <input
+              class="form-control soft"
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              id="threshold"
+              name="threshold"
+              value="{{ config.threshold|default:0.6 }}"
+              placeholder="0.0 to 1.0"
+              required
+            >
+            <div class="help">Recommended: <span class="mono">0.55</span> to <span class="mono">0.70</span></div>
+          </div>
 
-        <button type="submit">Save</button>
-    </form>
+          <div class="fgroup full">
+            <label for="camera_source">
+              <i class="fa-solid fa-link"></i> Camera Source
+            </label>
+            <input
+              class="form-control soft"
+              type="text"
+              id="camera_source"
+              name="camera_source"
+              value="{{ config.camera_source|default:'' }}"
+              placeholder="e.g. 0 or rtsp://... or http://..."
+              required
+            >
+            <div class="help">
+              Supports webcam index, RTSP, or HTTP stream.
+            </div>
+          </div>
 
-    <div class="nav-container">
-        <button class="nav-button" onclick="location.href='{% url 'camera_config_list' %}'">Back to List</button>
-        <button class="nav-button" onclick="location.href='{% url 'home' %}'">Back to Home</button>
+        </div>
+
+        <div class="actions">
+          <div class="left">
+            <button type="submit" class="btnx primary">
+              <i class="fa-solid fa-floppy-disk"></i> Save
+            </button>
+          </div>
+
+          <div class="right">
+            <a class="btnx ghost" href="{% url 'camera_config_list' %}">
+              <i class="fa-solid fa-arrow-left"></i> Back to List
+            </a>
+            <a class="btnx" href="{% url 'home' %}">
+              <i class="fa-solid fa-house"></i> Home
+            </a>
+          </div>
+        </div>
+
+      </form>
     </div>
+
+  </div>
+
 </div>
 
 {% endblock %}

@@ -1,37 +1,1001 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mx-auto p-4">
-  <h1 class="text-3xl font-bold mb-6 text-center">🎥 Live Attendance Streams</h1>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for config in configs %}
-    <div class="bg-white shadow-md rounded-2xl overflow-hidden border border-gray-200">
-      <div class="p-4">
-        <h2 class="text-lg font-semibold text-center mb-2">{{ config.name }}</h2>
-        <img id="cam-{{ config.id }}" src="{% url 'video_feed' config.id %}" class="w-full aspect-video object-cover rounded">
-        <div class="text-center mt-2">
-          <button onclick="toggleStream({{ config.id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full text-sm shadow">
-            ⏯ Pause / Resume
-          </button>
-        </div>
-        <div id="status-{{ config.id }}" class="text-center text-sm text-gray-500 mt-1">Recognizing...</div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendance Monitor</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(17,24,39,.08);
+      --brand:#0ea5e9;
+      --brand2:#2563eb;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --radius:16px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .page{
+      max-width:1280px;
+      margin:24px auto;
+      padding:0 18px 40px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:16px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+
+    .title h1{
+      margin:0;
+      font-size:30px;
+      line-height:1.05;
+      letter-spacing:-0.03em;
+      font-weight:900;
+    }
+
+    .title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .topbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    @media (max-width: 980px){
+      .header{ align-items:flex-start; }
+      .topbar{ justify-content:flex-start; }
+    }
+
+    .chip{
+      background:#eef2ff;
+      border:1px solid #e0e7ff;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      color:#3730a3;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      text-decoration:none;
+      white-space:nowrap;
+      min-height:42px;
+    }
+
+    .chip.neutral{
+      background:#fff;
+      border-color:var(--border);
+      color:#374151;
+    }
+
+    .mode-btn{
+      border:none;
+      min-height:46px;
+      padding:0 16px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg, var(--brand), var(--brand2));
+      color:#fff;
+      box-shadow:0 10px 20px rgba(37,99,235,.18);
+      transition:transform .05s ease, box-shadow .2s ease, filter .2s ease;
+      white-space:nowrap;
+    }
+
+    .mode-btn:hover{ filter:brightness(.98); }
+    .mode-btn:active{ transform:scale(.98); }
+
+    .layout{
+      display:grid;
+      grid-template-columns:1.6fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    @media (max-width: 980px){
+      .layout{ grid-template-columns:1fr; }
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid var(--border);
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .card-title{
+      font-size:15px;
+      font-weight:900;
+      letter-spacing:-0.02em;
+    }
+
+    .card-subtitle{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .cam-meta{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width:0;
+      flex-wrap:wrap;
+    }
+
+    .cam-name{
+      font-weight:900;
+      letter-spacing:-0.02em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:260px;
+      font-size:16px;
+    }
+
+    .cam-source{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:260px;
+      border:1px dashed var(--border);
+      padding:5px 9px;
+      border-radius:999px;
+      background:#fafafa;
+    }
+
+    .pill{
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      white-space:nowrap;
+      line-height:1;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+
+    .pill.live{
+      background:#ecfdf5;
+      border-color:#bbf7d0;
+      color:#065f46;
+    }
+
+    .pill.live .dot{ background:var(--ok); }
+
+    .pill.paused{
+      background:#fff7ed;
+      border-color:#fed7aa;
+      color:#9a3412;
+    }
+
+    .pill.paused .dot{ background:var(--warn); }
+
+    .pill.error{
+      background:#fef2f2;
+      border-color:#fecaca;
+      color:#991b1b;
+    }
+
+    .pill.error .dot{ background:var(--bad); }
+
+    .stream-wrap{
+      position:relative;
+      background:#0b1220;
+      min-height:260px;
+    }
+
+    .stream-img{
+      width:100%;
+      display:block;
+      max-height:420px;
+      object-fit:cover;
+      opacity:1;
+      background:#0b1220;
+    }
+
+    .stream-wrap.loading::after{
+      content:"Loading stream…";
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      color:rgba(255,255,255,.92);
+      font-weight:800;
+      letter-spacing:-0.01em;
+      background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:10px;
+      color:#fff;
+      background:rgba(0,0,0,.45);
+      text-align:center;
+      padding:16px;
+    }
+
+    .overlay.show{ display:flex; }
+
+    .overlay h3{
+      margin:0;
+      font-size:18px;
+      letter-spacing:-0.02em;
+    }
+
+    .overlay p{
+      margin:0;
+      color:rgba(255,255,255,.8);
+      font-size:13px;
+      max-width:360px;
+      line-height:1.45;
+    }
+
+    .controls{
+      padding:14px 16px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+
+    .btns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      height:44px;
+      padding:0 14px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      transition:transform .05s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+      white-space:nowrap;
+      min-width:128px;
+    }
+
+    .btn:active{ transform:scale(.98); }
+    .btn:hover{ box-shadow:0 10px 22px rgba(17,24,39,.08); }
+
+    .btn.primary{
+      background:linear-gradient(135deg, var(--brand), var(--brand2));
+      color:#fff;
+      border:none;
+      box-shadow:0 10px 20px rgba(37,99,235,.18);
+    }
+
+    .btn.ghost{ background:#f9fafb; }
+
+    .btn.small{
+      min-width:110px;
+      height:40px;
+      border-radius:12px;
+      font-size:12px;
+    }
+
+
+    .toggles{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .toggle{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      user-select:none;
+      min-height:38px;
+    }
+
+    .toggle input{ transform:translateY(1px); }
+
+    .side{
+      position:sticky;
+      top:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      padding:14px;
+    }
+
+    .kpi{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .kpi .label{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .kpi .value{
+      font-size:22px;
+      font-weight:900;
+      margin-top:4px;
+      letter-spacing:-0.03em;
+      line-height:1;
+    }
+
+    .kpi .sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+    }
+
+    .log{
+      padding:14px;
+    }
+
+    .log-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .log-head h3{
+      margin:0;
+      font-size:16px;
+      letter-spacing:-0.02em;
+      font-weight:900;
+    }
+
+    .log-tools{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .timeline{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height:360px;
+      overflow:auto;
+      padding-right:6px;
+      scroll-behavior:smooth;
+    }
+
+    .timeline::-webkit-scrollbar{ width:10px; }
+    .timeline::-webkit-scrollbar-thumb{
+      background:#d1d5db;
+      border-radius:999px;
+      border:2px solid #fff;
+    }
+    .timeline::-webkit-scrollbar-track{ background:transparent; }
+
+    .event{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:10px;
+      align-items:center;
+      transition:all .25s ease;
+    }
+
+    .event.new{
+      border-color:#93c5fd;
+      box-shadow:0 0 0 4px rgba(59,130,246,.12);
+      transform:translateY(-1px);
+    }
+
+    .badge{
+      font-size:12px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:#eef2ff;
+      border:1px solid #e0e7ff;
+      color:#3730a3;
+      white-space:nowrap;
+      font-weight:800;
+      line-height:1;
+    }
+
+    .event .meta{
+      min-width:0;
+    }
+
+    .event .meta .who{
+      font-weight:800;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      display:block;
+      min-width:0;
+    }
+
+    .event .when{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+      text-align:right;
+      min-width:64px;
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:10px;
+      line-height:1.45;
+    }
+
+    body.service-mode .side{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      width:360px;
+      max-width:calc(100vw - 36px);
+      z-index:9999;
+    }
+
+    .stream-wrap:fullscreen .stream-img{
+      max-height:none;
+      height:100vh;
+      object-fit:contain;
+      background:#0b1220;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="title">
+        <h1>Attendance Monitor</h1>
+        <p>Monitor camera feeds and today’s attendance activity.</p>
+      </div>
+
+      <div class="topbar">
+        <div class="chip neutral">📅 <span id="todayDate"></span></div>
+        <div class="chip neutral">🕒 <span id="clock"></span></div>
+        <a class="chip neutral" href="{% url 'camera_config_list' %}">⚙️ Camera Settings</a>
+        <button class="mode-btn" onclick="toggleServiceMode()">🎥 Service Mode</button>
       </div>
     </div>
-    {% endfor %}
-  </div>
-</div>
 
-<script>
-  const streamState = {};
-  function toggleStream(id) {
-    const img = document.getElementById(`cam-${id}`);
-    if (streamState[id]) {
-      img.src = img.dataset.src;
-      streamState[id] = false;
-    } else {
-      img.dataset.src = img.src;
-      img.src = '';
-      streamState[id] = true;
+    <div class="layout">
+      <div class="streams">
+        {% for c in configs %}
+          <div class="card" style="margin-bottom: 16px;">
+            <div class="card-head">
+              <div class="cam-meta">
+                <div class="cam-name">{{ c.name }}</div>
+                <div class="cam-source" title="{{ c.camera_source }}">Source</div>
+              </div>
+
+              <div class="pill paused" id="pill-{{ c.id }}">
+                <span class="dot"></span>
+                <span id="statusText-{{ c.id }}">Paused</span>
+              </div>
+            </div>
+
+            <div class="stream-wrap">
+              <img
+                id="img-{{ c.id }}"
+                class="stream-img"
+                alt="{{ c.name }}"
+                data-src="{% url 'video_feed' c.id %}"
+                src=""
+              />
+
+              <div class="overlay show" id="overlay-{{ c.id }}">
+                <h3>Stream Paused</h3>
+                <p>Click Resume to start the live feed.</p>
+              </div>
+            </div>
+
+            <div class="controls">
+              <div class="btns">
+                <button class="btn primary" id="btnToggle-{{ c.id }}" onclick="toggleStream({{ c.id }})">▶ Resume</button>
+                <button class="btn ghost" onclick="refreshStream({{ c.id }})">🔄 Refresh</button>
+                <button class="btn ghost" onclick="fullscreenStream({{ c.id }})">⛶ Fullscreen</button>
+              </div>
+
+
+                <div class="toggles">
+                  <label class="toggle">
+                    <input type="checkbox" checked onchange="setOption({{ c.id }}, 'boxes', this.checked)">
+                    Boxes
+                  </label>
+                  <label class="toggle">
+                    <input type="checkbox" checked onchange="setOption({{ c.id }}, 'names', this.checked)">
+                    Names
+                  </label>
+                  <label class="toggle">
+                    <input type="checkbox" checked onchange="setOption({{ c.id }}, 'sound', this.checked)">
+                    Sound
+                  </label>
+                </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="side">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Today</div>
+              <div class="card-subtitle">Attendance summary</div>
+            </div>
+            <span class="pill live">
+              <span class="dot"></span>
+              Live
+            </span>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">Captured</div>
+              <div class="value" id="kpiCaptured">0</div>
+              <div class="sub" id="kpiLast">Last: —</div>
+            </div>
+
+            <div class="kpi">
+              <div class="label">Streams</div>
+              <div class="value" id="kpiStreams">{{ configs|length }}</div>
+              <div class="sub" id="kpiOnline">Online: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="log">
+            <div class="log-head">
+              <h3>Live Log</h3>
+
+              <div class="log-tools">
+                <span class="pill paused" id="logPill">
+                  <span class="dot"></span>
+                  <span id="logStatusText">Connecting…</span>
+                </span>
+                <button class="btn ghost small" onclick="refreshLog()">🔄 Refresh</button>
+              </div>
+            </div>
+
+            <div class="timeline" id="timeline">
+              <div class="hint">No events yet today.</div>
+            </div>
+
+            <div class="hint">
+              Tip: Use <b>Service Mode</b> during service. Shortcuts: <b>S</b> for mode, <b>R</b> to refresh.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pad = (n) => String(n).padStart(2, "0");
+
+    function tickClock(){
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const year = now.getFullYear();
+
+      document.getElementById("todayDate").textContent = `${day}-${month}-${year}`;
+      document.getElementById("clock").textContent =
+        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
     }
-  }
-</script>
-{% endblock %}
+
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    const STORAGE_KEY = "attendance_monitor_streams_v1";
+
+    function loadState(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      }catch{
+        return {};
+      }
+    }
+
+    function saveState(state){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    const streamState = {};
+    const retryTimers = {};
+
+    function setPill(camId, state){
+      const pill = document.getElementById(`pill-${camId}`);
+      const text = document.getElementById(`statusText-${camId}`);
+
+      pill.classList.remove("live", "paused", "error");
+
+      if(state === "live"){
+        pill.classList.add("live");
+        text.textContent = "Live";
+      }else if(state === "paused"){
+        pill.classList.add("paused");
+        text.textContent = "Paused";
+      }else{
+        pill.classList.add("error");
+        text.textContent = "Error";
+      }
+
+      updateOnlineCount();
+    }
+
+    function showOverlay(camId, title, msg){
+      const o = document.getElementById(`overlay-${camId}`);
+      o.classList.add("show");
+      o.innerHTML = `<h3>${title}</h3><p>${msg}</p>`;
+    }
+
+    function hideOverlay(camId){
+      document.getElementById(`overlay-${camId}`).classList.remove("show");
+    }
+
+    function setLoading(camId, on){
+      const img = document.getElementById(`img-${camId}`);
+      const wrap = img.closest(".stream-wrap");
+      if(on) wrap.classList.add("loading");
+      else wrap.classList.remove("loading");
+    }
+
+    function buildSrc(camId){
+      const img = document.getElementById(`img-${camId}`);
+      const base = img.dataset.src;
+      const opts = streamState[camId]?.options || {};
+      const params = new URLSearchParams();
+
+      params.set("_ts", Date.now());
+      params.set("boxes", opts.boxes ? "1" : "0");
+      params.set("names", opts.names ? "1" : "0");
+      params.set("sound", opts.sound ? "1" : "0");
+
+      return `${base}?${params.toString()}`;
+    }
+
+    function scheduleReconnect(camId){
+      clearTimeout(retryTimers[camId]);
+      retryTimers[camId] = setTimeout(() => {
+        if(streamState[camId]?.playing){
+          showOverlay(camId, "Reconnecting…", "Trying to restore the stream.");
+          refreshStream(camId);
+        }
+      }, 1500);
+    }
+
+    function persistCam(camId){
+      const saved = loadState();
+      saved[camId] = {
+        playing: !!streamState[camId]?.playing,
+        options: streamState[camId]?.options || { boxes:true, names:true, sound:true }
+      };
+      saveState(saved);
+    }
+
+    function toggleStream(camId){
+      if(!streamState[camId]){
+        streamState[camId] = { playing:false, options:{ boxes:true, names:true, sound:true } };
+      }
+
+      const img = document.getElementById(`img-${camId}`);
+      const btn = document.getElementById(`btnToggle-${camId}`);
+
+      if(streamState[camId].playing){
+        img.onload = null;
+        img.onerror = null;
+        img.src = "";
+        streamState[camId].playing = false;
+        btn.textContent = "▶ Resume";
+        setLoading(camId, false);
+        setPill(camId, "paused");
+        showOverlay(camId, "Stream Paused", "Click Resume to start the live feed.");
+        persistCam(camId);
+        return;
+      }
+
+      streamState[camId].playing = true;
+      btn.textContent = "⏸ Pause";
+      setPill(camId, "live");
+      hideOverlay(camId);
+      setLoading(camId, true);
+
+      img.onload = () => {
+        setLoading(camId, false);
+        setPill(camId, "live");
+        hideOverlay(camId);
+      };
+
+      img.onerror = () => {
+        setLoading(camId, false);
+        setPill(camId, "error");
+        showOverlay(camId, "Stream Lost", "Reconnecting…");
+        scheduleReconnect(camId);
+      };
+
+      img.src = buildSrc(camId);
+      persistCam(camId);
+    }
+
+    function refreshStream(camId){
+      const img = document.getElementById(`img-${camId}`);
+
+      if(!streamState[camId] || !streamState[camId].playing){
+        setPill(camId, "paused");
+        setLoading(camId, false);
+        showOverlay(camId, "Stream Paused", "Click Resume to start the live feed.");
+        return;
+      }
+
+      setLoading(camId, true);
+      img.src = buildSrc(camId);
+    }
+
+    function fullscreenStream(camId){
+      const img = document.getElementById(`img-${camId}`);
+      const wrap = img.closest(".stream-wrap");
+      if(wrap.requestFullscreen) wrap.requestFullscreen();
+    }
+
+    function setOption(camId, key, val){
+      if(!streamState[camId]){
+        streamState[camId] = { playing:false, options:{ boxes:true, names:true, sound:true } };
+      }
+
+      streamState[camId].options[key] = val;
+      persistCam(camId);
+
+      if(streamState[camId].playing) refreshStream(camId);
+    }
+
+    function updateOnlineCount(){
+      const online = Object.values(streamState).filter(s => s.playing).length;
+      const el = document.getElementById("kpiOnline");
+      if(el) el.textContent = `Online: ${online}`;
+    }
+
+    function toggleServiceMode(){
+      document.body.classList.toggle("service-mode");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = loadState();
+
+      for(const [camIdStr, st] of Object.entries(saved)){
+        const camId = parseInt(camIdStr, 10);
+        if(!Number.isFinite(camId)) continue;
+
+        streamState[camId] = {
+          playing:false,
+          options: st.options || { boxes:true, names:true, sound:true }
+        };
+
+        const boxes = document.querySelector(`input[onchange*="setOption(${camId}, 'boxes'"]`);
+        const names = document.querySelector(`input[onchange*="setOption(${camId}, 'names'"]`);
+        const sound = document.querySelector(`input[onchange*="setOption(${camId}, 'sound'"]`);
+
+        if(boxes) boxes.checked = !!streamState[camId].options.boxes;
+        if(names) names.checked = !!streamState[camId].options.names;
+        if(sound) sound.checked = !!streamState[camId].options.sound;
+
+        if(st.playing){
+          toggleStream(camId);
+        }
+      }
+
+      updateOnlineCount();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if(e.target && ["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+      if(e.key.toLowerCase() === "s") toggleServiceMode();
+      if(e.key.toLowerCase() === "r") refreshLog();
+    });
+
+    const LOG_ENDPOINT = "/api/attendance/today/?limit=60";
+    let lastSeenIds = new Set();
+    let lastSince = null;
+    let pollingTimer = null;
+
+    const logPill = document.getElementById("logPill");
+    const logStatusText = document.getElementById("logStatusText");
+
+    function setLogState(state){
+      if(!logPill || !logStatusText) return;
+
+      logPill.classList.remove("live", "paused", "error");
+
+      if(state === "live"){
+        logPill.classList.add("live");
+        logStatusText.textContent = "Live";
+      }else if(state === "error"){
+        logPill.classList.add("error");
+        logStatusText.textContent = "Offline";
+      }else{
+        logPill.classList.add("paused");
+        logStatusText.textContent = "Connecting…";
+      }
+    }
+
+    function formatTime(iso){
+      if(!iso) return "—";
+      const d = new Date(iso);
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function renderEvent(item, isNew){
+      const el = document.createElement("div");
+      el.className = "event" + (isNew ? " new" : "");
+      el.dataset.id = item.id;
+
+      const camera = item.camera ? ` • ${item.camera}` : "";
+
+      el.innerHTML = `
+        <div class="badge">${item.status || "UPDATED"}</div>
+        <div class="meta">
+          <span class="who">${item.name}${camera}</span>
+        </div>
+        <div class="when">${formatTime(item.time)}</div>
+      `;
+
+      return el;
+    }
+
+    async function fetchLog(){
+      try{
+        setLogState("paused");
+
+        const url = lastSince
+          ? `${LOG_ENDPOINT}&since=${encodeURIComponent(lastSince)}`
+          : LOG_ENDPOINT;
+
+        const res = await fetch(url, { cache: "no-store" });
+        if(!res.ok){
+          setLogState("error");
+          return;
+        }
+
+        const data = await res.json();
+        setLogState("live");
+
+        document.getElementById("kpiCaptured").textContent = data.count ?? 0;
+        if(data.latest){
+          document.getElementById("kpiLast").textContent = `Last: ${formatTime(data.latest)}`;
+        }
+        if(data.latest_epoch_ms) lastSince = data.latest_epoch_ms;
+
+        const items = data.items || [];
+        const timeline = document.getElementById("timeline");
+        const hint = timeline.querySelector(".hint");
+
+        if(hint && items.length > 0) hint.remove();
+
+        let added = 0;
+
+        for(const item of items){
+          if(lastSeenIds.has(item.id)) continue;
+          lastSeenIds.add(item.id);
+          timeline.prepend(renderEvent(item, true));
+          added++;
+        }
+
+        if(timeline.children.length === 0){
+          timeline.innerHTML = `<div class="hint">No events yet today.</div>`;
+        }
+
+        while(timeline.children.length > 80){
+          timeline.removeChild(timeline.lastChild);
+        }
+
+        if(added > 0){
+          setTimeout(() => {
+            document.querySelectorAll(".event.new").forEach(e => e.classList.remove("new"));
+          }, 1200);
+        }
+      }catch(e){
+        setLogState("error");
+      }
+    }
+
+    function startPolling(){
+      if(pollingTimer) clearInterval(pollingTimer);
+      fetchLog();
+      pollingTimer = setInterval(fetchLog, 4000);
+    }
+
+    function refreshLog(){
+      fetchLog();
+    }
+
+    startPolling();
+  </script>
+</body>
+</html>

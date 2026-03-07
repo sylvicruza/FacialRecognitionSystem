@@ -1,188 +1,1208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Member</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f0f2f5;
-            font-family: 'Arial', sans-serif;
-            color: #343a40;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register Member</title>
 
-        .container {
-            margin-top: 50px;
-            max-width: 600px;
-        }
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
 
-        .card {
-            border: none;
-            border-radius: 1.5rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#101a33;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow: 0 20px 50px rgba(2, 6, 23, .25);
+      --softShadow: 0 10px 30px rgba(15, 23, 42, .10);
 
-        h2 {
-            margin-bottom: 20px;
-            font-size: 2rem;
-            font-weight: bold;
-            color: #28a745;
-        }
+      --brand:#22c55e;
+      --brand2:#16a34a;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --info:#38bdf8;
+      --radius:18px;
 
-        video {
-            width: 100%;
-            height: auto;
-            border-radius: 1rem;
-            border: 5px solid #28a745;
-            max-width: 100%;
-            margin-bottom: 20px;
-        }
+      --glass: rgba(255,255,255,.08);
+      --glassBorder: rgba(255,255,255,.14);
+    }
 
-        .image-preview {
-            display: none;
-            margin-top: 15px;
-            border-radius: 1rem;
-            border: 1px solid #ced4da;
-            max-width: 100%;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+    *{ box-sizing:border-box; }
 
-        .btn-success {
-            background-color: #28a745;
-            border: none;
-            transition: background-color 0.3s;
-        }
+    body{
+      min-height: 100vh;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(34,197,94,.18), transparent 60%),
+        radial-gradient(900px 500px at 80% 20%, rgba(56,189,248,.18), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
 
-        .btn-success:hover {
-            background-color: #218838;
-        }
+    .wrap{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 16px 42px;
+    }
 
-        .form-group label {
-            font-weight: bold;
-        }
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap:wrap;
+    }
 
-        .social-icons {
-            margin-top: 20px;
-        }
+    .page-title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      color: rgba(255,255,255,.92);
+    }
 
-        .social-icons i {
-            font-size: 1.5rem;
-            margin: 0 10px;
-            color: #6c757d;
-        }
+    .page-icon{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(34,197,94,1), rgba(56,189,248,1));
+      box-shadow: 0 15px 30px rgba(34,197,94,.18);
+      display:grid;
+      place-items:center;
+      color:#08121d;
+      flex:0 0 auto;
+    }
 
-        .social-icons i:hover {
-            color: #28a745;
-            transition: color 0.3s;
-        }
+    .page-copy h1{
+      margin:0;
+      font-size: 18px;
+      line-height:1.15;
+      letter-spacing:-0.02em;
+      font-weight: 800;
+    }
 
-        .back-button {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: #28a745;
-            cursor: pointer;
-        }
+    .page-copy p{
+      margin:4px 0 0;
+      color: rgba(255,255,255,.70);
+      font-size: 12px;
+      line-height:1.45;
+      max-width: 620px;
+    }
 
-        .back-button i {
-            margin-right: 5px;
-        }
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
-        .back-button:hover {
-            color: #218838;
-        }
-    </style>
+    .chip-link{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--glassBorder);
+      color: rgba(255,255,255,.9);
+      text-decoration:none;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .chip-link:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.22);
+    }
+
+    .chip-link:active{ transform: scale(.98); }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .85fr;
+      gap: 16px;
+      align-items:start;
+    }
+
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(226,232,240,.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-head{
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.88));
+      flex-wrap:wrap;
+    }
+
+    .panel-head .title{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+    }
+
+    .panel-head .title h2{
+      margin:0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing:-0.02em;
+    }
+
+    .panel-head .title span{
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+    }
+
+    .stepper{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .step{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid #e8edf5;
+      background:#fff;
+      font-size: 12px;
+      font-weight:700;
+      color: #0f172a;
+      white-space:nowrap;
+    }
+
+    .step .n{
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display:grid;
+      place-items:center;
+      font-weight: 800;
+      background: rgba(34,197,94,.12);
+      color: var(--brand2);
+      font-size:11px;
+    }
+
+    .stage{
+      position:relative;
+      background: #07101d;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      aspect-ratio: 16/10;
+      width:100%;
+      overflow:hidden;
+    }
+
+    .stage video,
+    .stage img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      filter: brightness(1.12) contrast(1.04);
+    }
+
+    .stage-overlay{
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.20));
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px;
+      pointer-events:none;
+    }
+
+    .stage-badge{
+      pointer-events:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      max-width: 70%;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .dot{
+      width: 8px;
+      height:8px;
+      border-radius:50%;
+      background: var(--warning);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.18);
+    }
+
+    .dot.live{
+      background: var(--brand);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.18);
+    }
+
+    .dot.err{
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.18);
+    }
+
+    .stage-actions{
+      pointer-events:auto;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .btnx{
+      border:none;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 800;
+      font-size: 13px;
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform .05s ease, box-shadow .2s ease, opacity .2s ease, background .2s ease;
+      box-shadow: var(--softShadow);
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    .btnx:active{ transform: scale(.98); }
+
+    .btnx.primary{
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      color:#052012;
+    }
+
+    .btnx.ghost{
+      background: rgba(255,255,255,.14);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.20);
+      box-shadow: none;
+    }
+
+    .btnx.soft{
+      background: rgba(255,255,255,.94);
+      color: #0f172a;
+      border: 1px solid rgba(226,232,240,.9);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+    }
+
+    .btnx.disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter: grayscale(.15);
+      pointer-events:none;
+    }
+
+    .face-guide{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .face-guide.show{ display:flex; }
+
+    .mask{
+      width:min(58%, 360px);
+      aspect-ratio: 3/4;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.90);
+      box-shadow:
+        0 0 0 9999px rgba(0,0,0,.10),
+        0 0 24px rgba(34,197,94,.18);
+      position:relative;
+    }
+
+    .mask:after{
+      content:"Align face inside the oval";
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      bottom:-42px;
+      font-size: 12px;
+      color: rgba(255,255,255,.90);
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 8px 10px;
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      white-space:nowrap;
+    }
+
+    .flash{
+      position:absolute;
+      inset:0;
+      background: rgba(255,255,255,.92);
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .flash.run{
+      animation: flash 380ms ease-out;
+    }
+
+    @keyframes flash {
+      0%{ opacity:0; }
+      12%{ opacity:1; }
+      100%{ opacity:0; }
+    }
+
+    .success-pop{
+      position:absolute;
+      top: 16px;
+      left: 16px;
+      display:none;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(34,197,94,.15);
+      border: 1px solid rgba(34,197,94,.35);
+      color: rgba(255,255,255,.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 40px rgba(34,197,94,.18);
+      pointer-events:none;
+    }
+
+    .success-pop.show{
+      display:flex;
+      animation: pop 600ms ease;
+    }
+
+    @keyframes pop{
+      0%{ transform: translateY(-8px); opacity:0; }
+      18%{ transform: translateY(0); opacity:1; }
+      100%{ transform: translateY(0); opacity:1; }
+    }
+
+    .panel-body{
+      padding: 16px 18px 18px;
+    }
+
+    .seg{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+
+    .seg button{
+      border:1px solid var(--border);
+      background:#fff;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor:pointer;
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+    }
+
+    .seg button:hover{ background: rgba(34,197,94,.06); }
+    .seg button:active{ transform: scale(.98); }
+
+    .seg button.active{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color: #065f46;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom: 12px;
+    }
+
+    .field label{
+      font-size: 12px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .field .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height:1.4;
+    }
+
+    .soft{
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      background:#fff;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      min-height:46px;
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 680px){
+      .row2{ grid-template-columns: 1fr; }
+    }
+
+    .preview{
+      border-radius: 16px;
+      border: 1px dashed rgba(100,116,139,.35);
+      background: rgba(241,245,249,.65);
+      padding: 10px;
+      display:grid;
+      place-items:center;
+      min-height: 180px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .preview img{
+      width:100%;
+      border-radius: 14px;
+      display:none;
+      transition: filter .2s ease;
+    }
+
+    .preview.blur img{
+      filter: blur(14px);
+    }
+
+    .preview .ph{
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+      padding: 12px;
+      line-height:1.45;
+    }
+
+    .preview-tools{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+
+    .pillbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor:pointer;
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      transition: transform .05s ease, background .2s ease;
+      white-space:nowrap;
+    }
+
+    .pillbtn:active{ transform: scale(.98); }
+
+    .pillbtn.danger{
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+      color: #991b1b;
+    }
+
+    .pillbtn.ok{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color: #065f46;
+    }
+
+    .alertbox{
+      display:none;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(226,232,240,.9);
+      background: rgba(241,245,249,.9);
+      color:#0f172a;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      margin-bottom: 12px;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .alertbox.info{ border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.12); }
+    .alertbox.success{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); }
+    .alertbox.warning{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+    .alertbox.danger{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
+
+    details.tips{
+      border: 1px solid rgba(226,232,240,.9);
+      background: rgba(255,255,255,.92);
+      border-radius: 16px;
+      padding: 12px 12px;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+      margin-top: 12px;
+    }
+
+    details.tips summary{
+      cursor:pointer;
+      list-style:none;
+      font-weight: 800;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    details.tips summary::-webkit-details-marker{ display:none; }
+
+    .tips ul{
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #0f172a;
+      font-size: 13px;
+    }
+
+    .tips li{
+      margin: 6px 0;
+      color: #0f172a;
+    }
+
+    .tips .sub{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+      line-height:1.45;
+    }
+
+    .foot{
+      display:flex;
+      justify-content:flex-start;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
+    }
+
+    .link{
+      cursor:pointer;
+      color: rgba(255,255,255,.86);
+      text-decoration:none;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--glassBorder);
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      transition: transform .05s ease;
+    }
+
+    .link:active{ transform: scale(.98); }
+
+    .legacy-selects{ display:none; }
+  </style>
 </head>
 
 <body>
-   <div class="container py-5">
-    <div class="card shadow rounded-4">
-        <div class="card-body text-center">
-            <h2 class="text-success mb-4">Register Member</h2>
-
-            <video id="video" autoplay></video>
-
-            <form id="registrationForm" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                <div class="mb-3 text-start">
-                    <label for="name" class="form-label fw-bold">Name</label>
-                    <input type="text" id="name" name="name" value="{{ name }}" class="form-control" readonly>
-                </div>
-
-                <div class="mb-3 text-start">
-                    <label for="portal_id" class="form-label fw-bold">Portal ID</label>
-                    <input type="text" id="portal_id" name="portal_id" value="{{ portal_id }}" class="form-control" readonly>
-                </div>
-
-                <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
-                <input type="hidden" id="image_data" name="image_data">
-
-                <div class="mb-3 text-start">
-                    <label class="form-label fw-bold">Captured Image Preview</label>
-                    <img id="imagePreview" class="image-preview" src="" alt="Captured Image Preview" />
-                </div>
-
-                <div class="mb-4">
-                    <button type="submit" class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2">
-                        <i class="fas fa-user-check"></i> Register Member
-                    </button>
-                </div>
-
-                {% if error %}
-                <div class="alert alert-danger">{{ error }}</div>
-                {% endif %}
-
-                <div class="back-button" onclick="location.href='{% url 'home' %}'">
-                    <i class="fas fa-arrow-left"></i> Back to Home
-                </div>
-            </form>
+  <div class="wrap">
+    <div class="top">
+      <div class="page-title">
+        <div class="page-icon">
+          <i class="fa-solid fa-user-plus"></i>
         </div>
+        <div class="page-copy">
+          <h1>Register Member</h1>
+          <p>Capture a clear face photo and save it to the attendance system.</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a class="chip-link" href="{% url 'camera_config_list' %}">
+          <i class="fa-solid fa-gear"></i> Camera Settings
+        </a>
+        <a class="chip-link" href="{% url 'home' %}">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+      </div>
     </div>
-</div>
 
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="title">
+            <h2>Capture</h2>
+            <span>Start camera and capture a clear face photo.</span>
+          </div>
+          <div class="stepper">
+            <div class="step"><span class="n">1</span> Start</div>
+            <div class="step"><span class="n">2</span> Align</div>
+            <div class="step"><span class="n">3</span> Capture</div>
+          </div>
+        </div>
 
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const imageDataInput = document.getElementById('image_data');
-        const registrationForm = document.getElementById('registrationForm');
-        const imagePreview = document.getElementById('imagePreview');
+        <div class="stage">
+          <video id="video" autoplay playsinline muted></video>
+          <img id="rtspPreview" alt="Configured camera preview" style="display:none;" />
 
-        // Access the webcam
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-                video.play();
-            })
-            .catch(err => {
-                console.error("Error accessing the camera: ", err);
-            });
+          <div class="face-guide" id="faceGuide">
+            <div class="mask"></div>
+          </div>
 
-        // Capture the image when the form is submitted
-        registrationForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataURL = canvas.toDataURL('image/jpeg');
-            imageDataInput.value = dataURL;
+          <div class="flash" id="flash"></div>
+          <div class="success-pop" id="successPop">
+            <i class="fa-solid fa-circle-check"></i>
+            <div style="font-weight:800;">Captured</div>
+          </div>
 
-            // Show the captured image preview
-            imagePreview.src = dataURL;
-            imagePreview.style.display = 'block';
+          <div class="stage-overlay">
+            <div class="stage-badge" id="stageBadge">
+              <span class="dot" id="stageDot"></span>
+              <span id="stageText">Ready. Choose a mode and press Start.</span>
+            </div>
 
-            // Submit the form programmatically
-            registrationForm.submit();
-        });
-    </script>
+            <div class="stage-actions">
+              <button type="button" class="btnx ghost" id="startBtn">
+                <i class="fa-solid fa-video"></i> Start
+              </button>
+              <button type="button" class="btnx primary disabled" id="captureBtn">
+                <i class="fa-solid fa-camera"></i> Capture
+              </button>
+            </div>
+          </div>
+        </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+        <div class="panel-body">
+          <div id="cameraAlert" class="alertbox warning"></div>
+
+          <div class="seg">
+            <button type="button" id="modeLocalBtn" class="active">
+              <i class="fa-solid fa-laptop"></i> This Device
+            </button>
+            <button type="button" id="modeConfigBtn">
+              <i class="fa-solid fa-network-wired"></i> Configured Camera
+            </button>
+          </div>
+
+          <div class="legacy-selects">
+            <select id="sourceMode">
+              <option value="local" selected>Local Device Camera</option>
+              <option value="config">Configured Camera</option>
+            </select>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label>Device Camera</label>
+              <select id="localCameraSelect" class="form-select soft"></select>
+              <div class="hint">If empty, press Start once to grant permission.</div>
+            </div>
+
+            <div class="field" id="configSelectWrap" style="display:none;">
+              <label>Configured Camera</label>
+              <select id="configCameraSelect" class="form-select soft">
+                {% for c in camera_configs %}
+                  <option value="{{ c.id }}">{{ c.name }} ({{ c.camera_source }})</option>
+                {% endfor %}
+              </select>
+              <div class="hint">Uses your saved server camera source.</div>
+            </div>
+          </div>
+
+          <details class="tips">
+            <summary>
+              <span><i class="fa-solid fa-lightbulb"></i> Photo Tips</span>
+              <span style="color:var(--muted);font-size:12px;">Open</span>
+            </summary>
+            <ul>
+              <li><b>Good light:</b> avoid shadows on the face.</li>
+              <li><b>Center face:</b> keep the face inside the oval.</li>
+              <li><b>No hat or hood:</b> reduce obstruction.</li>
+              <li><b>Look at camera:</b> keep eyes open and face steady.</li>
+            </ul>
+            <div class="sub">If the room is dark, move closer to a light source.</div>
+          </details>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="title">
+            <h2>Preview</h2>
+            <span>Review the captured image before saving.</span>
+          </div>
+          <div class="stepper">
+            <div class="step"><span class="n">✓</span> Ready</div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <form id="registrationForm" method="POST">
+            {% csrf_token %}
+
+            <div class="field">
+              <label>Name</label>
+              <input type="text" id="name" name="name" value="{{ name }}" class="form-control soft" readonly>
+            </div>
+
+            <div class="field">
+              <label>Portal ID</label>
+              <input type="text" id="portal_id" name="portal_id" value="{{ portal_id }}" class="form-control soft" readonly>
+            </div>
+
+            <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+            <input type="hidden" id="image_data" name="image_data">
+
+            <div class="field">
+              <label>Captured Image</label>
+              <div class="preview" id="previewBox">
+                <div class="ph" id="previewHint">
+                  No photo captured yet.<br>Press <b>Start</b>, align the face, then capture.
+                </div>
+                <img id="imagePreview" src="" alt="Captured Image Preview" />
+              </div>
+
+              <div class="preview-tools">
+                <button type="button" class="pillbtn danger" id="retakeBtn" disabled>
+                  <i class="fa-solid fa-rotate-left"></i> Retake
+                </button>
+
+                <button type="button" class="pillbtn" id="privacyBtn" disabled>
+                  <i class="fa-solid fa-eye-slash"></i> Privacy: Off
+                </button>
+
+                <button type="button" class="pillbtn ok" id="resumeAfterRetakeBtn" style="display:none;">
+                  <i class="fa-solid fa-video"></i> Restart Camera
+                </button>
+              </div>
+
+              <div class="hint" style="margin-top:6px;">
+                Privacy mode blurs the preview on screen only.
+              </div>
+            </div>
+
+            <button type="submit" id="registerBtn" class="btnx primary disabled" style="width:100%; justify-content:center;">
+              <i class="fa-solid fa-user-check"></i> Register Member
+            </button>
+
+            {% if error %}
+              <div class="mt-3 alert alert-danger text-start">{{ error }}</div>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <a class="link" href="{% url 'home' %}">
+        <i class="fa-solid fa-arrow-left"></i> Back to Home
+      </a>
+    </div>
+  </div>
+
+<script>
+  const sourceMode = document.getElementById('sourceMode');
+  const modeLocalBtn = document.getElementById('modeLocalBtn');
+  const modeConfigBtn = document.getElementById('modeConfigBtn');
+
+  const configSelectWrap = document.getElementById('configSelectWrap');
+  const configCameraSelect = document.getElementById('configCameraSelect');
+
+  const localCameraSelect = document.getElementById('localCameraSelect');
+
+  const video = document.getElementById('video');
+  const rtspPreview = document.getElementById('rtspPreview');
+
+  const canvas = document.getElementById('canvas');
+  const imageDataInput = document.getElementById('image_data');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewHint = document.getElementById('previewHint');
+  const previewBox = document.getElementById('previewBox');
+
+  const cameraAlert = document.getElementById('cameraAlert');
+  const startBtn = document.getElementById('startBtn');
+  const captureBtn = document.getElementById('captureBtn');
+  const registerBtn = document.getElementById('registerBtn');
+
+  const stageText = document.getElementById('stageText');
+  const stageDot = document.getElementById('stageDot');
+  const faceGuide = document.getElementById('faceGuide');
+
+  const flash = document.getElementById('flash');
+  const successPop = document.getElementById('successPop');
+
+  const retakeBtn = document.getElementById('retakeBtn');
+  const privacyBtn = document.getElementById('privacyBtn');
+  const resumeAfterRetakeBtn = document.getElementById('resumeAfterRetakeBtn');
+
+  const registrationForm = document.getElementById('registrationForm');
+
+  let stream = null;
+  let privacyOn = false;
+
+  function setStage(state, msg){
+    stageText.textContent = msg;
+    stageDot.classList.remove('live','err');
+    if(state === 'live') stageDot.classList.add('live');
+    if(state === 'err') stageDot.classList.add('err');
+  }
+
+  function showGuide(show){
+    faceGuide.classList.toggle('show', !!show);
+  }
+
+  function setAlert(msg, type='warning') {
+    cameraAlert.textContent = msg;
+    cameraAlert.className = `alertbox ${type}`;
+    cameraAlert.style.display = 'block';
+  }
+
+  function clearAlert() {
+    cameraAlert.style.display = 'none';
+    cameraAlert.textContent = '';
+  }
+
+  function setCaptureEnabled(enabled){
+    captureBtn.classList.toggle('disabled', !enabled);
+  }
+
+  function setRegisterEnabled(enabled){
+    registerBtn.classList.toggle('disabled', !enabled);
+  }
+
+  function stopLocalCamera() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+
+  async function loadLocalCameras() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+
+    localCameraSelect.innerHTML = '';
+    cams.forEach((cam, idx) => {
+      const opt = document.createElement('option');
+      opt.value = cam.deviceId;
+      opt.textContent = cam.label || `Camera ${idx + 1}`;
+      localCameraSelect.appendChild(opt);
+    });
+  }
+
+  function runCaptureFX(){
+    flash.classList.remove('run');
+    successPop.classList.remove('show');
+    void flash.offsetWidth;
+    flash.classList.add('run');
+    successPop.classList.add('show');
+    setTimeout(()=> successPop.classList.remove('show'), 900);
+  }
+
+  function enablePreviewTools(enable){
+    retakeBtn.disabled = !enable;
+    privacyBtn.disabled = !enable;
+    resumeAfterRetakeBtn.style.display = enable ? 'none' : 'none';
+  }
+
+  function setCapturedPreview(dataURL){
+    imageDataInput.value = dataURL;
+    imagePreview.src = dataURL;
+    imagePreview.style.display = 'block';
+    previewHint.style.display = 'none';
+
+    enablePreviewTools(true);
+    setRegisterEnabled(true);
+  }
+
+  async function startLocalCamera(deviceId = null) {
+    clearAlert();
+    stopLocalCamera();
+
+    try {
+      const constraints = {
+        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
+        audio: false
+      };
+
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      await video.play();
+
+      await loadLocalCameras();
+
+      rtspPreview.style.display = 'none';
+      rtspPreview.src = '';
+      video.style.display = 'block';
+
+      setCaptureEnabled(true);
+      showGuide(true);
+      setStage('live', 'Camera live. Align face and capture.');
+      setAlert("Camera started. Keep face centered and well lit.", "info");
+
+    } catch (err) {
+      console.error(err);
+      setCaptureEnabled(false);
+      showGuide(false);
+      setStage('err', 'Camera access blocked.');
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        setAlert("Camera needs HTTPS or localhost access.", "warning");
+      } else {
+        setAlert("Unable to access camera. Allow permission and try again.", "warning");
+      }
+    }
+  }
+
+  function startConfiguredCamera(camId) {
+    clearAlert();
+    stopLocalCamera();
+
+    video.style.display = 'none';
+    rtspPreview.style.display = 'block';
+    rtspPreview.src = `/camera_preview/${camId}/?_ts=${Date.now()}`;
+
+    setCaptureEnabled(true);
+    showGuide(true);
+    setStage('live', 'Configured camera loading… align face and capture.');
+    setAlert("Configured camera started. Wait for preview, then capture.", "info");
+
+    rtspPreview.onerror = () => {
+      setStage('err', 'Configured stream failed.');
+      setAlert("Configured camera preview failed to load.", "danger");
+      setCaptureEnabled(false);
+      showGuide(false);
+    };
+  }
+
+  function setMode(mode) {
+    imageDataInput.value = '';
+    imagePreview.style.display = 'none';
+    previewHint.style.display = 'block';
+    enablePreviewTools(false);
+    setRegisterEnabled(false);
+
+    privacyOn = false;
+    previewBox.classList.remove('blur');
+    privacyBtn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Privacy: Off`;
+
+    modeLocalBtn.classList.toggle('active', mode === 'local');
+    modeConfigBtn.classList.toggle('active', mode === 'config');
+    sourceMode.value = mode;
+
+    setCaptureEnabled(false);
+    showGuide(false);
+
+    if (mode === 'local') {
+      configSelectWrap.style.display = 'none';
+      setStage('ready', 'Ready. Press Start to enable local camera.');
+      setAlert("Local mode uses this device camera.", "info");
+      rtspPreview.src = '';
+      rtspPreview.style.display = 'none';
+      video.style.display = 'block';
+    } else {
+      configSelectWrap.style.display = 'block';
+      setStage('ready', 'Ready. Select a saved camera and press Start.');
+      setAlert("Configured mode uses a saved server camera.", "info");
+      rtspPreview.style.display = 'block';
+      video.style.display = 'none';
+    }
+  }
+
+  function captureFromLocal() {
+    if (!stream) {
+      setAlert("Start the local camera first.", "warning");
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const w = video.videoWidth || 640;
+    const h = video.videoHeight || 480;
+
+    canvas.width = w;
+    canvas.height = h;
+
+    ctx.filter = "brightness(1.12) contrast(1.04)";
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = "none";
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+    setCapturedPreview(dataURL);
+
+    runCaptureFX();
+    setAlert("Captured successfully. Review and register.", "success");
+    setStage('live', 'Captured. Review the image and register.');
+
+    showGuide(false);
+    stopLocalCamera();
+    resumeAfterRetakeBtn.style.display = 'inline-flex';
+    resumeAfterRetakeBtn.textContent = 'Restart Camera';
+  }
+
+  function captureFromConfigured() {
+    if (!rtspPreview.src) {
+      setAlert("Start the configured camera first.", "warning");
+      return;
+    }
+
+    const w = rtspPreview.naturalWidth || 960;
+    const h = rtspPreview.naturalHeight || 540;
+
+    if (!w || !h) {
+      setAlert("Preview not ready yet. Try again in a moment.", "warning");
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = w;
+    canvas.height = h;
+
+    try {
+      ctx.filter = "brightness(1.12) contrast(1.04)";
+      ctx.drawImage(rtspPreview, 0, 0, w, h);
+      ctx.filter = "none";
+    } catch (e) {
+      console.error(e);
+      setAlert("Unable to capture from configured camera.", "danger");
+      return;
+    }
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+    setCapturedPreview(dataURL);
+
+    runCaptureFX();
+    setAlert("Captured successfully. Review and register.", "success");
+    setStage('live', 'Captured. Review the image and register.');
+    showGuide(false);
+
+    resumeAfterRetakeBtn.style.display = 'none';
+  }
+
+  function retake(){
+    imageDataInput.value = '';
+    imagePreview.style.display = 'none';
+    previewHint.style.display = 'block';
+    enablePreviewTools(false);
+    setRegisterEnabled(false);
+
+    setAlert("Retake mode. Press Start and capture again.", "info");
+    setStage('ready', 'Retake mode. Press Start to continue.');
+    setCaptureEnabled(false);
+    showGuide(false);
+
+    if (sourceMode.value === 'config') {
+      rtspPreview.src = '';
+    }
+    resumeAfterRetakeBtn.style.display = 'none';
+  }
+
+  function togglePrivacy(){
+    privacyOn = !privacyOn;
+    previewBox.classList.toggle('blur', privacyOn);
+    privacyBtn.innerHTML = privacyOn
+      ? `<i class="fa-solid fa-eye"></i> Privacy: On`
+      : `<i class="fa-solid fa-eye-slash"></i> Privacy: Off`;
+  }
+
+  modeLocalBtn.addEventListener('click', () => setMode('local'));
+  modeConfigBtn.addEventListener('click', () => setMode('config'));
+
+  startBtn.addEventListener('click', async () => {
+    if (sourceMode.value === 'local') {
+      const selected = localCameraSelect.value || null;
+      await startLocalCamera(selected);
+    } else {
+      const camId = configCameraSelect.value;
+      startConfiguredCamera(camId);
+    }
+  });
+
+  localCameraSelect.addEventListener('change', async () => {
+    if (sourceMode.value !== 'local') return;
+    if (!localCameraSelect.value) return;
+    await startLocalCamera(localCameraSelect.value);
+  });
+
+  configCameraSelect.addEventListener('change', () => {
+    if (sourceMode.value !== 'config') return;
+    rtspPreview.src = '';
+    setCaptureEnabled(false);
+    showGuide(false);
+    setStage('ready', 'Camera changed. Press Start to load preview.');
+    setAlert("Camera changed. Click Start to load preview.", "info");
+  });
+
+  captureBtn.addEventListener('click', () => {
+    if (captureBtn.classList.contains('disabled')) return;
+    if (sourceMode.value === 'local') captureFromLocal();
+    else captureFromConfigured();
+  });
+
+  retakeBtn.addEventListener('click', () => retake());
+  privacyBtn.addEventListener('click', () => togglePrivacy());
+
+  resumeAfterRetakeBtn.addEventListener('click', async () => {
+    if (sourceMode.value === 'local') {
+      const selected = localCameraSelect.value || null;
+      await startLocalCamera(selected);
+    }
+    resumeAfterRetakeBtn.style.display = 'none';
+  });
+
+  registrationForm.addEventListener('submit', (event) => {
+    if (!imageDataInput.value) {
+      event.preventDefault();
+      setAlert("Please capture a photo before registering.", "warning");
+      setStage('err', 'Capture required before registration.');
+    }
+  });
+
+  (async function init() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setAlert("Your browser does not support camera access.", "danger");
+      setStage('err', 'Browser not supported.');
+      return;
+    }
+    try { await loadLocalCameras(); } catch {}
+    setMode('local');
+    setStage('ready', 'Ready. Choose a mode and press Start.');
+  })();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 </body>
-
 </html>
