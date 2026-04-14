@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 project_root = Path.cwd()
+icon_path = project_root / "static" / "images" / "time-attendance-icon.ico"
 
 a = Analysis(
     ["run_attendance_client.py"],
@@ -12,7 +13,7 @@ a = Analysis(
     datas=[
         ("templates", "templates"),
         ("static", "static"),
-        ("media", "media"),
+        ("media/audio", "media/audio"),
     ],
     hiddenimports=[
         "waitress",
@@ -32,8 +33,9 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
     name="TimeAndAttendance",
     debug=False,
     bootloader_ignore_signals=False,
@@ -45,15 +47,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="TimeAndAttendance",
+    icon=str(icon_path) if icon_path.exists() else None,
 )

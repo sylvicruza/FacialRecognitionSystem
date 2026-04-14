@@ -55,7 +55,7 @@ jobs:
         run: |
           if (Test-Path release) { Remove-Item release -Recurse -Force }
           New-Item -ItemType Directory -Path release | Out-Null
-          Compress-Archive -Path dist\TimeAndAttendance\* -DestinationPath release\TimeAndAttendance-portable-${{ steps.version.outputs.app_version }}.zip
+          Compress-Archive -Path dist\TimeAndAttendance.exe -DestinationPath release\TimeAndAttendance-portable-${{ steps.version.outputs.app_version }}.zip
 
       - name: Install Inno Setup
         shell: powershell

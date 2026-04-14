@@ -20,4 +20,4 @@ echo Building desktop executable...
 if errorlevel 1 exit /b 1
 
 echo Build complete.
-echo Output folder: %~dp0dist\TimeAndAttendance
+echo Output file: %~dp0dist\TimeAndAttendance.exe
