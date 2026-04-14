@@ -1,5 +1,7 @@
 #define MyAppName "Time and Attendance"
+#ifndef MyAppVersion
 #define MyAppVersion "1.0.0"
+#endif
 #define MyAppPublisher "SlyApps"
 #define MyAppExeName "TimeAndAttendance.exe"
 #define MyAppFolder "TimeAndAttendance"
@@ -14,7 +16,7 @@ DefaultGroupName={#MyAppName}
 DisableDirPage=no
 DisableProgramGroupPage=yes
 OutputDir=installer_output
-OutputBaseFilename=TimeAndAttendanceSetup-1.0.0
+OutputBaseFilename=TimeAndAttendanceSetup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
