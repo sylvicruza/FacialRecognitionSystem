@@ -17,6 +17,19 @@ def _wait_for_port(host: str, port: int, timeout: float = 15.0) -> bool:
     return False
 
 
+def _find_available_port(host: str, preferred_port: int, max_attempts: int = 50) -> int:
+    for port in range(preferred_port, preferred_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind((host, port))
+            except OSError:
+                continue
+            return port
+    raise RuntimeError(
+        f"Could not find a free localhost port starting from {preferred_port}."
+    )
+
+
 def _open_browser_when_ready(host: str, port: int):
     if _wait_for_port(host, port):
         webbrowser.open(f"http://{host}:{port}/login/")
@@ -36,7 +49,8 @@ def main():
     from waitress import serve
 
     host = os.getenv("ATTENDANCE_CLIENT_HOST", "127.0.0.1")
-    port = int(os.getenv("ATTENDANCE_CLIENT_PORT", "8000"))
+    preferred_port = int(os.getenv("ATTENDANCE_CLIENT_PORT", "8000"))
+    port = _find_available_port(host, preferred_port)
     threads = int(os.getenv("ATTENDANCE_CLIENT_THREADS", "8"))
 
     # Ensure the packaged desktop app has the local session/runtime tables it needs.
@@ -49,7 +63,13 @@ def main():
     )
     browser_thread.start()
 
-    print(f"Time and Attendance desktop starting on http://{host}:{port}/login/")
+    if port != preferred_port:
+        print(
+            f"Port {preferred_port} is busy. "
+            f"Time and Attendance desktop will use http://{host}:{port}/login/ instead."
+        )
+    else:
+        print(f"Time and Attendance desktop starting on http://{host}:{port}/login/")
     application = StaticFilesHandler(get_wsgi_application())
     serve(application, host=host, port=port, threads=threads)
 
