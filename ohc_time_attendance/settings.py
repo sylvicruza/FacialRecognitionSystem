@@ -12,11 +12,29 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _desktop_runtime_dir() -> Path:
+    configured = os.getenv("ATTENDANCE_DESKTOP_DATA_DIR")
+    if configured:
+        root = Path(configured)
+    elif os.getenv("ATTENDANCE_DESKTOP_MODE") == "1" or getattr(sys, "frozen", False):
+        root = Path(os.getenv("LOCALAPPDATA", str(BASE_DIR))) / "TimeAndAttendance"
+    else:
+        root = BASE_DIR
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+RUNTIME_DIR = _desktop_runtime_dir()
+RUNTIME_MEDIA_DIR = RUNTIME_DIR / "media"
+RUNTIME_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,10 +46,10 @@ SECRET_KEY = 'django-insecure-b%dojd@n&=@*ca+^+w#g5gcoz8w3(rk#%amn0-ip_v%4x%ws$d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = str(RUNTIME_MEDIA_DIR)
 
 
 # Application definition
@@ -83,7 +101,7 @@ WSGI_APPLICATION = 'ohc_time_attendance.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': RUNTIME_DIR / 'db.sqlite3',
     }
 }
 
@@ -128,6 +146,14 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+ATTENDANCE_API_BASE_URL = os.getenv(
+    "ATTENDANCE_API_BASE_URL",
+    "https://heavensconnect.onrender.com/api/attendance",
+)
+ATTENDANCE_API_TOKEN = os.getenv("ATTENDANCE_API_TOKEN", "")
+ATTENDANCE_API_TIMEOUT = int(os.getenv("ATTENDANCE_API_TIMEOUT", "30"))
+ATTENDANCE_API_VERIFY_SSL = os.getenv("ATTENDANCE_API_VERIFY_SSL", "True") == "True"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -138,7 +164,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "mail.openedheavenschapel.co.uk"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "welfare@openedheavenschapel.co.uk"
-EMAIL_HOST_PASSWORD = ""
+EMAIL_HOST_PASSWORD = "Ifeanyi/1000"
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = "welfare@openedheavenschapel.co.uk"

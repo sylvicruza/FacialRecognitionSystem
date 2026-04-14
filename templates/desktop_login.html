@@ -1,0 +1,429 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time and Attendance Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1:#071522;
+      --bg-2:#0d2136;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#dbe4ee;
+      --card:#f8fbff;
+      --white:#ffffff;
+      --brand:#1fb56d;
+      --brand-2:#149e5c;
+      --accent:#89c8ff;
+      --glow:rgba(31,181,109,.22);
+      --radius-xl:32px;
+      --radius-lg:22px;
+      --shadow:0 28px 80px rgba(2,6,23,.32);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:'Manrope', sans-serif;
+      color:var(--white);
+      background:
+        radial-gradient(760px 420px at 15% 15%, rgba(31,181,109,.18), transparent 62%),
+        radial-gradient(820px 460px at 86% 10%, rgba(137,200,255,.16), transparent 60%),
+        linear-gradient(160deg, var(--bg-1), var(--bg-2));
+      overflow-x:hidden;
+    }
+
+    .shell{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      position:relative;
+    }
+
+    .shell::before,
+    .shell::after{
+      content:"";
+      position:absolute;
+      border-radius:999px;
+      filter:blur(12px);
+      pointer-events:none;
+    }
+
+    .shell::before{
+      width:280px;
+      height:280px;
+      background:rgba(31,181,109,.10);
+      top:60px;
+      left:80px;
+    }
+
+    .shell::after{
+      width:360px;
+      height:360px;
+      background:rgba(137,200,255,.08);
+      right:80px;
+      bottom:40px;
+    }
+
+    .brand-side{
+      padding:40px 42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .brand-panel{
+      width:min(100%, 560px);
+      padding:34px;
+      border-radius:36px;
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter:blur(16px);
+      box-shadow:0 24px 70px rgba(2,6,23,.18);
+    }
+
+    .brand-row{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:34px;
+    }
+
+    .logo{
+      width:62px;
+      height:62px;
+      border-radius:20px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      display:grid;
+      place-items:center;
+      padding:8px;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    .brand-meta{
+      line-height:1.2;
+    }
+
+    .brand-meta .kicker{
+      font-size:12px;
+      color:rgba(255,255,255,.66);
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .brand-meta .title{
+      margin-top:4px;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .headline{
+      max-width:470px;
+      font-size:52px;
+      line-height:.98;
+      letter-spacing:-.06em;
+      font-weight:800;
+      margin:0;
+    }
+
+    .subcopy{
+      margin:18px 0 0;
+      max-width:420px;
+      color:rgba(255,255,255,.72);
+      font-size:15px;
+      line-height:1.6;
+    }
+
+    .points{
+      margin-top:34px;
+      display:grid;
+      gap:12px;
+    }
+
+    .point{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.86);
+      font-size:14px;
+    }
+
+    .point i{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      color:#042312;
+      background:linear-gradient(135deg, #29ca7e, #86d5ff);
+      flex:0 0 auto;
+    }
+
+    .login-side{
+      padding:32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .login-card{
+      width:min(100%, 430px);
+      border-radius:var(--radius-xl);
+      background:rgba(250,252,255,.97);
+      color:var(--ink);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.45);
+    }
+
+    .login-head{
+      padding:30px 30px 18px;
+      background:
+        radial-gradient(260px 120px at 12% 0%, rgba(31,181,109,.14), transparent 70%),
+        linear-gradient(180deg, #ffffff, #f9fbff);
+      border-bottom:1px solid rgba(219,228,238,.92);
+    }
+
+    .login-head h1{
+      margin:0;
+      font-size:34px;
+      font-weight:800;
+      letter-spacing:-.05em;
+    }
+
+    .login-head p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .status{
+      margin-top:16px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(31,181,109,.10);
+      color:#187248;
+      font-size:12px;
+      font-weight:700;
+      border:1px solid rgba(31,181,109,.12);
+    }
+
+    .login-body{
+      padding:26px 30px 30px;
+    }
+
+    .alert{
+      border:none;
+      border-radius:18px;
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:16px;
+    }
+
+    .alert-danger{
+      background:#fff0f0;
+      color:#b42318;
+    }
+
+    .alert-success,
+    .alert-info{
+      background:#eef9f3;
+      color:#17653f;
+    }
+
+    .form-label{
+      font-size:13px;
+      font-weight:800;
+      color:#344256;
+      margin-bottom:8px;
+    }
+
+    .form-control{
+      height:56px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#f2f7fd;
+      font-size:15px;
+      padding:0 16px;
+      box-shadow:none;
+    }
+
+    .form-control:focus{
+      border-color:#88cfff;
+      box-shadow:0 0 0 .2rem rgba(137,200,255,.16);
+      background:#f8fbff;
+    }
+
+    .submit{
+      width:100%;
+      height:58px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg, var(--brand), var(--brand-2));
+      color:#f3fff8;
+      font-size:15px;
+      font-weight:800;
+      box-shadow:0 18px 34px var(--glow);
+      transition:transform .08s ease, box-shadow .2s ease;
+    }
+
+    .submit:hover{
+      box-shadow:0 22px 40px rgba(31,181,109,.28);
+    }
+
+    .submit:active{
+      transform:scale(.99);
+    }
+
+    .login-note{
+      margin-top:16px;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    @media (max-width: 1100px){
+      .shell{
+        grid-template-columns:1fr;
+      }
+
+      .brand-side{
+        padding:24px 24px 8px;
+      }
+
+      .login-side{
+        padding:16px 24px 28px;
+      }
+
+      .headline{
+        font-size:40px;
+      }
+    }
+
+    @media (max-width: 640px){
+      .brand-panel{
+        padding:24px;
+      }
+
+      .headline{
+        font-size:34px;
+      }
+
+      .login-card{
+        border-radius:24px;
+      }
+
+      .login-head,
+      .login-body{
+        padding-left:20px;
+        padding-right:20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="brand-side">
+      <div class="brand-panel">
+        <div class="brand-row">
+          <div class="logo">
+            <img src="{% static 'images/ohc-logo.png' %}" alt="Opened Heavens Chapel Logo">
+          </div>
+          <div class="brand-meta">
+            <div class="kicker">Opened Heavens Chapel</div>
+            <div class="title">Time and Attendance</div>
+          </div>
+        </div>
+
+        <h2 class="headline">Local cameras. Shared records.</h2>
+        <p class="subcopy">Sign in to continue to the desktop workspace.</p>
+
+        <div class="points">
+          <div class="point">
+            <i class="fa-solid fa-camera-retro"></i>
+            <span>Private camera access stays on this machine.</span>
+          </div>
+          <div class="point">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Each staff user signs in with their own account.</span>
+          </div>
+          <div class="point">
+            <i class="fa-solid fa-database"></i>
+            <span>Members, cameras, and logs sync with the hosted backend.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="login-side">
+      <div class="login-card">
+        <div class="login-head">
+          <h1>Sign In</h1>
+          <p>Use your staff username and password.</p>
+          <div class="status">
+            <i class="fa-solid fa-link"></i>
+            Connected to hosted attendance API
+          </div>
+        </div>
+
+        <div class="login-body">
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+
+          {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="mb-3">
+              <label class="form-label" for="username">Username</label>
+              <input class="form-control" id="username" name="username" type="text" autocomplete="username" placeholder="Enter username" required>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label" for="password">Password</label>
+              <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+            </div>
+
+            <button class="submit" type="submit">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              Continue
+            </button>
+          </form>
+
+          <div class="login-note">Desktop access is for church staff accounts.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

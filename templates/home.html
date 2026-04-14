@@ -626,7 +626,7 @@
   let lastDate = "";
   function tick(){
     const now = new Date();
-    const d = now.toISOString().slice(0,10);
+    const d = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
     if(d !== lastDate){
       dateEl.textContent = d;
       lastDate = d;

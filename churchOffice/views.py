@@ -22,31 +22,44 @@
 
 from __future__ import annotations
 
-import base64
 import json
 import os
 import time
 from collections import defaultdict, deque
+from functools import wraps
 from smtplib import SMTPException
 from typing import Deque, Dict, List, Tuple
+from urllib.parse import quote
 
 import cv2
 import numpy as np
 import pygame
-import torch
-from facenet_pytorch import InceptionResnetV1, MTCNN
+from requests import RequestException
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.files.base import ContentFile
-from django.db import IntegrityError
+from django.contrib.messages import get_messages
 from django.http import JsonResponse, StreamingHttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Attendance, CameraConfiguration, Person
-from .services import mark_attendance
+from .api_backend import (
+    ACCESS_TOKEN_SESSION_KEY,
+    REFRESH_TOKEN_SESSION_KEY,
+    fetch_all_attendance_logs,
+    fetch_attendance_page,
+    get_all_cameras,
+    get_all_people,
+    get_camera,
+    get_client,
+    normalize_person,
+    to_namespace,
+    wrap_api_page,
+)
+from .api_client import AttendanceApiError
+from .face_api_runtime import detect_and_encode, load_authorized_face_encodings, recognize_faces
 from .utils import (
     fetch_user_data,
     fetch_user_data_by_id,
@@ -54,7 +67,6 @@ from .utils import (
     upload_person_photo_to_portal,
 )
 from django.views.decorators.http import require_GET
-from django.db import models
 
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
@@ -68,7 +80,6 @@ from reportlab.pdfgen import canvas
 import csv
 import io
 from datetime import datetime
-from .models import Attendance, Person
 
 
 
@@ -96,100 +107,83 @@ except Exception as e:
         return
 
 
-# =========================================================
-# Face Models (loaded once)
-# =========================================================
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-mtcnn = MTCNN(keep_all=True, device=device)
-resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
+DESKTOP_USER_SESSION_KEY = "attendance_desktop_user"
+DESKTOP_ROLE_SESSION_KEY = "attendance_desktop_role"
+DESKTOP_NAME_SESSION_KEY = "attendance_desktop_name"
 
 
-def detect_and_encode(image_rgb: np.ndarray) -> List[Tuple[np.ndarray, np.ndarray]]:
-    faces: List[Tuple[np.ndarray, np.ndarray]] = []
-    with torch.no_grad():
-        boxes, _ = mtcnn.detect(image_rgb)
-        if boxes is None:
-            return faces
-
-        h, w = image_rgb.shape[:2]
-
-        for box in boxes:
-            x1, y1, x2, y2 = map(int, map(round, box))
-
-            x1 = max(0, min(x1, w - 1))
-            x2 = max(0, min(x2, w - 1))
-            y1 = max(0, min(y1, h - 1))
-            y2 = max(0, min(y2, h - 1))
-
-            if x2 <= x1 or y2 <= y1:
-                continue
-
-            face = image_rgb[y1:y2, x1:x2]
-            if face.size == 0:
-                continue
-
-            face = cv2.resize(face, (160, 160), interpolation=cv2.INTER_LINEAR)
-            face = np.transpose(face, (2, 0, 1)).astype(np.float32) / 255.0
-            face_tensor = torch.from_numpy(face).unsqueeze(0).to(device)
-
-            encoding = resnet(face_tensor).cpu().numpy().flatten()
-            faces.append((encoding, box))
-
-    return faces
+def _store_desktop_auth(request, payload: dict):
+    request.session[ACCESS_TOKEN_SESSION_KEY] = payload.get("access", "")
+    request.session[REFRESH_TOKEN_SESSION_KEY] = payload.get("refresh", "")
+    request.session[DESKTOP_USER_SESSION_KEY] = {
+        "user_id": payload.get("user_id"),
+        "username": payload.get("username"),
+        "email": payload.get("email"),
+        "user_type": payload.get("user_type"),
+        "role": payload.get("role"),
+        "full_name": payload.get("full_name"),
+        "is_superuser": payload.get("is_superuser", False),
+    }
+    request.session[DESKTOP_ROLE_SESSION_KEY] = payload.get("role") or payload.get("user_type") or ""
+    request.session[DESKTOP_NAME_SESSION_KEY] = payload.get("full_name") or payload.get("username") or "Desktop User"
+    request.session.modified = True
 
 
-def encode_uploaded_images() -> Tuple[np.ndarray, List[int]]:
-    encodings: List[np.ndarray] = []
-    person_ids: List[int] = []
-
-    qs = Person.objects.filter(authorized=True).exclude(image="").only("id", "image")
-    for person in qs:
-        try:
-            img_path = os.path.join(settings.MEDIA_ROOT, str(person.image))
-            img = cv2.imread(img_path)
-            if img is None:
-                continue
-
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            for encoding, _ in detect_and_encode(img_rgb):
-                encodings.append(encoding)
-                person_ids.append(person.id)
-
-        except Exception as e:
-            print(f"[WARN] encode failed for person_id={person.id}: {e}")
-
-    if not encodings:
-        return np.empty((0, 512), dtype=np.float32), []
-
-    return np.array(encodings, dtype=np.float32), person_ids
+def _clear_desktop_auth(request):
+    for key in (
+        ACCESS_TOKEN_SESSION_KEY,
+        REFRESH_TOKEN_SESSION_KEY,
+        DESKTOP_USER_SESSION_KEY,
+        DESKTOP_ROLE_SESSION_KEY,
+        DESKTOP_NAME_SESSION_KEY,
+    ):
+        request.session.pop(key, None)
+    request.session.modified = True
 
 
-def recognize_faces(
-    known_encodings: np.ndarray,
-    known_person_ids: List[int],
-    test_encodings: List[Tuple[np.ndarray, np.ndarray]],
-    threshold: float = 0.6,
-) -> List[Tuple[int | None, np.ndarray, float | None]]:
-    results: List[Tuple[int | None, np.ndarray, float | None]] = []
+def _update_desktop_tokens(request, access_token: str | None, refresh_token: str | None):
+    if access_token:
+        request.session[ACCESS_TOKEN_SESSION_KEY] = access_token
+    if refresh_token:
+        request.session[REFRESH_TOKEN_SESSION_KEY] = refresh_token
+    request.session.modified = True
 
-    if known_encodings is None or len(known_encodings) == 0:
-        for _, box in test_encodings:
-            results.append((None, box, None))
-        return results
 
-    for test_encoding, box in test_encodings:
-        distances = np.linalg.norm(known_encodings - test_encoding, axis=1)
-        if distances.size == 0:
-            results.append((None, box, None))
-            continue
+def _is_desktop_authenticated(request) -> bool:
+    return bool(request.session.get(ACCESS_TOKEN_SESSION_KEY))
 
-        min_idx = int(np.argmin(distances))
-        min_dist = float(distances[min_idx])
-        person_id = known_person_ids[min_idx] if min_dist < float(threshold) else None
-        results.append((person_id, box, min_dist))
 
-    return results
+def _is_staff_desktop_user(payload: dict) -> bool:
+    role = str(payload.get("role") or payload.get("user_type") or "").lower()
+    return role in {"superuser", "admin", "finance", "viewer"}
+
+
+def _safe_next_url(request, candidate: str | None) -> str:
+    if candidate and url_has_allowed_host_and_scheme(candidate, allowed_hosts={request.get_host()}):
+        return candidate
+    return reverse("home")
+
+
+def desktop_login_required(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if _is_desktop_authenticated(request):
+            return view_func(request, *args, **kwargs)
+        if request.path.startswith("/api/"):
+            return JsonResponse({"error": "Desktop login required."}, status=401)
+        login_url = f"{reverse('desktop_login')}?next={quote(request.get_full_path())}"
+        return redirect(login_url)
+
+    return _wrapped
+
+
+def _api_client(request=None):
+    token_updater = None
+    if request is not None:
+        token_updater = lambda access_token, refresh_token=None: _update_desktop_tokens(
+            request, access_token, refresh_token
+        )
+    return get_client(request=request, token_updater=token_updater)
 
 
 # =========================================================
@@ -266,7 +260,7 @@ def _open_capture(source: int | str) -> cv2.VideoCapture:
         return cap
 
 
-def gen_frames(source, cam_config, max_fps=10, draw_boxes=True, draw_names=True, play_sound=True):
+def gen_frames(source, cam_config, api_client, known_encodings, person_by_index, max_fps=10, draw_boxes=True, draw_names=True, play_sound=True):
     cap = _open_capture(source)
 
     if not cap.isOpened():
@@ -281,9 +275,6 @@ def gen_frames(source, cam_config, max_fps=10, draw_boxes=True, draw_names=True,
             )
         cap.release()
         return
-
-    known_encodings, known_person_ids = encode_uploaded_images()
-    person_by_id = Person.objects.in_bulk(known_person_ids)
 
     last_marked: Dict[int, timezone.datetime] = {}
     hits: Dict[int, Deque[timezone.datetime]] = defaultdict(lambda: deque(maxlen=30))
@@ -319,12 +310,12 @@ def gen_frames(source, cam_config, max_fps=10, draw_boxes=True, draw_names=True,
             if test_encodings:
                 recognized = recognize_faces(
                     known_encodings,
-                    known_person_ids,
+                    person_by_index,
                     test_encodings,
                     threshold=float(cam_config.threshold),
                 )
 
-                for person_id, box, dist in recognized:
+                for person, box, dist in recognized:
                     if box is None:
                         continue
 
@@ -338,24 +329,32 @@ def gen_frames(source, cam_config, max_fps=10, draw_boxes=True, draw_names=True,
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     label = "Not Recognized"
 
-                    if person_id is not None and person_id in person_by_id:
-                        person = person_by_id[person_id]
+                    if person is not None:
                         now = timezone.now()
 
-                        hits[person_id].append(now)
+                        hits[person.id].append(now)
                         recent_hits = [
-                            t for t in hits[person_id]
+                            t for t in hits[person.id]
                             if (now - t).total_seconds() <= STABLE_WINDOW_SECONDS
                         ]
 
                         if len(recent_hits) >= STABLE_HITS_REQUIRED:
-                            last = last_marked.get(person_id)
+                            last = last_marked.get(person.id)
                             if not last or (now - last).total_seconds() >= COOLDOWN_SECONDS:
-                                outcome = mark_attendance(person, min_checkout_seconds=60, camera=cam_config)
-                                last_marked[person_id] = now
-                                if play_sound:
-                                    play_success_sound()
-                                label = f"{person.name} ({outcome.status})"
+                                try:
+                                    outcome = api_client.face_check_in(
+                                        {
+                                            "person_id": person.id,
+                                            "camera_id": cam_config.id,
+                                            "min_checkout_seconds": 60,
+                                        }
+                                    )
+                                    last_marked[person.id] = now
+                                    if play_sound:
+                                        play_success_sound()
+                                    label = f"{person.name} ({outcome.get('status', 'updated')})"
+                                except AttendanceApiError:
+                                    label = f"{person.name} (api error)"
                             else:
                                 label = f"{person.name} (cooldown)"
                         else:
@@ -394,10 +393,16 @@ def _get_bool_qs(request, key: str, default: bool = True) -> bool:
     return v in ("1", "true", "True", "yes", "on")
 
 
+@desktop_login_required
 def video_feed(request, cam_id):
-    cam_config = get_object_or_404(CameraConfiguration, id=cam_id)
+    try:
+        cam_config = get_camera(cam_id, request=request)
+    except AttendanceApiError:
+        return StreamingHttpResponse(content_type="multipart/x-mixed-replace; boundary=frame")
     src = cam_config.camera_source.strip()
     source = int(src) if src.isdigit() else src
+    api_client = _api_client(request)
+    known_encodings, person_by_index = load_authorized_face_encodings(request=request)
 
     draw_boxes = _get_bool_qs(request, "boxes", True)
     draw_names = _get_bool_qs(request, "names", True)
@@ -407,6 +412,9 @@ def video_feed(request, cam_id):
         gen_frames(
             source,
             cam_config,
+            api_client,
+            known_encodings,
+            person_by_index,
             max_fps=10,
             draw_boxes=draw_boxes,
             draw_names=draw_names,
@@ -416,13 +424,23 @@ def video_feed(request, cam_id):
     )
 
 
+@desktop_login_required
 def camera_stream(request, cam_id: int):
-    config = get_object_or_404(CameraConfiguration, id=cam_id)
+    try:
+        config = get_camera(cam_id, request=request)
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not load camera: {exc}")
+        return redirect("camera_config_list")
     return render(request, "camera_stream.html", {"config": config})
 
 
+@desktop_login_required
 def stream_all_cameras(request):
-    configs = CameraConfiguration.objects.all()
+    try:
+        configs = get_all_cameras(request=request)
+    except AttendanceApiError as exc:
+        configs = []
+        messages.error(request, f"Could not load cameras: {exc}")
     return render(request, "stream_all_cameras.html", {"configs": configs})
 
 def gen_preview_frames(source, max_fps=10):
@@ -477,8 +495,12 @@ def gen_preview_frames(source, max_fps=10):
         cap.release()
 
 
+@desktop_login_required
 def camera_preview_feed(request, cam_id):
-    cam_config = get_object_or_404(CameraConfiguration, id=cam_id)
+    try:
+        cam_config = get_camera(cam_id, request=request)
+    except AttendanceApiError:
+        return StreamingHttpResponse(content_type="multipart/x-mixed-replace; boundary=frame")
     src = cam_config.camera_source.strip()
     source = int(src) if src.isdigit() else src
 
@@ -492,6 +514,7 @@ def camera_preview_feed(request, cam_id):
 # NFC API (MATCH your urls.py)
 # =========================================================
 @csrf_exempt
+@desktop_login_required
 def nfc_check_in(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
@@ -506,44 +529,100 @@ def nfc_check_in(request):
     if not uid:
         return JsonResponse({"error": "UID is required"}, status=400)
 
-    person = Person.objects.filter(nfc_uid=uid).first()
-    if not person:
-        return JsonResponse({"error": "UID not registered"}, status=404)
-
-    cam = None
-    if camera_id:
-        cam = CameraConfiguration.objects.filter(id=camera_id).first()
-
-    outcome = mark_attendance(person, min_checkout_seconds=60, camera=cam)
-    play_success_sound()
-
-    return JsonResponse({
-        "status": outcome.status,
-        "name": person.name,
-        "camera": cam.name if cam else None
-    })
+    try:
+        outcome = _api_client(request).nfc_check_in(
+            {"uid": uid, "camera_id": camera_id, "min_checkout_seconds": 60}
+        )
+        play_success_sound()
+        return JsonResponse(outcome)
+    except AttendanceApiError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
 
 
 # =========================================================
 # UI / Pages (MATCH your urls.py)
 # =========================================================
-def home(request):
-    total_persons = Person.objects.count()
-    total_attendance = Attendance.objects.count()
-    total_check_ins = Attendance.objects.filter(check_in_time__isnull=False).count()
-    total_check_outs = Attendance.objects.filter(check_out_time__isnull=False).count()
-    total_cameras = CameraConfiguration.objects.count()
+def desktop_login(request):
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        next_url = _safe_next_url(request, request.POST.get("next"))
 
-    context = {
-        "total_persons": total_persons,
-        "total_attendance": total_attendance,
-        "total_check_ins": total_check_ins,
-        "total_check_outs": total_check_outs,
-        "total_cameras": total_cameras,
-    }
+        if not username or not password:
+            return render(
+                request,
+                "desktop_login.html",
+                {"next_url": next_url, "error": "Username and password are required."},
+            )
+
+        try:
+            payload = get_client().authenticate(username=username, password=password)
+        except AttendanceApiError as exc:
+            return render(
+                request,
+                "desktop_login.html",
+                {"next_url": next_url, "error": f"Login failed: {exc}"},
+            )
+
+        if not _is_staff_desktop_user(payload):
+            _clear_desktop_auth(request)
+            return render(
+                request,
+                "desktop_login.html",
+                {
+                    "next_url": next_url,
+                    "error": "This desktop app is for admin and staff accounts only.",
+                },
+            )
+
+        _store_desktop_auth(request, payload)
+        messages.success(request, f"Signed in as {request.session.get(DESKTOP_NAME_SESSION_KEY)}.")
+        return redirect(next_url)
+
+    if _is_desktop_authenticated(request):
+        return redirect(_safe_next_url(request, request.GET.get("next")))
+
+    _clear_desktop_auth(request)
+    list(get_messages(request))
+
+    return render(request, "desktop_login.html", {"next_url": _safe_next_url(request, request.GET.get("next"))})
+
+
+def desktop_logout(request):
+    _clear_desktop_auth(request)
+    messages.success(request, "Desktop session signed out.")
+    return redirect("desktop_login")
+
+
+@desktop_login_required
+def home(request):
+    try:
+        overview = _api_client(request).overview()
+        logs = fetch_all_attendance_logs(request=request)
+        context = {
+            "total_persons": overview.get("total_persons", 0),
+            "total_attendance": overview.get("total_attendance", 0),
+            "total_check_ins": sum(1 for item in logs if getattr(item, "check_in_time", None)),
+            "total_check_outs": sum(1 for item in logs if getattr(item, "check_out_time", None)),
+            "total_cameras": overview.get("total_cameras", 0),
+            "desktop_user_name": request.session.get(DESKTOP_NAME_SESSION_KEY, "Desktop User"),
+            "desktop_user_role": request.session.get(DESKTOP_ROLE_SESSION_KEY, ""),
+        }
+    except AttendanceApiError as exc:
+        messages.error(request, f"Attendance API unavailable: {exc}")
+        context = {
+            "total_persons": 0,
+            "total_attendance": 0,
+            "total_check_ins": 0,
+            "total_check_outs": 0,
+            "total_cameras": 0,
+            "desktop_user_name": request.session.get(DESKTOP_NAME_SESSION_KEY, "Desktop User"),
+            "desktop_user_role": request.session.get(DESKTOP_ROLE_SESSION_KEY, ""),
+        }
     return render(request, "home.html", context)
 
 
+@desktop_login_required
 def search_user(request):
     if request.method == "POST":
         action = request.POST.get("action", "search").strip()
@@ -672,11 +751,17 @@ def search_user(request):
     return render(request, "search_user.html")
 
 
+@desktop_login_required
 def register_user(request):
+    try:
+        cams = get_all_cameras(request=request)
+    except AttendanceApiError as exc:
+        cams = []
+        messages.error(request, f"Could not load camera settings: {exc}")
+
     if request.method == "GET":
         portal_id = request.GET.get("portal_id")
         name = request.GET.get("name")
-        cams = CameraConfiguration.objects.all().order_by("name")
 
         return render(
             request,
@@ -693,8 +778,6 @@ def register_user(request):
         name = request.POST.get("name")
         image_data = request.POST.get("image_data")
 
-        cams = CameraConfiguration.objects.all().order_by("name")
-
         if not image_data:
             return render(
                 request,
@@ -708,28 +791,25 @@ def register_user(request):
             )
 
         try:
-            header, encoded = image_data.split(",", 1)
-        except ValueError:
+            person = _api_client(request).create_person(
+                {
+                    "name": name,
+                    "portal_id": portal_id,
+                    "image_data": image_data,
+                    "authorized": True,
+                }
+            )
+        except AttendanceApiError as exc:
             return render(
                 request,
                 "register_user.html",
                 {
-                    "error": "Invalid image data.",
+                    "error": f"Could not save member to API: {exc}",
                     "portal_id": portal_id,
                     "name": name,
                     "camera_configs": cams,
                 },
             )
-
-        image_file = ContentFile(base64.b64decode(encoded), name=f"{name}.jpg")
-
-        person = Person(
-            name=name,
-            portal_id=portal_id,
-            image=image_file,
-            authorized=True,
-        )
-        person.save()
 
         # Upload same image to ChurchCRM behind the scenes
         if portal_id:
@@ -739,19 +819,18 @@ def register_user(request):
             if upload_result.get("ok"):
                 messages.success(
                     request,
-                    f"{name} registered successfully. Portal photo updated successfully."
+                    f"{person.get('name', name)} registered successfully. Portal photo updated successfully."
                 )
             else:
                 messages.warning(
                     request,
-                    f"{name} registered locally, but portal photo upload failed: {upload_result.get('error', 'Unknown error')}"
+                    f"{person.get('name', name)} registered in attendance, but portal photo upload failed: {upload_result.get('error', 'Unknown error')}"
                 )
         else:
-            messages.success(request, f"{name} registered successfully.")
+            messages.success(request, f"{person.get('name', name)} registered successfully.")
 
         return redirect("person_list")
 
-    cams = CameraConfiguration.objects.all().order_by("name")
     return render(request, "register_user.html", {"camera_configs": cams})
 
 
@@ -762,8 +841,14 @@ def success_page(request):
 # =========================================================
 # People management (MATCH your urls.py)
 # =========================================================
+@desktop_login_required
 def person_list(request):
-    persons_qs = Person.objects.all().order_by("-id")   # latest first
+    search = request.GET.get("search", "").strip()
+    try:
+        persons_qs = get_all_people(search=search, request=request)
+    except AttendanceApiError as exc:
+        persons_qs = []
+        messages.error(request, f"Could not load members: {exc}")
 
     paginator = Paginator(persons_qs, 10)  # 10 per page
     page_number = request.GET.get("page")
@@ -772,31 +857,47 @@ def person_list(request):
     return render(request, "user_list.html", {"persons": persons})
 
 
+@desktop_login_required
 def person_detail(request, pk: int):
-    person = get_object_or_404(Person, pk=pk)
+    try:
+        person = normalize_person(_api_client(request).get_person(pk))
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not load member: {exc}")
+        return redirect("person_list")
     user_data = fetch_user_data_by_id(person.portal_id)
     return render(request, "user_detail.html", {"person": person, "user_data": user_data})
 
 
+@desktop_login_required
 def person_authorize(request, pk: int):
-    person = get_object_or_404(Person, pk=pk)
-
     if request.method == "POST":
-        authorized = request.POST.get("authorized", False)
-        person.authorized = bool(authorized)
-        person.save()
+        authorized = request.POST.get("authorized") in ("1", "true", "True", "on", "yes")
+        try:
+            _api_client(request).authorize_person(pk, authorized)
+            messages.success(request, "Member authorization updated.")
+        except AttendanceApiError as exc:
+            messages.error(request, f"Could not update authorization: {exc}")
         return redirect("person_detail", pk=pk)
 
-    return render(request, "user_authorize.html", {"person": person})
+    return redirect("person_detail", pk=pk)
 
 
+@desktop_login_required
 def person_delete(request, pk: int):
-    person = get_object_or_404(Person, pk=pk)
+    try:
+        person = normalize_person(_api_client(request).get_person(pk))
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not load member: {exc}")
+        return redirect("person_list")
 
     if request.method == "POST":
-        person.delete()
-        messages.success(request, "Member deleted successfully.")
-        return redirect("person_list")
+        try:
+            _api_client(request).delete_person(pk)
+            messages.success(request, "Member deleted successfully.")
+            return redirect("person_list")
+        except AttendanceApiError as exc:
+            messages.error(request, f"Could not delete member: {exc}")
+            return redirect("person_detail", pk=pk)
 
     return render(request, "user_delete_confirm.html", {"person": person})
 
@@ -805,36 +906,18 @@ def person_delete(request, pk: int):
 # Attendance views (MATCH your urls.py)
 # =========================================================
 
-def _filtered_attendance_qs(search_query: str, date_filter: str):
-    """
-    Returns a flat Attendance queryset, filtered + ordered newest-first.
-    """
-    qs = Attendance.objects.select_related("person")
-
-    if search_query:
-        qs = qs.filter(person__name__icontains=search_query)
-
-    if date_filter:
-        # date_filter comes as 'YYYY-MM-DD'
-        qs = qs.filter(date=date_filter)
-
-    # newest first
-    qs = qs.order_by("-date", "-check_in_time", "-id")
-    return qs
-
-
+@desktop_login_required
 def person_attendance_list(request):
     search_query = request.GET.get("search", "").strip()
     date_filter = request.GET.get("attendance_date", "").strip()
-
-    qs = _filtered_attendance_qs(search_query, date_filter)
-
     page_size = int(request.GET.get("page_size", 25) or 25)
     page_size = max(10, min(page_size, 200))  # clamp
-    paginator = Paginator(qs, page_size)
-
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
+    page_number = int(request.GET.get("page", 1) or 1)
+    try:
+        page_obj = fetch_attendance_page(search_query, date_filter, page_number, page_size, request=request)
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not load attendance logs: {exc}")
+        page_obj = wrap_api_page({"count": 0}, [], 1, page_size)
 
     return render(
         request,
@@ -848,6 +931,7 @@ def person_attendance_list(request):
     )
 
 
+@desktop_login_required
 def capture_and_recognize(request):
     # Your system uses the stream endpoints now; keep this route but redirect somewhere useful.
     return redirect("camera_config_list")
@@ -856,6 +940,7 @@ def capture_and_recognize(request):
 # =========================================================
 # Camera configuration UI (MATCH your urls.py)
 # =========================================================
+@desktop_login_required
 def camera_config_create(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
@@ -866,89 +951,80 @@ def camera_config_create(request):
             messages.error(request, "All fields are required.")
             return render(request, "camera_config_form.html")
 
-        CameraConfiguration.objects.create(
-            name=name,
-            camera_source=camera_source,
-            threshold=threshold
-        )
-
-        messages.success(request, "Camera configuration saved successfully.")
-        return redirect("camera_config_list")
+        try:
+            _api_client(request).create_camera(
+                {"name": name, "camera_source": camera_source, "threshold": threshold}
+            )
+            messages.success(request, "Camera configuration saved successfully.")
+            return redirect("camera_config_list")
+        except AttendanceApiError as exc:
+            messages.error(request, f"Could not save camera configuration: {exc}")
+            return render(request, "camera_config_form.html", {"config": to_namespace({"name": name, "camera_source": camera_source, "threshold": threshold})})
 
     return render(request, "camera_config_form.html")
 
 
+@desktop_login_required
 def camera_config_list(request):
-    configs = CameraConfiguration.objects.all()
+    try:
+        configs = get_all_cameras(request=request)
+    except AttendanceApiError as exc:
+        configs = []
+        messages.error(request, f"Could not load cameras: {exc}")
     return render(request, "camera_config_list.html", {"configs": configs})
 
 
+@desktop_login_required
 def camera_config_update(request, pk: int):
-    config = get_object_or_404(CameraConfiguration, pk=pk)
-
     if request.method == "POST":
-        config.name = request.POST.get("name")
-        config.camera_source = request.POST.get("camera_source", "")
-        config.threshold = request.POST.get("threshold", "0.6")
-        config.save()
-        return redirect("camera_config_list")
+        try:
+            _api_client(request).update_camera(
+                pk,
+                {
+                    "name": request.POST.get("name"),
+                    "camera_source": request.POST.get("camera_source", ""),
+                    "threshold": request.POST.get("threshold", "0.6"),
+                },
+            )
+            messages.success(request, "Camera configuration updated.")
+            return redirect("camera_config_list")
+        except AttendanceApiError as exc:
+            messages.error(request, f"Could not update camera configuration: {exc}")
+            return render(
+                request,
+                "camera_config_form.html",
+                {"config": to_namespace({"id": pk, "name": request.POST.get("name"), "camera_source": request.POST.get("camera_source", ""), "threshold": request.POST.get("threshold", "0.6")})},
+            )
 
+    try:
+        config = get_camera(pk, request=request)
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not load camera configuration: {exc}")
+        return redirect("camera_config_list")
     return render(request, "camera_config_form.html", {"config": config})
 
 
+@desktop_login_required
 def camera_config_delete(request, pk: int):
-    config = get_object_or_404(CameraConfiguration, pk=pk)
     if request.method == "POST":
-        config.delete()
-        messages.success(request, "Camera configuration deleted.")
+        try:
+            _api_client(request).delete_camera(pk)
+            messages.success(request, "Camera configuration deleted.")
+        except AttendanceApiError as exc:
+            messages.error(request, f"Could not delete camera configuration: {exc}")
     return redirect("camera_config_list")
 
+@desktop_login_required
 def api_attendance_monitor(request):
-    today = timezone.localdate()
-
-    total_checked_in = Attendance.objects.filter(
-        date=today,
-        check_in_time__isnull=False
-    ).count()
-
-    qs = (
-        Attendance.objects
-        .select_related("person", "camera")
-        .filter(date=today)
-        .order_by("-check_in_time")[:200]
-    )
-
-    events = []
-    for a in qs:
-        if a.check_in_time:
-            events.append({
-                "type": "checked_in",
-                "time": a.check_in_time.isoformat(),
-                "name": a.person.name,
-                "person_id": a.person_id,
-                "camera": a.camera.name if a.camera else None,
-            })
-        if a.check_out_time:
-            events.append({
-                "type": "checked_out",
-                "time": a.check_out_time.isoformat(),
-                "name": a.person.name,
-                "person_id": a.person_id,
-                "camera": a.camera.name if a.camera else None,
-            })
-
-    events.sort(key=lambda x: x["time"], reverse=True)
-    events = events[:50]
-
-    return JsonResponse({
-        "date": str(today),
-        "total_checked_in": total_checked_in,
-        "events": events,
-    })
+    try:
+        return JsonResponse(_api_client(request).monitor())
+    except AttendanceApiError as exc:
+        return JsonResponse({"error": str(exc)}, status=503)
 
 
 
 @require_GET
+@desktop_login_required
 def attendance_today_api(request):
     """
     Returns today's attendance events (latest first).
@@ -956,83 +1032,27 @@ def attendance_today_api(request):
       - ?since=<epoch_ms>  (optional) for incremental updates
       - ?limit=60
     """
-    limit = int(request.GET.get("limit", 60))
-    since = request.GET.get("since")
-
-    today = timezone.localdate()
-
-    qs = Attendance.objects.filter(date=today).select_related("person").order_by("-check_in_time", "-check_out_time", "-id")
-
-    if since:
-        try:
-            if since.isdigit():
-                dt = timezone.datetime.fromtimestamp(int(since) / 1000, tz=timezone.get_current_timezone())
-                # "changed since" = check_in or check_out happened after dt
-                qs = qs.filter(
-                    models.Q(check_in_time__gt=dt) |
-                    models.Q(check_out_time__gt=dt)
-                )
-        except Exception:
-            pass
-
-    qs = qs[:limit]
-
-    def status_for(a: Attendance):
-        if a.check_out_time:
-            return "CHECKED OUT"
-        if a.check_in_time:
-            return "CHECKED IN"
-        return "UPDATED"
-
-    def event_time(a: Attendance):
-        # pick the most recent meaningful event time
-        return a.check_out_time or a.check_in_time
-
-    items = []
-    latest_ts = None
-
-    for a in qs:
-        t = event_time(a)
-        if t and (latest_ts is None or t > latest_ts):
-            latest_ts = t
-
-        items.append({
-            "id": a.id,
-            "person_id": a.person_id,
-            "name": a.person.name if a.person else "Unknown",
-            "status": status_for(a),
-            "time": t.isoformat() if t else None,
-            "camera": a.camera.name if a.camera else None,
-        })
-
-    return JsonResponse({
-        "date": str(today),
-        "count": Attendance.objects.filter(date=today).count(),
-        "items": items,
-        "latest_epoch_ms": int(latest_ts.timestamp() * 1000) if latest_ts else None,
-        "latest": latest_ts.isoformat() if latest_ts else None,
-    })
+    try:
+        params = {"limit": int(request.GET.get("limit", 60) or 60)}
+        since = request.GET.get("since")
+        if since:
+            params["since"] = since
+        return JsonResponse(_api_client(request).today(**params))
+    except AttendanceApiError as exc:
+        return JsonResponse({"error": str(exc)}, status=503)
 
 
+@desktop_login_required
 def attendance_delete(request, pk: int):
     """
     Deletes an attendance record. POST-only + CSRF protected.
     Redirects back to the referring page (or a safe fallback).
     """
-    attendance = get_object_or_404(Attendance, pk=pk)
-
-    # OPTIONAL: if you want staff-only deletes, uncomment:
-    # if not request.user.is_staff:
-    #     messages.error(request, "You are not allowed to delete attendance records.")
-    #     return redirect(request.POST.get("next") or "person_attendance_list")
-
-    display_name = getattr(attendance.person, "name", str(attendance.person))
-    date_str = str(attendance.date)
-
-    attendance.delete()
-
-    messages.success(request, f"Deleted attendance for {display_name} on {date_str}.")
-
+    try:
+        _api_client(request).delete_attendance_log(pk)
+        messages.success(request, "Deleted attendance record.")
+    except AttendanceApiError as exc:
+        messages.error(request, f"Could not delete attendance record: {exc}")
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
     return redirect(next_url)
 
@@ -1049,12 +1069,12 @@ def _duration_text(a) -> str:
     return "Not Checked Out"
 
 
+@desktop_login_required
 def attendance_export_download(request):
     search_query = request.GET.get("search", "").strip()
     date_filter = request.GET.get("attendance_date", "").strip()
     fmt = (request.GET.get("format") or "csv").lower().strip()
-
-    qs = _filtered_attendance_qs(search_query, date_filter)
+    qs = fetch_all_attendance_logs(search_query, date_filter, request=request)
 
     # filename
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1073,9 +1093,9 @@ def attendance_export_download(request):
             w.writerow([
                 a.person.name if a.person else "",
                 getattr(a.person, "portal_id", "") if a.person else "",
-                str(a.date) if a.date else "",
-                a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else "",
-                a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else "",
+                str(a.date) if getattr(a, "date", None) else "",
+                str(a.check_in_time) if getattr(a, "check_in_time", None) else "",
+                str(a.check_out_time) if getattr(a, "check_out_time", None) else "",
                 _duration_text(a),
             ])
         return resp
@@ -1090,9 +1110,9 @@ def attendance_export_download(request):
             ws.append([
                 a.person.name if a.person else "",
                 getattr(a.person, "portal_id", "") if a.person else "",
-                str(a.date) if a.date else "",
-                a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else "",
-                a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else "",
+                str(a.date) if getattr(a, "date", None) else "",
+                str(a.check_in_time) if getattr(a, "check_in_time", None) else "",
+                str(a.check_out_time) if getattr(a, "check_out_time", None) else "",
                 _duration_text(a),
             ])
 
@@ -1140,9 +1160,9 @@ def attendance_export_download(request):
 
             name = a.person.name if a.person else ""
             portal = getattr(a.person, "portal_id", "") if a.person else ""
-            dt = str(a.date) if a.date else ""
-            cin = a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else ""
-            cout = a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else ""
+            dt = str(a.date) if getattr(a, "date", None) else ""
+            cin = str(a.check_in_time) if getattr(a, "check_in_time", None) else ""
+            cout = str(a.check_out_time) if getattr(a, "check_out_time", None) else ""
             dur = _duration_text(a)
 
             row = [name, str(portal), dt, cin, cout, str(dur)]
@@ -1160,6 +1180,7 @@ def attendance_export_download(request):
     return HttpResponse("Invalid format", status=400)
 
 
+@desktop_login_required
 def attendance_email_export(request):
     if request.method != "POST":
         return redirect("person_attendance_list")
@@ -1173,7 +1194,7 @@ def attendance_email_export(request):
         messages.error(request, "Recipient email is required.")
         return redirect("person_attendance_list")
 
-    qs = _filtered_attendance_qs(search_query, date_filter)
+    qs = fetch_all_attendance_logs(search_query, date_filter, request=request)
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     label = "attendance"
@@ -1194,9 +1215,9 @@ def attendance_email_export(request):
             w.writerow([
                 a.person.name if a.person else "",
                 getattr(a.person, "portal_id", "") if a.person else "",
-                str(a.date) if a.date else "",
-                a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else "",
-                a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else "",
+                str(a.date) if getattr(a, "date", None) else "",
+                str(a.check_in_time) if getattr(a, "check_in_time", None) else "",
+                str(a.check_out_time) if getattr(a, "check_out_time", None) else "",
                 _duration_text(a),
             ])
 
@@ -1214,9 +1235,9 @@ def attendance_email_export(request):
             ws.append([
                 a.person.name if a.person else "",
                 getattr(a.person, "portal_id", "") if a.person else "",
-                str(a.date) if a.date else "",
-                a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else "",
-                a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else "",
+                str(a.date) if getattr(a, "date", None) else "",
+                str(a.check_in_time) if getattr(a, "check_in_time", None) else "",
+                str(a.check_out_time) if getattr(a, "check_out_time", None) else "",
                 _duration_text(a),
             ])
 
@@ -1261,9 +1282,9 @@ def attendance_email_export(request):
 
             name = a.person.name if a.person else ""
             portal = getattr(a.person, "portal_id", "") if a.person else ""
-            dt = str(a.date) if a.date else ""
-            cin = a.check_in_time.strftime("%H:%M:%S") if a.check_in_time else ""
-            cout = a.check_out_time.strftime("%H:%M:%S") if a.check_out_time else ""
+            dt = str(a.date) if getattr(a, "date", None) else ""
+            cin = str(a.check_in_time) if getattr(a, "check_in_time", None) else ""
+            cout = str(a.check_out_time) if getattr(a, "check_out_time", None) else ""
             dur = _duration_text(a)
 
             row = [name, str(portal), dt, cin, cout, str(dur)]
