@@ -153,6 +153,10 @@ ATTENDANCE_API_BASE_URL = os.getenv(
 ATTENDANCE_API_TOKEN = os.getenv("ATTENDANCE_API_TOKEN", "")
 ATTENDANCE_API_TIMEOUT = int(os.getenv("ATTENDANCE_API_TIMEOUT", "30"))
 ATTENDANCE_API_VERIFY_SSL = os.getenv("ATTENDANCE_API_VERIFY_SSL", "True") == "True"
+TIME_ATTENDANCE_DOWNLOAD_URL = os.getenv(
+    "TIME_ATTENDANCE_DOWNLOAD_URL",
+    "https://github.com/sylvicruza/FacialRecognitionSystem/releases/latest",
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -169,3 +173,4 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = "welfare@openedheavenschapel.co.uk"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+DEMO_REQUEST_EMAIL = os.getenv("DEMO_REQUEST_EMAIL", EMAIL_HOST_USER)

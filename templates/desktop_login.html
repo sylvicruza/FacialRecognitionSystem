@@ -305,6 +305,11 @@
       font-size:12px;
     }
 
+    .login-note a{
+      color:var(--brand-2);
+      font-weight:800;
+    }
+
     @media (max-width: 1100px){
       .shell{
         grid-template-columns:1fr;
@@ -420,7 +425,10 @@
             </button>
           </form>
 
-          <div class="login-note">Desktop access is for church staff accounts.</div>
+          <div class="login-note">
+            Desktop access is for staff accounts.
+            <a href="{% url 'product_about' %}">Learn more</a>
+          </div>
         </div>
       </div>
     </section>

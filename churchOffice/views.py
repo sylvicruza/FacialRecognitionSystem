@@ -44,6 +44,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from .api_backend import (
     ACCESS_TOKEN_SESSION_KEY,
@@ -542,6 +543,55 @@ def nfc_check_in(request):
 # =========================================================
 # UI / Pages (MATCH your urls.py)
 # =========================================================
+def product_about(request):
+    return render(
+        request,
+        "product_about.html",
+        {
+            "download_url": settings.TIME_ATTENDANCE_DOWNLOAD_URL,
+        },
+    )
+
+
+@require_POST
+def demo_request(request):
+    name = request.POST.get("name", "").strip()
+    email = request.POST.get("email", "").strip()
+    organisation = request.POST.get("organisation", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    plan = request.POST.get("plan", "").strip()
+    message = request.POST.get("message", "").strip()
+
+    if not name or not email:
+        messages.error(request, "Please enter your name and email so we can contact you.")
+        return redirect("product_about")
+
+    body = (
+        "A new Time and Attendance demo request was submitted.\n\n"
+        f"Name: {name}\n"
+        f"Email: {email}\n"
+        f"Organisation: {organisation or '-'}\n"
+        f"Phone: {phone or '-'}\n"
+        f"Interested plan: {plan or '-'}\n\n"
+        f"Message:\n{message or '-'}\n"
+    )
+
+    try:
+        email_message = EmailMessage(
+            subject=f"Time and Attendance Demo Request - {name}",
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.DEMO_REQUEST_EMAIL],
+            reply_to=[email],
+        )
+        email_message.send(fail_silently=False)
+        messages.success(request, "Thanks. We received your request and will contact you to schedule a demo.")
+    except Exception:
+        messages.error(request, "We could not send your request right now. Please try again later.")
+
+    return redirect("product_about")
+
+
 def desktop_login(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()

@@ -1,0 +1,645 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time and Attendance | SlyApps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root{
+      --ink:#071322;
+      --muted:#607086;
+      --line:#dce7f1;
+      --paper:#f7fbff;
+      --white:#fff;
+      --brand:#20b66f;
+      --brand-dark:#13864f;
+      --blue:#2e7df6;
+      --gold:#f0b33b;
+      --shadow:0 30px 90px rgba(7,19,34,.16);
+      --radius:30px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:'Manrope', sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 520px at 8% 2%, rgba(32,182,111,.16), transparent 58%),
+        radial-gradient(780px 520px at 92% 4%, rgba(46,125,246,.13), transparent 58%),
+        linear-gradient(180deg,#f8fcff,#eef6fb 46%,#f9fcff);
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      width:min(1180px, calc(100% - 36px));
+      margin:0 auto;
+    }
+
+    .nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:22px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .brand img{
+      width:46px;
+      height:46px;
+      border-radius:15px;
+      box-shadow:0 12px 28px rgba(7,19,34,.12);
+    }
+
+    .nav-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:11px 15px;
+      border-radius:999px;
+      background:rgba(255,255,255,.76);
+      border:1px solid rgba(220,231,241,.9);
+      color:#26374b;
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .pill.primary{
+      background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+      color:#fff;
+      border:none;
+      box-shadow:0 16px 34px rgba(32,182,111,.22);
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:34px;
+      align-items:center;
+      padding:46px 0 56px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 13px;
+      border-radius:999px;
+      background:#eaf8f1;
+      color:#126b41;
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:18px;
+    }
+
+    h1{
+      font-size:clamp(44px, 7vw, 82px);
+      line-height:.92;
+      letter-spacing:-.075em;
+      margin:0;
+      max-width:760px;
+    }
+
+    .hero p{
+      margin:22px 0 0;
+      max-width:590px;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.65;
+    }
+
+    .cta-row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:28px;
+    }
+
+    .hero-card{
+      border-radius:38px;
+      background:linear-gradient(160deg,#071322,#10273e);
+      padding:28px;
+      color:#fff;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero-card:before{
+      content:"";
+      position:absolute;
+      inset:-120px -160px auto auto;
+      width:360px;
+      height:360px;
+      border-radius:999px;
+      background:rgba(32,182,111,.20);
+      filter:blur(6px);
+    }
+
+    .screen{
+      position:relative;
+      border-radius:26px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.13);
+      padding:18px;
+    }
+
+    .screen-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+
+    .metric{
+      background:rgba(255,255,255,.94);
+      color:var(--ink);
+      border-radius:20px;
+      padding:17px;
+      min-height:122px;
+    }
+
+    .metric i{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:13px;
+      background:#e9f8f1;
+      color:var(--brand-dark);
+      margin-bottom:12px;
+    }
+
+    .metric b{
+      display:block;
+      font-size:28px;
+      letter-spacing:-.04em;
+    }
+
+    .metric span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:3px;
+    }
+
+    section{
+      padding:56px 0;
+    }
+
+    .section-title{
+      max-width:680px;
+      margin-bottom:24px;
+    }
+
+    .section-title h2{
+      margin:0;
+      font-size:clamp(32px, 4vw, 52px);
+      line-height:1;
+      letter-spacing:-.06em;
+    }
+
+    .section-title p{
+      margin:14px 0 0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.65;
+    }
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+
+    .feature,
+    .price,
+    .demo-card{
+      background:rgba(255,255,255,.82);
+      border:1px solid rgba(220,231,241,.9);
+      border-radius:var(--radius);
+      box-shadow:0 18px 46px rgba(7,19,34,.08);
+    }
+
+    .feature{
+      padding:22px;
+    }
+
+    .feature i{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      background:#eaf8f1;
+      color:var(--brand-dark);
+      margin-bottom:18px;
+      font-size:18px;
+    }
+
+    .feature b{
+      display:block;
+      font-size:18px;
+      margin-bottom:8px;
+      letter-spacing:-.02em;
+    }
+
+    .feature p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .pricing{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .price{
+      padding:24px;
+      position:relative;
+    }
+
+    .price.highlight{
+      background:linear-gradient(160deg,#071322,#10273e);
+      color:#fff;
+      transform:translateY(-10px);
+    }
+
+    .price .tag{
+      display:inline-flex;
+      padding:7px 11px;
+      border-radius:999px;
+      background:#eef6fb;
+      color:#38516b;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:16px;
+    }
+
+    .price.highlight .tag{
+      background:rgba(240,179,59,.16);
+      color:#ffd985;
+    }
+
+    .price h3{
+      margin:0;
+      font-size:26px;
+      letter-spacing:-.04em;
+    }
+
+    .amount{
+      margin:13px 0;
+      font-size:34px;
+      font-weight:800;
+      letter-spacing:-.05em;
+    }
+
+    .amount span{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:0;
+    }
+
+    .price.highlight .amount span,
+    .price.highlight li{
+      color:rgba(255,255,255,.76);
+    }
+
+    ul{
+      list-style:none;
+      padding:0;
+      margin:18px 0 0;
+      display:grid;
+      gap:11px;
+    }
+
+    li{
+      color:#475b72;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    li i{
+      color:var(--brand);
+      margin-right:8px;
+    }
+
+    .demo-wrap{
+      display:grid;
+      grid-template-columns:.85fr 1.15fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .demo-card{
+      padding:24px;
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      font-weight:800;
+      color:#34495f;
+      margin:0 0 8px;
+    }
+
+    input,
+    select,
+    textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:13px 14px;
+      font:inherit;
+      background:#f7fbff;
+      color:var(--ink);
+      outline:none;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+
+    .full{ grid-column:1 / -1; }
+
+    button{
+      border:none;
+      cursor:pointer;
+      font:inherit;
+    }
+
+    .message{
+      padding:13px 15px;
+      border-radius:16px;
+      margin-bottom:14px;
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .message.success{
+      background:#eaf8f1;
+      color:#126b41;
+    }
+
+    .message.error{
+      background:#fff0f0;
+      color:#a92420;
+    }
+
+    footer{
+      padding:30px 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    @media (max-width: 960px){
+      .hero,
+      .demo-wrap{
+        grid-template-columns:1fr;
+      }
+
+      .feature-grid,
+      .pricing{
+        grid-template-columns:1fr;
+      }
+
+      .price.highlight{
+        transform:none;
+      }
+    }
+
+    @media (max-width: 640px){
+      .nav{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      .form-grid{
+        grid-template-columns:1fr;
+      }
+
+      .metric-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap nav">
+    <a class="brand" href="{% url 'product_about' %}">
+      <img src="{% static 'images/time-attendance-icon.png' %}" alt="Time and Attendance">
+      <span>Time and Attendance</span>
+    </a>
+    <div class="nav-actions">
+      <a class="pill" href="#pricing">Pricing</a>
+      <a class="pill" href="#demo">Book demo</a>
+      <a class="pill primary" href="{{ download_url }}" target="_blank" rel="noopener">
+        <i class="fa-solid fa-download"></i> Download app
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap hero">
+      <div>
+        <div class="eyebrow"><i class="fa-solid fa-clock"></i> Simple staff attendance</div>
+        <h1>Time tracking for teams, churches, and offices.</h1>
+        <p>Install the desktop app, connect your local cameras, and keep attendance records synced securely online.</p>
+        <div class="cta-row">
+          <a class="pill primary" href="#demo"><i class="fa-solid fa-calendar-check"></i> Request a demo</a>
+          <a class="pill" href="{{ download_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Download installer</a>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="screen">
+          <div class="screen-head">
+            <strong>Today at a glance</strong>
+            <span class="pill"><i class="fa-solid fa-circle" style="color:var(--brand);"></i> Live</span>
+          </div>
+          <div class="metric-grid">
+            <div class="metric"><i class="fa-solid fa-users"></i><b>248</b><span>registered people</span></div>
+            <div class="metric"><i class="fa-solid fa-right-to-bracket"></i><b>186</b><span>check-ins today</span></div>
+            <div class="metric"><i class="fa-solid fa-camera"></i><b>4</b><span>local cameras</span></div>
+            <div class="metric"><i class="fa-solid fa-face-smile"></i><b>AI</b><span>face recognition ready</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-title">
+        <h2>What it does</h2>
+        <p>Everything you need to register people, mark attendance, and review logs without manual paper sheets.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <i class="fa-solid fa-id-badge"></i>
+          <b>Member registration</b>
+          <p>Add people, capture photos, and manage attendance profiles from the desktop app.</p>
+        </article>
+        <article class="feature">
+          <i class="fa-solid fa-camera-retro"></i>
+          <b>Camera attendance</b>
+          <p>Use local DroidCam, Reolink, webcam, or RTSP camera sources on the same network.</p>
+        </article>
+        <article class="feature">
+          <i class="fa-solid fa-file-export"></i>
+          <b>Reports and exports</b>
+          <p>Search logs, export CSV, Excel, or PDF, and email attendance reports when needed.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap" id="pricing">
+      <div class="section-title">
+        <h2>Pricing</h2>
+        <p>Start small, then upgrade when you are ready for smarter attendance automation.</p>
+      </div>
+
+      <div class="pricing">
+        <article class="price">
+          <span class="tag">Free</span>
+          <h3>Starter</h3>
+          <div class="amount">£0 <span>/ trial</span></div>
+          <ul>
+            <li><i class="fa-solid fa-check"></i>Basic member setup</li>
+            <li><i class="fa-solid fa-check"></i>Manual attendance logs</li>
+            <li><i class="fa-solid fa-check"></i>Limited local testing</li>
+          </ul>
+        </article>
+
+        <article class="price">
+          <span class="tag">Pro</span>
+          <h3>Time and Attendance</h3>
+          <div class="amount">Custom <span>/ organisation</span></div>
+          <ul>
+            <li><i class="fa-solid fa-check"></i>Desktop attendance app</li>
+            <li><i class="fa-solid fa-check"></i>Camera setup and logs</li>
+            <li><i class="fa-solid fa-check"></i>Exports and email reports</li>
+            <li><i class="fa-solid fa-check"></i>Hosted backend sync</li>
+          </ul>
+        </article>
+
+        <article class="price highlight">
+          <span class="tag">Highest tier</span>
+          <h3>Facial Recognition</h3>
+          <div class="amount">Premium <span>/ deployment</span></div>
+          <ul>
+            <li><i class="fa-solid fa-check"></i>Face recognition check-in</li>
+            <li><i class="fa-solid fa-check"></i>Local camera intelligence</li>
+            <li><i class="fa-solid fa-check"></i>Multi-camera monitoring</li>
+            <li><i class="fa-solid fa-check"></i>Setup support and onboarding</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap" id="demo">
+      <div class="demo-wrap">
+        <div class="section-title">
+          <h2>Book a demo</h2>
+          <p>Tell us about your organisation. We will contact you and schedule a walkthrough.</p>
+          <div class="cta-row">
+            <a class="pill" href="{{ download_url }}" target="_blank" rel="noopener">
+              <i class="fa-solid fa-download"></i> Download latest app
+            </a>
+          </div>
+        </div>
+
+        <form class="demo-card" method="post" action="{% url 'demo_request' %}">
+          {% csrf_token %}
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="message {{ message.tags|default:'success' }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <div class="form-grid">
+            <div>
+              <label for="name">Name</label>
+              <input id="name" name="name" type="text" required>
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required>
+            </div>
+            <div>
+              <label for="organisation">Organisation</label>
+              <input id="organisation" name="organisation" type="text">
+            </div>
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="text">
+            </div>
+            <div class="full">
+              <label for="plan">Interested in</label>
+              <select id="plan" name="plan">
+                <option value="Pro">Pro time and attendance</option>
+                <option value="Facial Recognition">Facial recognition premium</option>
+                <option value="Free">Free trial</option>
+              </select>
+            </div>
+            <div class="full">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Tell us what you want to track."></textarea>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button class="pill primary" type="submit">
+              <i class="fa-solid fa-paper-plane"></i> Send request
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    Time and Attendance by SlyApps. Built for local camera access and hosted attendance records.
+  </footer>
+</body>
+</html>
