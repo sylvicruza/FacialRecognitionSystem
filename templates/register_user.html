@@ -1,22 +1,17 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register Member</title>
+{% extends "base.html" %}
+{% block title %}Register Member{% endblock %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Capture Member Photo{% endblock %}
+{% block page_subtitle %}Start a camera, capture a clear face photo, and save the member.{% endblock %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-
+{% block content %}
   <style>
     :root{
-      --bg1:#0b1220;
-      --bg2:#101a33;
       --card:#ffffff;
       --text:#0f172a;
       --muted:#64748b;
       --border:#e2e8f0;
-      --shadow: 0 20px 50px rgba(2, 6, 23, .25);
+      --shadow: 0 22px 54px rgba(15, 23, 42, .08);
       --softShadow: 0 10px 30px rgba(15, 23, 42, .10);
 
       --brand:#22c55e;
@@ -26,106 +21,20 @@
       --info:#38bdf8;
       --radius:18px;
 
-      --glass: rgba(255,255,255,.08);
-      --glassBorder: rgba(255,255,255,.14);
     }
 
     *{ box-sizing:border-box; }
 
-    body{
-      min-height: 100vh;
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(1200px 600px at 20% 0%, rgba(34,197,94,.18), transparent 60%),
-        radial-gradient(900px 500px at 80% 20%, rgba(56,189,248,.18), transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-    }
-
-    .wrap{
-      max-width: 1120px;
+    .register-wrap{
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 28px 16px 42px;
+      padding: 0 0 18px;
     }
-
-    .top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 14px;
-      margin-bottom: 16px;
-      flex-wrap:wrap;
-    }
-
-    .page-title{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      color: rgba(255,255,255,.92);
-    }
-
-    .page-icon{
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(34,197,94,1), rgba(56,189,248,1));
-      box-shadow: 0 15px 30px rgba(34,197,94,.18);
-      display:grid;
-      place-items:center;
-      color:#08121d;
-      flex:0 0 auto;
-    }
-
-    .page-copy h1{
-      margin:0;
-      font-size: 18px;
-      line-height:1.15;
-      letter-spacing:-0.02em;
-      font-weight: 800;
-    }
-
-    .page-copy p{
-      margin:4px 0 0;
-      color: rgba(255,255,255,.70);
-      font-size: 12px;
-      line-height:1.45;
-      max-width: 620px;
-    }
-
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .chip-link{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--glassBorder);
-      color: rgba(255,255,255,.9);
-      text-decoration:none;
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      transition: transform .05s ease, background .2s ease, border-color .2s ease;
-      font-weight:700;
-      white-space:nowrap;
-    }
-
-    .chip-link:hover{
-      background: rgba(255,255,255,.10);
-      border-color: rgba(255,255,255,.22);
-    }
-
-    .chip-link:active{ transform: scale(.98); }
 
     .grid{
       display:grid;
-      grid-template-columns: 1.25fr .85fr;
-      gap: 16px;
+      grid-template-columns: minmax(0, 1.25fr) minmax(360px, .85fr);
+      gap: 18px;
       align-items:start;
     }
 
@@ -134,9 +43,9 @@
     }
 
     .panel{
-      background: rgba(255,255,255,.94);
-      border: 1px solid rgba(226,232,240,.9);
-      border-radius: var(--radius);
+      background: #fff;
+      border: 1px solid #dfe9e3;
+      border-radius: 24px;
       box-shadow: var(--shadow);
       overflow:hidden;
     }
@@ -148,7 +57,7 @@
       justify-content:space-between;
       align-items:center;
       gap: 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.88));
+      background: linear-gradient(180deg, #ffffff, #fbfdfc);
       flex-wrap:wrap;
     }
 
@@ -607,59 +516,10 @@
       line-height:1.45;
     }
 
-    .foot{
-      display:flex;
-      justify-content:flex-start;
-      align-items:center;
-      gap: 10px;
-      flex-wrap:wrap;
-      margin-top: 12px;
-    }
-
-    .link{
-      cursor:pointer;
-      color: rgba(255,255,255,.86);
-      text-decoration:none;
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--glassBorder);
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      transition: transform .05s ease;
-    }
-
-    .link:active{ transform: scale(.98); }
-
     .legacy-selects{ display:none; }
   </style>
-</head>
 
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="page-title">
-        <div class="page-icon">
-          <i class="fa-solid fa-user-plus"></i>
-        </div>
-        <div class="page-copy">
-          <h1>Register Member</h1>
-          <p>Capture a clear face photo and save it to the attendance system.</p>
-        </div>
-      </div>
-
-      <div class="top-actions">
-        <a class="chip-link" href="{% url 'camera_config_list' %}">
-          <i class="fa-solid fa-gear"></i> Camera Settings
-        </a>
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Home
-        </a>
-      </div>
-    </div>
-
+  <div class="register-wrap">
     <div class="grid">
       <!-- LEFT -->
       <div class="panel">
@@ -767,7 +627,7 @@
             <span>Review the captured image before saving.</span>
           </div>
           <div class="stepper">
-            <div class="step"><span class="n">✓</span> Ready</div>
+            <div class="step"><span class="n">OK</span> Ready</div>
           </div>
         </div>
 
@@ -777,13 +637,38 @@
 
             <div class="field">
               <label>Name</label>
-              <input type="text" id="name" name="name" value="{{ name }}" class="form-control soft" readonly>
+              <input type="text" id="name" name="name" value="{{ name }}" class="form-control soft" placeholder="Member full name" required>
             </div>
 
-            <div class="field">
-              <label>Portal ID</label>
-              <input type="text" id="portal_id" name="portal_id" value="{{ portal_id }}" class="form-control soft" readonly>
+            <div class="row2">
+              <div class="field">
+                <label>Email</label>
+                <input type="email" id="email" name="email" value="{{ email }}" class="form-control soft" placeholder="member@example.com">
+              </div>
+
+              <div class="field">
+                <label>Phone</label>
+                <input type="text" id="phone" name="phone" value="{{ phone }}" class="form-control soft" placeholder="Phone number">
+              </div>
             </div>
+
+            {% if integration_enabled %}
+              <div class="field">
+                <label>External ID</label>
+                <input type="text" id="portal_id" name="portal_id" value="{{ portal_id }}" class="form-control soft" placeholder="Optional existing system ID">
+                <div class="hint">Use this only for the connected member integration owned by this organization.</div>
+              </div>
+            {% else %}
+              <input type="hidden" id="portal_id" name="portal_id" value="">
+            {% endif %}
+
+            {% if request.session.attendance_desktop_plan.allow_nfc %}
+              <div class="field">
+                <label>NFC Tag UID</label>
+                <input type="text" id="nfc_uid" name="nfc_uid" value="{{ nfc_uid }}" class="form-control soft" placeholder="Optional card/tag UID">
+                <div class="hint">Optional. You can also add this later from the member profile.</div>
+              </div>
+            {% endif %}
 
             <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
             <input type="hidden" id="image_data" name="image_data">
@@ -828,11 +713,6 @@
       </div>
     </div>
 
-    <div class="foot">
-      <a class="link" href="{% url 'home' %}">
-        <i class="fa-solid fa-arrow-left"></i> Back to Home
-      </a>
-    </div>
   </div>
 
 <script>
@@ -998,7 +878,7 @@
 
     setCaptureEnabled(true);
     showGuide(true);
-    setStage('live', 'Configured camera loading… align face and capture.');
+    setStage('live', 'Configured camera loading... align face and capture.');
     setAlert("Configured camera started. Wait for preview, then capture.", "info");
 
     rtspPreview.onerror = () => {
@@ -1203,6 +1083,4 @@
   })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-</body>
-</html>
+{% endblock %}

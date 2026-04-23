@@ -1,6 +1,6 @@
-# Time and Attendance Desktop Client
+# KairosTrack Desktop Client
 
-This project should now be treated as the local desktop client for the Time and Attendance system.
+This project should now be treated as the local desktop client for KairosTrack.
 
 ## Why the split is required
 

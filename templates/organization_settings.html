@@ -1,0 +1,857 @@
+{% extends "base.html" %}
+{% block title %}Organization Settings{% endblock %}
+{% block page_crumb %}Setup{% endblock %}
+{% block page_title %}Organization{% endblock %}
+{% block page_subtitle %}Manage your workspace, plan, registration link, branches, and staff.{% endblock %}
+
+{% block content %}
+<style>
+  .org-wrap{
+    display:grid;
+    gap:18px;
+  }
+
+  .org-hero{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:18px;
+    align-items:stretch;
+  }
+
+  .panel{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:26px;
+    box-shadow:0 22px 54px rgba(15,23,42,.08);
+    overflow:hidden;
+  }
+
+  .panel.pad{ padding:22px; }
+
+  .panel-head{
+    padding:20px 22px;
+    border-bottom:1px solid #edf2ef;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .panel-title h2{
+    margin:0;
+    font-size:20px;
+    font-weight:900;
+    letter-spacing:-.03em;
+    color:#101827;
+  }
+
+  .panel-title p{
+    margin:4px 0 0;
+    color:#64748b;
+    font-size:13px;
+  }
+
+  .brand-card{
+    background:
+      radial-gradient(520px 240px at 82% 0%, rgba(34,197,94,.18), transparent 70%),
+      linear-gradient(135deg,#06291b,#10364a);
+    color:#fff;
+    min-height:250px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+
+  .brand-card h2{
+    margin:0;
+    font-size:32px;
+    font-weight:900;
+    letter-spacing:-.05em;
+  }
+
+  .brand-card p{
+    color:rgba(255,255,255,.74);
+    margin:8px 0 0;
+    max-width:560px;
+  }
+
+  .chips{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+
+  .mini-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.9);
+    font-weight:800;
+    font-size:12px;
+  }
+
+  .plan-grid,
+  .stats-grid,
+  .profile-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .stat,
+  .profile-card{
+    border:1px solid #e6eee9;
+    border-radius:20px;
+    padding:16px;
+    background:linear-gradient(180deg,#fff,#fbfdfc);
+  }
+
+  .stat span,
+  .profile-card span{
+    display:block;
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .stat b{
+    display:block;
+    margin-top:8px;
+    font-size:26px;
+    color:#101827;
+    letter-spacing:-.04em;
+  }
+
+  .profile-card b{
+    display:block;
+    margin-top:7px;
+    color:#101827;
+    font-size:15px;
+    overflow-wrap:anywhere;
+  }
+
+  .limit-bar{
+    height:9px;
+    margin-top:12px;
+    border-radius:999px;
+    background:#edf5f0;
+    overflow:hidden;
+  }
+
+  .limit-bar div{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+  }
+
+  .limit-warning{
+    margin-top:12px;
+    padding:12px 14px;
+    border-radius:16px;
+    border:1px solid #fed7aa;
+    background:#fff7ed;
+    color:#9a3412;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-top:16px;
+  }
+
+  .feature{
+    padding:12px;
+    border-radius:16px;
+    border:1px solid #d8f0df;
+    background:#f0fbf4;
+    color:#14532d;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .feature.locked{
+    border-color:#e2e8f0;
+    background:#f8fafc;
+    color:#64748b;
+  }
+
+  .form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+
+  .full{ grid-column:1 / -1; }
+
+  .field label{
+    display:block;
+    color:#334155;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:7px;
+  }
+
+  .field input,
+  .field select{
+    width:100%;
+    min-height:48px;
+    border:1px solid #dfe7ef;
+    background:#f7fbff;
+    border-radius:15px;
+    padding:0 14px;
+    color:#101827;
+    outline:none;
+  }
+
+  .field input:focus,
+  .field select:focus{
+    border-color:#90d4b1;
+    box-shadow:0 0 0 4px rgba(34,197,94,.12);
+    background:#fff;
+  }
+
+  .btnx{
+    border:none;
+    border-radius:15px;
+    padding:12px 15px;
+    font-weight:900;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-decoration:none;
+    cursor:pointer;
+  }
+
+  .btnx.primary{
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#052012;
+  }
+
+  .btnx.soft{
+    background:#eef8f1;
+    color:#11623d;
+    border:1px solid #ccebd8;
+  }
+
+  .btnx.danger{
+    background:#fff1f1;
+    color:#a01818;
+    border:1px solid #ffd1d1;
+  }
+
+  .btnx:disabled,
+  .field input:disabled,
+  .field select:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  .copy-row{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+  }
+
+  .table-wrap{
+    overflow:auto;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  th,
+  td{
+    padding:15px 18px;
+    border-top:1px solid #edf2ef;
+    text-align:left;
+    vertical-align:middle;
+    white-space:nowrap;
+  }
+
+  th{
+    color:#64748b;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+
+  td{
+    color:#101827;
+    font-weight:750;
+  }
+
+  .sub{
+    color:#64748b;
+    font-size:12px;
+    font-weight:700;
+    margin-top:3px;
+  }
+
+  .badge-soft{
+    display:inline-flex;
+    border-radius:999px;
+    padding:7px 10px;
+    background:#eef8f1;
+    color:#11623d;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .two-col{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+
+  @media (max-width:1050px){
+    .org-hero,
+    .two-col{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width:680px){
+    .form-grid,
+    .plan-grid,
+    .stats-grid,
+    .profile-grid,
+    .feature-grid,
+    .copy-row{ grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="org-wrap">
+  <section class="org-hero">
+    <div class="panel pad brand-card">
+      <div>
+        <h2>{{ organization.name|default:"Organization" }}</h2>
+        <p>Keep your workspace details, registration link, staff, and branch setup in one place.</p>
+        <div class="chips">
+          <span class="mini-chip"><i class="fa-solid fa-layer-group"></i> {{ plan.name|default:"No plan" }}</span>
+          <span class="mini-chip"><i class="fa-solid fa-users"></i> {{ organization.member_count|default:0 }} members</span>
+          <span class="mini-chip"><i class="fa-solid fa-user-shield"></i> {{ organization.staff_count|default:0 }} staff</span>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="mini-chip"><i class="fa-solid fa-link"></i> {{ organization.slug|default:"setup-needed" }}</span>
+        <span class="mini-chip"><i class="fa-solid fa-circle-check"></i> Active workspace</span>
+      </div>
+    </div>
+
+    <div class="panel pad">
+      <div class="panel-title">
+        <h2>Plan Limits</h2>
+        <p>Feature access is based on the current plan.</p>
+      </div>
+      <div class="stats-grid" style="margin-top:16px;">
+        <div class="stat">
+          <span>Members</span>
+          <b>{{ member_limit.current|default:0 }} / {% if member_limit.is_limited %}{{ member_limit.limit }}{% else %}Unlimited{% endif %}</b>
+          {% if member_limit.is_limited %}<div class="limit-bar"><div style="width:{{ member_limit.percent }}%;"></div></div>{% endif %}
+        </div>
+        <div class="stat">
+          <span>Staff</span>
+          <b>{{ staff_limit.current|default:0 }} / {% if staff_limit.is_limited %}{{ staff_limit.limit }}{% else %}Unlimited{% endif %}</b>
+          {% if staff_limit.is_limited %}<div class="limit-bar"><div style="width:{{ staff_limit.percent }}%;"></div></div>{% endif %}
+        </div>
+        <div class="stat"><span>QR</span><b>{% if plan.allow_qr %}On{% else %}Off{% endif %}</b></div>
+        <div class="stat"><span>Face Recognition</span><b>{% if plan.allow_face_recognition %}On{% else %}Off{% endif %}</b></div>
+      </div>
+      {% if member_limit.is_reached or staff_limit.is_reached %}
+        <div class="limit-warning">
+          {% if member_limit.is_reached %}Member limit reached. {% endif %}
+          {% if staff_limit.is_reached %}Staff limit reached. {% endif %}
+          Upgrade to keep growing this workspace.
+          <a href="{% url 'upgrade_request' %}" style="margin-left:8px;color:#9a3412;font-weight:900;">Request upgrade</a>
+        </div>
+      {% endif %}
+      <div class="feature-grid">
+        {% for method in attendance_methods %}
+          <div class="feature {% if not method.allowed %}locked{% endif %}">
+            <i class="fa-solid {{ method.icon }}"></i>
+            {{ method.name }} {% if not method.allowed %}({{ method.plan }}+){% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="two-col">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Workspace Profile</h2>
+          <p>Useful account details for administrators.</p>
+        </div>
+        <span class="badge-soft">{% if organization.is_active %}Active{% else %}Inactive{% endif %}</span>
+      </div>
+      <div style="padding:20px 22px;">
+        <div class="profile-grid">
+          <div class="profile-card">
+            <span>Organization ID</span>
+            <b>{{ organization.id|default:"-" }}</b>
+          </div>
+          <div class="profile-card">
+            <span>Workspace Slug</span>
+            <b>{{ organization.slug|default:"Not set" }}</b>
+          </div>
+          <div class="profile-card">
+            <span>Date Joined</span>
+            <b>{{ organization.created_at|default:"-" }}</b>
+          </div>
+          <div class="profile-card">
+            <span>Current Admin</span>
+            <b>{{ staff_profile.full_name|default:request.session.attendance_desktop_name }}</b>
+          </div>
+          <div class="profile-card">
+            <span>Admin Role</span>
+            <b>{{ staff_profile.role|default:"staff"|title }}</b>
+          </div>
+          <div class="profile-card">
+            <span>Plan Expiry</span>
+            <b>Not configured</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Subscription Snapshot</h2>
+          <p>What this workspace can use right now.</p>
+        </div>
+        <a class="btnx soft" href="{% url 'upgrade_request' %}">
+          <i class="fa-solid fa-arrow-up-right-dots"></i> Upgrade
+        </a>
+      </div>
+      <div style="padding:20px 22px;">
+        <div class="profile-grid">
+          <div class="profile-card"><span>Plan</span><b>{{ plan.name|default:"No plan" }}</b></div>
+          <div class="profile-card"><span>Tier</span><b>{{ plan.tier|default:"-"|title }}</b></div>
+          <div class="profile-card"><span>Members Used</span><b>{{ member_limit.current|default:0 }}{% if member_limit.is_limited %} / {{ member_limit.limit }}{% else %} / Unlimited{% endif %}</b></div>
+          <div class="profile-card"><span>Staff Used</span><b>{{ staff_limit.current|default:0 }}{% if staff_limit.is_limited %} / {{ staff_limit.limit }}{% else %} / Unlimited{% endif %}</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>Self-Registration Link</h2>
+        <p>Share this with members so they can submit their own profile for approval.</p>
+      </div>
+      {% if plan.allow_qr %}
+        <span class="badge-soft">Standard plan enabled</span>
+      {% else %}
+        <span class="badge-soft">Upgrade needed</span>
+      {% endif %}
+    </div>
+    <div style="padding:20px 22px;">
+      <div class="copy-row">
+        <div class="field">
+          <input id="registrationUrl" value="{{ registration_url }}" readonly>
+        </div>
+        <button class="btnx soft" type="button" onclick="navigator.clipboard.writeText(document.getElementById('registrationUrl').value)">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="two-col">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Organization Details</h2>
+          <p>Basic details used for records and communication.</p>
+        </div>
+      </div>
+      <form method="post" style="padding:20px 22px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_organization">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Organization Name</label>
+            <input name="name" value="{{ organization.name }}" required>
+          </div>
+          <div class="field">
+            <label>Contact Email</label>
+            <input name="contact_email" type="email" value="{{ organization.contact_email }}">
+          </div>
+          <div class="field">
+            <label>Contact Phone</label>
+            <input name="contact_phone" value="{{ organization.contact_phone }}">
+          </div>
+        </div>
+        <button class="btnx primary" style="margin-top:16px;" type="submit">
+          <i class="fa-solid fa-floppy-disk"></i> Save Details
+        </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Branches & GeoTracking</h2>
+          <p>Set branch GPS coordinates and radius for the mobile app.</p>
+        </div>
+      </div>
+      <form method="post" style="padding:20px 22px;border-bottom:1px solid #edf2ef;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_branch">
+        <div class="form-grid">
+          <div class="field">
+            <label>Branch Name</label>
+            <input name="branch_name" placeholder="Main Campus" required>
+          </div>
+          <div class="field">
+            <label>Address</label>
+            <input name="address" placeholder="Optional">
+          </div>
+          <div class="field">
+            <label>Latitude</label>
+            <input name="latitude" inputmode="decimal" placeholder="51.507351">
+          </div>
+          <div class="field">
+            <label>Longitude</label>
+            <input name="longitude" inputmode="decimal" placeholder="-0.127758">
+          </div>
+          <div class="field">
+            <label>Allowed Radius (meters)</label>
+            <input name="geofence_radius_meters" type="number" min="10" value="100">
+          </div>
+        </div>
+        <button class="btnx primary" style="margin-top:16px;" type="submit">
+          <i class="fa-solid fa-plus"></i> Add Branch
+        </button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Branch</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for branch in branches %}
+              <tr>
+                <td colspan="2">
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_branch">
+                    <input type="hidden" name="branch_id" value="{{ branch.id }}">
+                    <div class="form-grid">
+                      <div class="field">
+                        <label>Branch</label>
+                        <input name="branch_name" value="{{ branch.name }}" required>
+                      </div>
+                      <div class="field">
+                        <label>Address</label>
+                        <input name="address" value="{{ branch.address }}">
+                      </div>
+                      <div class="field">
+                        <label>Latitude</label>
+                        <input name="latitude" inputmode="decimal" value="{{ branch.latitude|default:'' }}">
+                      </div>
+                      <div class="field">
+                        <label>Longitude</label>
+                        <input name="longitude" inputmode="decimal" value="{{ branch.longitude|default:'' }}">
+                      </div>
+                      <div class="field">
+                        <label>Allowed Radius (meters)</label>
+                        <input name="geofence_radius_meters" type="number" min="10" value="{{ branch.geofence_radius_meters|default:100 }}">
+                      </div>
+                      <div class="field">
+                        <label>Status</label>
+                        <label style="display:flex;align-items:center;gap:8px;min-height:48px;margin:0;">
+                          <input name="is_active" type="checkbox" style="width:auto;min-height:auto;" {% if branch.is_active %}checked{% endif %}>
+                          Active
+                        </label>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+                      <button class="btnx soft" type="button" onclick="fillCurrentLocation(this)">
+                        <i class="fa-solid fa-location-crosshairs"></i> Use Current Location
+                      </button>
+                      <button class="btnx primary" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Branch
+                      </button>
+                    </div>
+                    <div class="sub" style="margin-top:10px;">
+                      GeoTracking mobile check-ins for events linked to this branch are accepted within {{ branch.geofence_radius_meters|default:100 }}m.
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="2">No branches yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>Event Branch Assignment</h2>
+        <p>GeoTracking validates against the branch attached to the event session.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Branch</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for event in events %}
+            <tr>
+              <td>{{ event.name }}<div class="sub">{{ event.branch_name|default:"No branch assigned" }}</div></td>
+              <td>
+                <form method="post" id="event-branch-{{ event.id }}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="assign_event_branch">
+                  <input type="hidden" name="event_id" value="{{ event.id }}">
+                  <div class="field">
+                    <select name="branch_id">
+                      <option value="">No branch</option>
+                      {% for branch in branches %}
+                        <option value="{{ branch.id }}" {% if event.branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </form>
+              </td>
+              <td>
+                <button class="btnx soft" type="submit" form="event-branch-{{ event.id }}">
+                  <i class="fa-solid fa-link"></i> Save
+                </button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No events yet. Create events from Event Sessions.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>Staff Users</h2>
+        <p>Owners and admins can add staff accounts for this organization.</p>
+      </div>
+      {% if can_manage_staff %}
+        <span class="badge-soft">Management enabled</span>
+      {% else %}
+        <span class="badge-soft">View only</span>
+      {% endif %}
+    </div>
+
+    {% if can_manage_staff %}
+      <form method="post" style="padding:20px 22px;border-bottom:1px solid #edf2ef;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_staff">
+        <div class="form-grid">
+          <div class="field">
+            <label>Username</label>
+            <input name="username" required {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input name="email" type="email" {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+          <div class="field">
+            <label>First Name</label>
+            <input name="first_name" {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input name="last_name" {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select name="role" {% if staff_limit.is_reached %}disabled{% endif %}>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Branch</label>
+            <select name="branch" {% if staff_limit.is_reached %}disabled{% endif %}>
+              <option value="">No branch</option>
+              {% for branch in branches %}
+                <option value="{{ branch.id }}">{{ branch.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input name="password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+          <div class="field">
+            <label>Confirm Password</label>
+            <input name="confirm_password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
+          </div>
+        </div>
+        {% if staff_limit.is_reached %}
+          <div class="limit-warning">Staff user limit reached for this plan. Upgrade before adding another staff account.</div>
+        {% endif %}
+        <button class="btnx primary" style="margin-top:16px;" type="submit" {% if staff_limit.is_reached %}disabled{% endif %}>
+          <i class="fa-solid fa-user-plus"></i> Add Staff
+        </button>
+      </form>
+    {% endif %}
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Staff</th><th>Role</th><th>Branch</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for item in staff %}
+            <tr>
+              <td>{{ item.full_name }}<div class="sub">{{ item.username }}{% if item.email %} · {{ item.email }}{% endif %}</div></td>
+              <td>{{ item.role|title }}</td>
+              <td>{{ item.branch_name|default:"-" }}</td>
+              <td>{{ item.created_at|default:"-" }}</td>
+              <td><span class="badge-soft">{% if item.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+              <td>
+                {% if can_manage_staff %}
+                  <button class="btnx soft" type="button" data-bs-toggle="collapse" data-bs-target="#staffManage{{ item.id }}">
+                    <i class="fa-solid fa-sliders"></i> Manage
+                  </button>
+                {% else %}
+                  <span class="sub">No action</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% if can_manage_staff %}
+              <tr class="collapse" id="staffManage{{ item.id }}">
+                <td colspan="6">
+                  <div class="two-col">
+                    <form method="post" class="panel pad" style="box-shadow:none;">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="update_staff">
+                      <input type="hidden" name="staff_id" value="{{ item.id }}">
+                      <div class="panel-title" style="margin-bottom:14px;">
+                        <h2 style="font-size:16px;">Edit Staff Profile</h2>
+                        <p>Update role, branch, contact details, or active status.</p>
+                      </div>
+                      <div class="form-grid">
+                        <div class="field">
+                          <label>First Name</label>
+                          <input name="first_name" value="{{ item.first_name }}">
+                        </div>
+                        <div class="field">
+                          <label>Last Name</label>
+                          <input name="last_name" value="{{ item.last_name }}">
+                        </div>
+                        <div class="field">
+                          <label>Email</label>
+                          <input name="email" type="email" value="{{ item.email }}">
+                        </div>
+                        <div class="field">
+                          <label>Role</label>
+                          <select name="role" {% if item.role == "owner" %}disabled{% endif %}>
+                            <option value="staff" {% if item.role == "staff" %}selected{% endif %}>Staff</option>
+                            <option value="admin" {% if item.role == "admin" %}selected{% endif %}>Admin</option>
+                            <option value="owner" {% if item.role == "owner" %}selected{% endif %}>Owner</option>
+                          </select>
+                          {% if item.role == "owner" %}<input type="hidden" name="role" value="owner">{% endif %}
+                        </div>
+                        <div class="field">
+                          <label>Branch</label>
+                          <select name="branch">
+                            <option value="">No branch</option>
+                            {% for branch in branches %}
+                              <option value="{{ branch.id }}" {% if item.branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                        <div class="field">
+                          <label>Status</label>
+                          <label style="display:flex;align-items:center;gap:8px;min-height:48px;margin:0;">
+                            <input name="is_active" type="checkbox" style="width:auto;min-height:auto;" {% if item.is_active %}checked{% endif %} {% if item.role == "owner" %}disabled{% endif %}>
+                            Active
+                          </label>
+                          {% if item.role == "owner" %}<input type="hidden" name="is_active" value="on">{% endif %}
+                        </div>
+                      </div>
+                      <button class="btnx primary" style="margin-top:16px;" type="submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Staff
+                      </button>
+                    </form>
+
+                    <div class="panel pad" style="box-shadow:none;">
+                      <div class="panel-title" style="margin-bottom:14px;">
+                        <h2 style="font-size:16px;">Password & Access</h2>
+                        <p>Reset this staff member's password or deactivate access.</p>
+                      </div>
+                      <form method="post" class="form-grid">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reset_staff_password">
+                        <input type="hidden" name="staff_id" value="{{ item.id }}">
+                        <div class="field">
+                          <label>New Password</label>
+                          <input name="password" type="password" minlength="8" required>
+                        </div>
+                        <div class="field">
+                          <label>Confirm Password</label>
+                          <input name="confirm_password" type="password" minlength="8" required>
+                        </div>
+                        <button class="btnx soft" type="submit">
+                          <i class="fa-solid fa-key"></i> Reset Password
+                        </button>
+                      </form>
+                      {% if item.is_active and item.role != "owner" %}
+                        <form method="post" style="margin-top:12px;">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="deactivate_staff">
+                          <input type="hidden" name="staff_id" value="{{ item.id }}">
+                          <button class="btnx danger" type="submit"><i class="fa-solid fa-user-slash"></i> Deactivate Staff</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
+          {% empty %}
+            <tr><td colspan="6">No staff users yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<script>
+  function fillCurrentLocation(button){
+    const form = button.closest("form");
+    const lat = form.querySelector('input[name="latitude"]');
+    const lng = form.querySelector('input[name="longitude"]');
+    if(!navigator.geolocation){
+      alert("This browser cannot capture location.");
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Capturing...";
+    navigator.geolocation.getCurrentPosition((position) => {
+      lat.value = position.coords.latitude.toFixed(6);
+      lng.value = position.coords.longitude.toFixed(6);
+      button.disabled = false;
+      button.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Use Current Location';
+    }, () => {
+      alert("Could not capture location. Please allow location permission or enter coordinates manually.");
+      button.disabled = false;
+      button.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Use Current Location';
+    }, {enableHighAccuracy:true, timeout:12000, maximumAge:0});
+  }
+</script>
+{% endblock %}

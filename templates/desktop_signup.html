@@ -1,0 +1,739 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create KairosTrack Workspace</title>
+  <link rel="icon" type="image/png" href="{% static 'images/kairostrack-icon.png' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --deep: #001b13;
+      --deep-2: #06281d;
+      --green: #16a34a;
+      --green-dark: #0f7a34;
+      --mint: #effaf2;
+      --ink: #111827;
+      --muted: #667085;
+      --line: #e7ece9;
+      --soft: #f8faf8;
+      --card: #ffffff;
+      --shadow: 0 30px 80px rgba(15, 23, 42, .15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Manrope, sans-serif;
+      color: var(--ink);
+      background: #f8faf8;
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 39% 61%;
+      background:
+        linear-gradient(104deg, var(--deep) 0%, var(--deep) 40%, transparent 40.1%),
+        radial-gradient(circle, rgba(15, 107, 45, .09) 1.2px, transparent 1.4px) 100% 0 / 17px 17px,
+        #fbfcfb;
+    }
+
+    .story {
+      position: relative;
+      min-height: 760px;
+      padding: 46px 44px;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .story::before {
+      content: "";
+      position: absolute;
+      width: 430px;
+      height: 430px;
+      right: -22px;
+      top: 350px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, rgba(25, 168, 76, .18) 0 34%, transparent 35%),
+        repeating-radial-gradient(circle, rgba(34, 197, 94, .14) 0 2px, transparent 2px 27px);
+      opacity: .78;
+    }
+
+    .brand,
+    .hero,
+    .benefits,
+    .quote {
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 68px;
+      height: 68px;
+      padding: 4px;
+      border-radius: 21px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.05));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 20px 42px rgba(34, 197, 94, .25);
+      overflow: hidden;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 17px;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1;
+    }
+
+    .brand-title span {
+      color: #4ade80;
+    }
+
+    .brand-subtitle {
+      margin-top: 8px;
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .hero {
+      margin-top: 78px;
+      max-width: 470px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(44px, 5vw, 60px);
+      line-height: 1.03;
+      letter-spacing: -.07em;
+      font-weight: 900;
+    }
+
+    .hero h1 span {
+      color: #31dc72;
+    }
+
+    .hero p {
+      margin: 22px 0 0;
+      max-width: 390px;
+      color: rgba(255, 255, 255, .78);
+      font-size: 16px;
+      line-height: 1.65;
+      font-weight: 700;
+    }
+
+    .benefits {
+      display: grid;
+      gap: 18px;
+      margin-top: 34px;
+      width: min(100%, 420px);
+    }
+
+    .benefit {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 17px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .benefit:last-child {
+      border-bottom: 0;
+    }
+
+    .benefit-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #eaffef;
+      background: rgba(34, 197, 94, .68);
+    }
+
+    .benefit b {
+      display: block;
+      font-size: 14px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .benefit span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255, 255, 255, .68);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .camera {
+      position: absolute;
+      z-index: 1;
+      right: -6px;
+      top: 492px;
+      width: 300px;
+      pointer-events: none;
+      filter: drop-shadow(0 28px 30px rgba(0, 0, 0, .28));
+    }
+
+    .quote {
+      width: min(100%, 450px);
+      margin-top: 38px;
+      padding: 24px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .075);
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .quote i {
+      color: #4ade80;
+      font-size: 26px;
+    }
+
+    .quote p {
+      margin: 10px 0 0;
+      color: rgba(255, 255, 255, .9);
+      font-size: 14px;
+      line-height: 1.65;
+      font-weight: 800;
+    }
+
+    .quote small {
+      display: block;
+      margin-top: 14px;
+      color: rgba(255, 255, 255, .68);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .form-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 38px 42px;
+    }
+
+    .workspace-card {
+      width: min(100%, 880px);
+      padding: 40px 44px 34px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, .97);
+      border: 1px solid rgba(231, 236, 233, .9);
+      box-shadow: var(--shadow);
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: -.055em;
+      font-weight: 900;
+    }
+
+    .card-head p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .progress-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+      margin: 28px 38px 34px;
+      text-align: center;
+    }
+
+    .progress-step {
+      position: relative;
+      color: #697386;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .progress-step::before {
+      content: "";
+      position: absolute;
+      top: 17px;
+      left: calc(-50% + 28px);
+      right: calc(50% + 28px);
+      height: 2px;
+      background: #e8ece9;
+    }
+
+    .progress-step:first-child::before {
+      display: none;
+    }
+
+    .progress-step strong {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 10px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: #667085;
+      background: #edf0f2;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .progress-step.active {
+      color: #13833b;
+    }
+
+    .progress-step.active strong {
+      color: #fff;
+      background: #13833b;
+      box-shadow: 0 -10px 0 -6px #13833b;
+    }
+
+    .alert {
+      margin: 0 0 18px;
+      padding: 13px 14px;
+      border-radius: 12px;
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #ffe4e6;
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 20px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .section-title {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+      color: #0f6b2d;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: #edf0f2;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    label span {
+      color: #667085;
+      font-weight: 700;
+    }
+
+    .field-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .field-shell i {
+      position: absolute;
+      left: 17px;
+      color: #344054;
+      font-size: 16px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 56px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 46px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      outline: 0;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    select {
+      appearance: none;
+      padding-right: 46px;
+      cursor: pointer;
+    }
+
+    .select-shell::after {
+      content: "\f107";
+      position: absolute;
+      right: 18px;
+      color: #344054;
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      pointer-events: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #7dd99b;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .13);
+    }
+
+    .security-note {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-top: 4px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      color: #344054;
+      background: var(--mint);
+    }
+
+    .security-note i {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: #15803d;
+      font-size: 25px;
+    }
+
+    .security-note b {
+      display: block;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .security-note span {
+      display: block;
+      margin-top: 3px;
+      color: #667085;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .submit {
+      width: 100%;
+      height: 56px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 10px;
+      background: #13833b;
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 18px 34px rgba(19, 131, 59, .2);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 40px rgba(19, 131, 59, .24);
+    }
+
+    .note {
+      margin-top: 20px;
+      text-align: center;
+      color: #667085;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .note a {
+      color: #13833b;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    @media (max-width: 1180px) {
+      .page {
+        grid-template-columns: 1fr;
+        background: var(--deep);
+      }
+
+      .story {
+        min-height: auto;
+      }
+
+      .camera {
+        display: none;
+      }
+
+      .form-wrap {
+        min-height: auto;
+        background:
+          radial-gradient(circle, rgba(15, 107, 45, .08) 1.2px, transparent 1.4px) 100% 0 / 17px 17px,
+          #fbfcfb;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .story {
+        padding: 32px 24px;
+      }
+
+      .hero {
+        margin-top: 46px;
+      }
+
+      .benefits,
+      .quote {
+        display: none;
+      }
+
+      .form-wrap {
+        padding: 24px 16px;
+      }
+
+      .workspace-card {
+        padding: 30px 22px 28px;
+      }
+
+      .progress-steps {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin: 24px 0;
+      }
+
+      .progress-step::before {
+        display: none;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full,
+      .section-title,
+      .security-note {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="story">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="{% static 'images/kairostrack-logo.png' %}" alt="KairosTrack">
+        </div>
+        <div>
+          <div class="brand-title">Kairos<span>Track</span></div>
+          <div class="brand-subtitle">Attendance Platform</div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1>Create your <span>attendance</span> workspace.</h1>
+        <p>Set up your organization and owner account to start using KairosTrack.</p>
+      </div>
+
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-icon"><i class="fa-regular fa-building"></i></div>
+          <div><b>Organization ready</b><span>Create your main workspace and branch in minutes.</span></div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon"><i class="fa-solid fa-user-shield"></i></div>
+          <div><b>Secure and private</b><span>Owner access is protected by staff credentials.</span></div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon"><i class="fa-solid fa-camera-retro"></i></div>
+          <div><b>Powerful features</b><span>Manage members, events, cameras and reports.</span></div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <div><b>Scalable for growth</b><span>Upgrade as your church or organization grows.</span></div>
+        </div>
+      </div>
+
+      <img class="camera" src="{% static 'images/dashboard-camera-transparent.png' %}" alt="">
+
+      <div class="quote">
+        <i class="fa-solid fa-quote-left"></i>
+        <p>KairosTrack helps teams manage attendance without paper, stress or duplicate records.</p>
+        <small>Built for churches, schools, teams and growing organizations.</small>
+      </div>
+    </section>
+
+    <section class="form-wrap">
+      <div class="workspace-card">
+        <div class="card-head">
+          <h2>Create your workspace</h2>
+          <p>Fill in the details below to set up your organization.</p>
+        </div>
+
+        <div class="progress-steps" aria-label="Workspace setup steps">
+          <div class="progress-step active"><strong>1</strong>Organization</div>
+          <div class="progress-step"><strong>2</strong>Owner Account</div>
+          <div class="progress-step"><strong>3</strong>Security</div>
+          <div class="progress-step"><strong>4</strong>Complete</div>
+        </div>
+
+        {% if error %}
+          <div class="alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-grid">
+            <div class="full">
+              <label for="organization_name">Organization Name</label>
+              <div class="field-shell">
+                <i class="fa-regular fa-building"></i>
+                <input id="organization_name" name="organization_name" value="{{ form.organization_name }}" placeholder="Enter organization name" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="contact_email">Contact Email</label>
+              <div class="field-shell">
+                <i class="fa-regular fa-envelope"></i>
+                <input id="contact_email" name="contact_email" type="email" value="{{ form.contact_email }}" placeholder="Enter contact email" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="contact_phone">Phone Number <span>(Optional)</span></label>
+              <div class="field-shell">
+                <i class="fa-solid fa-phone"></i>
+                <input id="contact_phone" name="contact_phone" value="{{ form.contact_phone }}" placeholder="Enter phone number">
+              </div>
+            </div>
+
+            <div>
+              <label for="branch_name">Main Branch / Location</label>
+              <div class="field-shell">
+                <i class="fa-solid fa-location-dot"></i>
+                <input id="branch_name" name="branch_name" value="{{ form.branch_name|default:'Main' }}" placeholder="Enter main branch or location">
+              </div>
+            </div>
+
+            <div>
+              <label for="plan_tier">Plan</label>
+              <div class="field-shell select-shell">
+                <i class="fa-regular fa-crown"></i>
+                <select id="plan_tier" name="plan_tier">
+                  {% for plan in plans %}
+                    <option value="{{ plan.tier }}" {% if form.plan_tier == plan.tier or not form.plan_tier and plan.tier == "starter" %}selected{% endif %}>
+                      {{ plan.name }} - GBP {{ plan.monthly_price_gbp|default:"0.00" }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="section-title"><i class="fa-regular fa-user"></i> Owner account</div>
+
+            <div>
+              <label for="first_name">First Name <span>(Optional)</span></label>
+              <div class="field-shell">
+                <i class="fa-regular fa-user"></i>
+                <input id="first_name" name="first_name" value="{{ form.first_name }}" placeholder="Enter first name">
+              </div>
+            </div>
+
+            <div>
+              <label for="last_name">Last Name <span>(Optional)</span></label>
+              <div class="field-shell">
+                <i class="fa-regular fa-user"></i>
+                <input id="last_name" name="last_name" value="{{ form.last_name }}" placeholder="Enter last name">
+              </div>
+            </div>
+
+            <div>
+              <label for="username">Username</label>
+              <div class="field-shell">
+                <i class="fa-solid fa-user-lock"></i>
+                <input id="username" name="username" value="{{ form.username }}" autocomplete="username" placeholder="Choose a username" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="password">Password</label>
+              <div class="field-shell">
+                <i class="fa-solid fa-lock"></i>
+                <input id="password" name="password" type="password" autocomplete="new-password" placeholder="Create password" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="confirm_password">Confirm Password</label>
+              <div class="field-shell">
+                <i class="fa-solid fa-shield-halved"></i>
+                <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" placeholder="Confirm password" required>
+              </div>
+            </div>
+
+            <div class="security-note">
+              <i class="fa-solid fa-shield-halved"></i>
+              <div>
+                <b>You are in good hands</b>
+                <span>Your data is secure and only used to set up your workspace.</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="submit" type="submit">
+            <i class="fa-solid fa-arrow-right"></i>
+            Create Workspace
+          </button>
+        </form>
+
+        <div class="note">
+          Already have an account? <a href="{% url 'desktop_login' %}">Sign in</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

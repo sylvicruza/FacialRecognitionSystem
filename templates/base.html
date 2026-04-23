@@ -4,308 +4,488 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Time and Attendance Desktop{% endblock %}</title>
+  <title>{% block title %}KairosTrack Desktop{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'images/kairostrack-icon.png' %}">
 
-  <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg1:#0b1220;
-      --bg2:#101a33;
-      --surface:#0f1b2d;
-      --surface2:#0c1626;
-
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e2e8f0;
-
-      --brand:#22c55e;
-      --brand2:#16a34a;
-      --accent:#38bdf8;
-      --warn:#f59e0b;
-
-      --sidebarW: 280px;
-      --radius: 18px;
-
-      --glass: rgba(255,255,255,.08);
-      --glassBorder: rgba(255,255,255,.14);
-      --shadow: 0 20px 50px rgba(2, 6, 23, .25);
-      --softShadow: 0 10px 30px rgba(15, 23, 42, .10);
+      --page:#f3f8f5;
+      --paper:#ffffff;
+      --ink:#152033;
+      --muted:#667085;
+      --line:#dfe9e3;
+      --green:#16a34a;
+      --green2:#0f7a38;
+      --green3:#063d26;
+      --sidebar:#022c22;
+      --sidebar2:#001c17;
+      --soft:#eaf8ef;
+      --shadow:0 22px 54px rgba(15, 23, 42, .10);
+      --radius:22px;
+      --sidebarW:270px;
     }
 
-    html, body{
+    *{ box-sizing:border-box; }
+
+    html,
+    body{
+      min-height:100%;
       margin:0;
-      padding:0;
-      height:100%;
-      font-family:'Poppins', sans-serif;
+      font-family:'Manrope', sans-serif;
       background:
-        radial-gradient(1200px 700px at 15% 0%, rgba(34,197,94,.14), transparent 60%),
-        radial-gradient(900px 600px at 85% 10%, rgba(56,189,248,.14), transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      color: rgba(255,255,255,.92);
+        radial-gradient(900px 440px at 20% -10%, rgba(22,163,74,.14), transparent 58%),
+        radial-gradient(780px 420px at 88% 4%, rgba(20,184,166,.08), transparent 58%),
+        linear-gradient(180deg, #fbfdfc, var(--page));
+      color:var(--ink);
     }
 
-    /* Layout */
+    a{ text-decoration:none; color:inherit; }
+
     .app{
-      display:flex;
       min-height:100vh;
+      display:flex;
       width:100%;
     }
 
-    /* Sidebar (desktop) */
     .sidebar{
-      width: var(--sidebarW);
-      padding: 18px 14px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      border-right: 1px solid var(--glassBorder);
-      backdrop-filter: blur(14px);
+      width:var(--sidebarW);
+      height:100vh;
+      position:sticky;
+      top:0;
+      padding:24px 18px;
+      background:
+        radial-gradient(400px 240px at 30% 0%, rgba(34,197,94,.18), transparent 62%),
+        linear-gradient(180deg, var(--sidebar), var(--sidebar2));
+      color:#fff;
+      overflow-y:auto;
+      overflow-x:visible;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(255,255,255,.22) transparent;
+      z-index:40;
     }
 
     .brand{
       display:flex;
-      align-items:center;
-      gap: 10px;
-      padding: 10px 10px 16px;
-      margin-bottom: 10px;
+      align-items:flex-start;
+      gap:13px;
+      margin-bottom:34px;
+      position:relative;
+      z-index:50;
     }
-  .brand .logo{
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: 0 12px 28px rgba(2,6,23,.16);
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  flex: 0 0 auto;
-  padding: 4px;
-}
 
-.real-logo{
-  width:100%;
-  height:100%;
-  object-fit: contain;
-  display:block;
-}
+    .brand .logo,
+    .mobile-real-logo-wrap{
+      width:64px;
+      height:64px;
+      border-radius:21px;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      padding:4px;
+      background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.24);
+      box-shadow:0 18px 42px rgba(0,0,0,.22),0 0 34px rgba(34,197,94,.16);
+      flex:0 0 auto;
+    }
 
-.mobile-real-logo-wrap{
-  width:40px;
-  height:40px;
-  border-radius:16px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  padding:4px;
-  flex: 0 0 auto;
-}
+    .brand-symbol{
+      color:#fff;
+      background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.06)) !important;
+      border-color:rgba(255,255,255,.28) !important;
+    }
 
-.mobile-real-logo{
-  width:100%;
-  height:100%;
-  object-fit: contain;
-  display:block;
-}
-    .brand .meta{
+    .brand-symbol i{
+      font-size:23px;
+      filter:drop-shadow(0 8px 12px rgba(0,0,0,.18));
+    }
+
+    .real-logo,
+    .mobile-real-logo{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:17px;
+      display:block;
+    }
+
+    .brand .title{
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.04em;
+      line-height:1.05;
+    }
+
+    .brand .sub{
+      margin-top:3px;
+      font-size:12px;
+      color:rgba(255,255,255,.68);
+    }
+
+    .brand-copy{
+      min-width:0;
+      flex:1;
+    }
+
+    .brand-topline{
       display:flex;
-      flex-direction:column;
-      line-height:1.1;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
     }
-    .brand .meta .title{
+
+    .brand-plan-wrap{
+      position:relative;
+      display:inline-flex;
+    }
+
+    .brand-plan-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      min-height:24px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:#dcfce7;
+      font-size:10px;
       font-weight:900;
-      font-size: 18px;
-      letter-spacing:-0.02em;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      backdrop-filter:blur(10px);
     }
-    .brand .meta .sub{
-      font-size: 12px;
-      color: rgba(255,255,255,.70);
+
+    .brand-plan-pop{
+      position:absolute;
+      top:calc(100% + 10px);
+      left:0;
+      width:min(320px, calc(100vw - 36px));
+      padding:16px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(9,25,20,.98), rgba(4,18,15,.98));
+      box-shadow:0 22px 54px rgba(0,0,0,.34);
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(8px);
+      transition:.18s ease;
+      z-index:80;
+    }
+
+    .brand-plan-wrap:hover .brand-plan-pop,
+    .brand-plan-wrap:focus-within .brand-plan-pop{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+    }
+
+    .brand-plan-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .brand-plan-head b{
+      display:block;
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      line-height:1.2;
+    }
+
+    .brand-plan-head span{
+      display:block;
+      margin-top:4px;
+      color:rgba(255,255,255,.68);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .brand-plan-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:7px 10px;
+      border-radius:11px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .brand-plan-list{
+      display:grid;
+      gap:8px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+
+    .brand-plan-list li{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.82);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .brand-plan-list li.enabled{
+      background:rgba(34,197,94,.14);
+      border-color:rgba(34,197,94,.28);
+      color:#dcfce7;
     }
 
     .nav-group-title{
-      font-size: 11px;
-      letter-spacing:.12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,.55);
-      padding: 12px 12px 6px;
+      margin:22px 8px 8px;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:rgba(255,255,255,.58);
+      font-weight:800;
     }
 
     .navlink{
       display:flex;
       align-items:center;
-      gap: 12px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      color: rgba(255,255,255,.90);
-      text-decoration:none;
-      transition: transform .05s ease, background .2s ease;
-      border: 1px solid transparent;
-      margin: 6px 6px;
+      gap:13px;
+      min-height:48px;
+      padding:12px 14px;
+      border-radius:14px;
+      color:rgba(255,255,255,.88);
+      font-size:14px;
+      font-weight:800;
+      margin:7px 0;
+      border:1px solid transparent;
+      transition:background .18s ease, transform .08s ease, border .18s ease;
     }
-    .navlink i{
-      width: 18px;
-      text-align:center;
-      opacity:.95;
-    }
-    .navlink:hover{
-      background: rgba(255,255,255,.08);
-      border-color: rgba(255,255,255,.10);
-    }
-    .navlink:active{ transform: scale(.99); }
 
-    /* Active item: set from JS based on current path */
-    .navlink.active{
-      background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(56,189,248,.16));
-      border-color: rgba(34,197,94,.22);
-      box-shadow: 0 18px 40px rgba(34,197,94,.10);
+    .navlink i{
+      width:30px;
+      height:30px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      font-size:14px;
+      color:rgba(255,255,255,.88);
+      background:rgba(255,255,255,.08);
     }
+
+    .navlink:hover{
+      color:#fff;
+      background:rgba(255,255,255,.08);
+      border-color:rgba(255,255,255,.08);
+    }
+
+    .navlink:active{ transform:scale(.99); }
+
+    .navlink.active{
+      color:#fff;
+      background:linear-gradient(135deg, rgba(34,197,94,.95), rgba(22,163,74,.78));
+      box-shadow:0 16px 34px rgba(0,0,0,.18);
+    }
+
+    .navlink.active i{
+      color:#064e3b;
+      background:#fff;
+    }
+
     .navlink .pill{
       margin-left:auto;
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.12);
-      color: rgba(255,255,255,.85);
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      background:rgba(34,197,94,.22);
+      color:#dcfce7;
     }
 
-    /* Content area */
-    .content{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      min-width: 0;
-    }
-
-    /* Topbar */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      padding: 14px 18px;
-      margin: 14px 14px 10px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid var(--glassBorder);
-      backdrop-filter: blur(14px);
+    .sidebar-user{
+      position:sticky;
+      bottom:0;
       display:flex;
       align-items:center;
+      gap:12px;
+      margin-top:24px;
+      padding:14px;
+      border-radius:18px;
+      background:rgba(4,47,34,.94);
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter:blur(16px);
+      box-shadow:0 -18px 38px rgba(0,0,0,.16);
+    }
+
+    .avatar{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg, #22c55e, #15803d);
+      color:#fff;
+      font-weight:900;
+      letter-spacing:-.04em;
+    }
+
+    .sidebar-user b{
+      display:block;
+      font-size:13px;
+      line-height:1.1;
+    }
+
+    .sidebar-user span{
+      display:block;
+      margin-top:3px;
+      color:rgba(255,255,255,.62);
+      font-size:11px;
+    }
+
+    .content{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      margin:18px 24px 8px;
+      display:flex;
+      align-items:flex-start;
       justify-content:space-between;
-      gap: 12px;
+      gap:18px;
     }
 
     .topbar-left{
       display:flex;
-      align-items:center;
-      gap: 12px;
+      align-items:flex-start;
+      gap:12px;
       min-width:0;
     }
 
     .burger{
       display:none;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.92);
-      border-radius: 14px;
-      padding: 10px 12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.92);
+      color:var(--ink);
+      border-radius:14px;
+      padding:11px 13px;
+      box-shadow:var(--shadow);
     }
 
-    .page-title{
-      display:flex;
-      flex-direction:column;
-      min-width:0;
+    .page-title .crumb{
+      display:block;
+      margin-bottom:5px;
+      color:var(--green);
+      font-size:12px;
+      font-weight:900;
     }
+
     .page-title h1{
       margin:0;
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing:-0.02em;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 520px;
+      color:#101828;
+      font-size:27px;
+      font-weight:900;
+      letter-spacing:-.055em;
+      line-height:1.05;
     }
+
     .page-title span{
-      font-size: 12px;
-      color: rgba(255,255,255,.70);
+      display:block;
+      margin-top:6px;
+      color:var(--muted);
+      font-size:14px;
     }
 
     .top-actions{
       display:flex;
       align-items:center;
-      gap: 10px;
+      justify-content:flex-end;
+      gap:10px;
       flex-wrap:wrap;
     }
 
     .chip{
+      min-height:42px;
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.92);
-      text-decoration:none;
-      transition: transform .05s ease, background .2s ease;
+      gap:9px;
+      padding:10px 15px;
+      border-radius:13px;
+      border:1px solid var(--line);
+      background:var(--paper);
+      color:#263244;
+      font-size:13px;
+      font-weight:900;
+      box-shadow:0 12px 30px rgba(15,23,42,.06);
+      white-space:nowrap;
     }
-    .chip:hover{ background: rgba(255,255,255,.10); }
-    .chip:active{ transform: scale(.98); }
+
+    .chip:hover{
+      color:#0f172a;
+      border-color:#d2ded8;
+      box-shadow:var(--shadow);
+    }
+
+    .chip.icon-only{
+      width:48px;
+      justify-content:center;
+      padding-inline:0;
+    }
 
     .main{
-      padding: 10px 14px 22px;
       flex:1;
       min-width:0;
+      padding:10px 24px 24px;
     }
 
-    /* Footer */
     footer{
-      margin: 0 14px 16px;
-      padding: 16px 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(14px);
-      color: rgba(255,255,255,.85);
+      margin:0 24px 18px;
+      color:#7b8794;
+      font-size:12px;
       text-align:center;
-      font-size: 12px;
     }
-    footer a{
-      color: rgba(255,255,255,.95);
-      text-decoration:none;
-      border-bottom: 1px dashed rgba(255,255,255,.35);
-    }
-    footer a:hover{ border-bottom-style: solid; }
 
-    /* Mobile */
-    @media (max-width: 992px){
+    .offcanvas{
+      background:linear-gradient(180deg, var(--sidebar), var(--sidebar2));
+      color:#fff;
+    }
+
+    @media (max-width: 1080px){
       .sidebar{ display:none; }
       .burger{ display:inline-flex; }
-      .topbar{ margin: 12px 10px 8px; }
-      .main{ padding: 8px 10px 16px; }
-      footer{ margin: 0 10px 14px; }
+      .topbar{
+        margin:14px 14px 8px;
+        align-items:stretch;
+        flex-direction:column;
+      }
+      .top-actions{
+        justify-content:flex-start;
+      }
+      .main{ padding:8px 14px 20px; }
+      footer{ margin:0 14px 16px; }
     }
 
-    /* Offcanvas styling (mobile sidebar) */
-    .offcanvas{
-      background: linear-gradient(180deg, rgba(11,18,32,.98), rgba(16,26,51,.98));
-      color: rgba(255,255,255,.92);
-      border-right: 1px solid rgba(255,255,255,.12);
+    @media (max-width: 640px){
+      .chip span.hide-sm{ display:none; }
+      .page-title h1{ font-size:24px; }
     }
-    .offcanvas .navlink{ margin: 6px 0; }
   </style>
 
   {% block extra_head %}{% endblock %}
@@ -313,133 +493,215 @@
 
 <body>
 <div class="app">
-
-  <!-- Desktop Sidebar -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="logo real-logo-wrap">
-  <img src="{% static 'images/time-attendance-icon.png' %}" alt="Time and Attendance Icon" class="real-logo">
-</div>
-      <div class="meta">
-        <div class="title">Time & Attendance</div>
-        <div class="sub">Desktop Control Center</div>
+      <div class="logo brand-symbol" aria-hidden="true">
+        <img class="real-logo" src="{% static 'images/kairostrack-logo.png' %}" alt="">
+      </div>
+      <div>
+        <div class="title">KairosTrack</div>
+        <div class="sub">Time & Attendance Platform</div>
       </div>
     </div>
 
     <div class="nav-group-title">Main</div>
 
+    <a class="navlink" data-route="{% url 'home' %}" href="{% url 'home' %}">
+      <i class="fa-solid fa-house"></i> Dashboard
+    </a>
+    <a class="navlink" data-route="{% url 'getting_started' %}" href="{% url 'getting_started' %}">
+      <i class="fa-solid fa-route"></i> Getting Started
+    </a>
     <a class="navlink" data-route="{% url 'search_user' %}" href="{% url 'search_user' %}">
       <i class="fa-solid fa-user-plus"></i> Register Member
     </a>
-
     <a class="navlink" data-route="{% url 'person_list' %}" href="{% url 'person_list' %}">
       <i class="fa-solid fa-users"></i> All Members
     </a>
-
-    <a class="navlink" data-route="{% url 'stream_all_cameras' %}" href="{% url 'stream_all_cameras' %}">
-      <i class="fa-solid fa-video"></i> Mark Attendance
-      <span class="pill">Live</span>
+    <a class="navlink" data-route="{% url 'attendance_sessions' %}" href="{% url 'attendance_sessions' %}">
+      <i class="fa-solid fa-calendar-check"></i> Event Sessions
     </a>
-
+    <a class="navlink" data-route="{% url 'manual_attendance' %}" href="{% url 'manual_attendance' %}">
+      <i class="fa-solid fa-list-check"></i> Manual Attendance
+    </a>
+    {% if request.session.attendance_desktop_plan.allow_qr %}
+      <a class="navlink" data-route="{% url 'qr_attendance' %}" href="{% url 'qr_attendance' %}">
+        <i class="fa-solid fa-qrcode"></i> QR Check-In
+      </a>
+    {% endif %}
+    {% if request.session.attendance_desktop_plan.allow_nfc %}
+      <a class="navlink" data-route="{% url 'nfc_attendance' %}" href="{% url 'nfc_attendance' %}">
+        <i class="fa-solid fa-id-card-clip"></i> NFC Check-In
+      </a>
+    {% endif %}
+    {% if request.session.attendance_desktop_plan.allow_face_recognition %}
+      <a class="navlink" data-route="{% url 'stream_all_cameras' %}" href="{% url 'stream_all_cameras' %}">
+        <i class="fa-solid fa-face-smile"></i> Face Recognition
+        <span class="pill">Live</span>
+      </a>
+    {% endif %}
     <a class="navlink" data-route="{% url 'person_attendance_list' %}" href="{% url 'person_attendance_list' %}">
       <i class="fa-solid fa-clipboard-list"></i> Attendance Logs
+    </a>
+    <a class="navlink" data-route="{% url 'attendance_reports' %}" href="{% url 'attendance_reports' %}">
+      <i class="fa-solid fa-chart-line"></i> Reports
     </a>
 
     <div class="nav-group-title">Setup</div>
 
-    <a class="navlink" data-route="{% url 'camera_config_list' %}" href="{% url 'camera_config_list' %}">
-      <i class="fa-solid fa-camera-retro"></i> Camera Setup
+    {% if request.session.attendance_desktop_plan.allow_face_recognition %}
+      <a class="navlink" data-route="{% url 'camera_config_list' %}" href="{% url 'camera_config_list' %}">
+        <i class="fa-solid fa-camera-retro"></i> Camera Setup
+      </a>
+    {% endif %}
+    <a class="navlink" data-route="{% url 'organization_settings' %}" href="{% url 'organization_settings' %}">
+      <i class="fa-solid fa-building-user"></i> Organization
+    </a>
+    <a class="navlink" data-route="{% url 'desktop_settings' %}" href="{% url 'desktop_settings' %}">
+      <i class="fa-solid fa-sliders"></i> Desktop Settings
     </a>
 
+    <div class="sidebar-user">
+      <div class="avatar">
+        {{ request.session.attendance_desktop_name|default:"SO"|slice:":2"|upper }}
+      </div>
+      <div>
+        <b>{{ request.session.attendance_desktop_name|default:"Staff User" }}</b>
+        <span>
+          {{ request.session.attendance_desktop_organization.name|default:"No organization" }}
+          {% if request.session.attendance_desktop_plan.name %} · {{ request.session.attendance_desktop_plan.name }}{% endif %}
+        </span>
+      </div>
+      <i class="fa-solid fa-chevron-down ms-auto" style="font-size:11px;color:rgba(255,255,255,.55);"></i>
+    </div>
   </aside>
 
-  <!-- Content -->
   <section class="content">
-    <!-- Topbar -->
     <div class="topbar">
       <div class="topbar-left">
-        <!-- Mobile menu -->
         <button class="burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
           <i class="fa-solid fa-bars"></i>
         </button>
 
         <div class="page-title">
-          <h1 id="pageTitle">{% block page_title %}Time and Attendance{% endblock %}</h1>
+          <span class="crumb">{% block page_crumb %}Dashboard{% endblock %}</span>
+          <h1 id="pageTitle">{% block page_title %}KairosTrack{% endblock %}</h1>
           <span id="pageSub">{% block page_subtitle %}Manage members, cameras and attendance in one place.{% endblock %}</span>
         </div>
       </div>
 
       <div class="top-actions">
-        {% if request.session.attendance_desktop_name %}
         <span class="chip">
-          <i class="fa-solid fa-user-shield"></i>
-          {{ request.session.attendance_desktop_name }}
-          {% if request.session.attendance_desktop_role %}
-            • {{ request.session.attendance_desktop_role|title }}
-          {% endif %}
+          <i class="fa-regular fa-calendar"></i>
+          <span id="shellDate"></span>
         </span>
+        <span class="chip">
+          <i class="fa-solid fa-clock"></i>
+          <span id="shellClock"></span>
+        </span>
+        {% if request.session.attendance_desktop_plan.allow_face_recognition %}
+          <a class="chip" href="{% url 'camera_config_list' %}">
+            <i class="fa-solid fa-gear"></i> <span class="hide-sm">Camera Settings</span>
+          </a>
         {% endif %}
-        <a class="chip" href="{% url 'camera_config_list' %}">
-          <i class="fa-solid fa-gear"></i> Camera Settings
-        </a>
-        <a class="chip" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Home
+        <a class="chip icon-only" href="{% url 'home' %}" aria-label="Home">
+          <i class="fa-solid fa-house"></i>
         </a>
         <a class="chip" href="{% url 'desktop_logout' %}">
-          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          <i class="fa-solid fa-right-from-bracket"></i> <span class="hide-sm">Sign Out</span>
         </a>
       </div>
     </div>
 
     <main class="main">
+      {% if messages %}
+        <div style="display:grid;gap:10px;margin:0 0 16px;">
+          {% for message in messages %}
+            <div style="padding:13px 15px;border-radius:16px;border:1px solid #d6efdd;background:#eaf8ef;color:#125c36;font-weight:800;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
 
     <footer>
-      <div>© {{ now|date:"Y" }} Opened Heavens Chapel | Developed by <a href="#">SlyApps</a></div>
-      <div style="margin-top:6px;">“Let all things be done decently and in order.” – 1 Corinthians 14:40</div>
+      <div>&copy; {% now "Y" %} KairosTrack by SlyApps</div>
     </footer>
   </section>
-
 </div>
 
-<!-- Mobile Offcanvas Sidebar -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
   <div class="offcanvas-header">
-    <div class="brandline d-flex align-items-center gap-2">
-      <div class="mobile-real-logo-wrap">
-  <img src="{% static 'images/time-attendance-icon.png' %}" alt="Time and Attendance Icon" class="mobile-real-logo">
-</div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="mobile-real-logo-wrap brand-symbol" aria-hidden="true">
+        <img class="mobile-real-logo" src="{% static 'images/kairostrack-logo.png' %}" alt="">
+      </div>
       <div>
-        <div style="font-weight:900;">Time & Attendance</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.7);">Desktop Control Center</div>
+        <div style="font-weight:900;">KairosTrack</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);">Time & Attendance Platform</div>
       </div>
     </div>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-  <div class="offcanvas-body">
+    <div class="offcanvas-body">
+    <a class="navlink" href="{% url 'home' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a class="navlink" href="{% url 'getting_started' %}"><i class="fa-solid fa-route"></i> Getting Started</a>
     <a class="navlink" href="{% url 'search_user' %}"><i class="fa-solid fa-user-plus"></i> Register Member</a>
     <a class="navlink" href="{% url 'person_list' %}"><i class="fa-solid fa-users"></i> All Members</a>
-    <a class="navlink" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-video"></i> Mark Attendance <span class="pill">Live</span></a>
+    <a class="navlink" href="{% url 'attendance_sessions' %}"><i class="fa-solid fa-calendar-check"></i> Event Sessions</a>
+    <a class="navlink" href="{% url 'manual_attendance' %}"><i class="fa-solid fa-list-check"></i> Manual Attendance</a>
+    {% if request.session.attendance_desktop_plan.allow_qr %}
+      <a class="navlink" href="{% url 'qr_attendance' %}"><i class="fa-solid fa-qrcode"></i> QR Check-In</a>
+    {% endif %}
+    {% if request.session.attendance_desktop_plan.allow_nfc %}
+      <a class="navlink" href="{% url 'nfc_attendance' %}"><i class="fa-solid fa-id-card-clip"></i> NFC Check-In</a>
+    {% endif %}
+    {% if request.session.attendance_desktop_plan.allow_face_recognition %}
+      <a class="navlink" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-face-smile"></i> Face Recognition <span class="pill">Live</span></a>
+    {% endif %}
     <a class="navlink" href="{% url 'person_attendance_list' %}"><i class="fa-solid fa-clipboard-list"></i> Attendance Logs</a>
-    <a class="navlink" href="{% url 'camera_config_list' %}"><i class="fa-solid fa-camera-retro"></i> Camera Setup</a>
+    <a class="navlink" href="{% url 'attendance_reports' %}"><i class="fa-solid fa-chart-line"></i> Reports</a>
+    {% if request.session.attendance_desktop_plan.allow_face_recognition %}
+      <a class="navlink" href="{% url 'camera_config_list' %}"><i class="fa-solid fa-camera-retro"></i> Camera Setup</a>
+    {% endif %}
+    <a class="navlink" href="{% url 'organization_settings' %}"><i class="fa-solid fa-building-user"></i> Organization</a>
+    <a class="navlink" href="{% url 'desktop_settings' %}"><i class="fa-solid fa-sliders"></i> Desktop Settings</a>
     <a class="navlink" href="{% url 'desktop_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
   </div>
 </div>
 
-<!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // Auto-highlight active sidebar link by matching current path prefix
   (function(){
     const path = window.location.pathname;
-    document.querySelectorAll(".navlink[data-route]").forEach(a=>{
+    document.querySelectorAll(".navlink[data-route]").forEach((a) => {
       const route = a.getAttribute("data-route");
       if(route && route !== "#" && (path === route || path.startsWith(route + "/"))){
         a.classList.add("active");
       }
     });
+  })();
+
+  (function(){
+    const pad = (n) => String(n).padStart(2, "0");
+    const dateEl = document.getElementById("shellDate");
+    const clockEl = document.getElementById("shellClock");
+
+    function tick(){
+      const now = new Date();
+      if(dateEl){
+        dateEl.textContent = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+      }
+      if(clockEl){
+        clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
   })();
 </script>
 

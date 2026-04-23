@@ -9,15 +9,25 @@ from .api_client import AttendanceApiClient
 
 ACCESS_TOKEN_SESSION_KEY = "attendance_api_access_token"
 REFRESH_TOKEN_SESSION_KEY = "attendance_api_refresh_token"
+API_BASE_URL_SESSION_KEY = "attendance_api_base_url"
 
 
-def get_client(request=None, token_updater=None) -> AttendanceApiClient:
-    token = settings.ATTENDANCE_API_TOKEN
-    refresh_token = None
+def get_client(request=None, token_updater=None, token: str | None = None, refresh_token: str | None = None) -> AttendanceApiClient:
+    access_token = token if token is not None else settings.ATTENDANCE_API_TOKEN
+    session_refresh_token = None
+    base_url = settings.ATTENDANCE_API_BASE_URL
     if request is not None:
-        token = request.session.get(ACCESS_TOKEN_SESSION_KEY) or token
-        refresh_token = request.session.get(REFRESH_TOKEN_SESSION_KEY)
-    return AttendanceApiClient(token=token, refresh_token=refresh_token, token_updater=token_updater)
+        access_token = request.session.get(ACCESS_TOKEN_SESSION_KEY) or access_token
+        session_refresh_token = request.session.get(REFRESH_TOKEN_SESSION_KEY)
+        base_url = request.session.get(API_BASE_URL_SESSION_KEY) or base_url
+    if refresh_token is None:
+        refresh_token = session_refresh_token
+    return AttendanceApiClient(
+        base_url=base_url,
+        token=access_token,
+        refresh_token=refresh_token,
+        token_updater=token_updater,
+    )
 
 
 def to_namespace(value: Any):
@@ -49,10 +59,25 @@ def normalize_camera(camera: dict[str, Any]):
     return to_namespace({**camera, "pk": camera["id"]})
 
 
-def get_all_people(search: str = "", request=None):
+def get_all_people(search: str = "", request=None, authorized: bool | None = None, source: str = ""):
     client = get_client(request=request)
-    payload = client.list_persons(search=search) if search else client.list_persons()
-    return [normalize_person(person) for person in extract_results(payload)]
+    params: dict[str, Any] = {"page_size": 200}
+    if search:
+        params["search"] = search
+    if authorized is not None:
+        params["authorized"] = str(authorized).lower()
+    if source:
+        params["source"] = source
+
+    people: list[Any] = []
+    page = 1
+    while True:
+        payload = client.list_persons(**{**params, "page": page})
+        people.extend(normalize_person(person) for person in extract_results(payload))
+        if not isinstance(payload, dict) or not payload.get("next"):
+            break
+        page += 1
+    return people
 
 
 def get_people_map(request=None):
@@ -124,30 +149,78 @@ def wrap_api_page(response: dict[str, Any], object_list: list[Any], page_number:
     return ApiPage()
 
 
-def fetch_attendance_page(search_query: str, date_filter: str, page_number: int, page_size: int, request=None):
-    response = get_client(request=request).list_attendance_logs(
-        search=search_query,
-        attendance_date=date_filter,
-        page=page_number,
-        page_size=page_size,
-    )
+def fetch_attendance_page(
+    search_query: str,
+    date_filter: str,
+    page_number: int,
+    page_size: int,
+    event_id: str = "",
+    attendance_session_id: str = "",
+    date_from: str = "",
+    date_to: str = "",
+    branch_id: str = "",
+    method: str = "",
+    request=None,
+):
+    params = {
+        "search": search_query,
+        "attendance_date": date_filter,
+        "page": page_number,
+        "page_size": page_size,
+    }
+    if event_id:
+        params["event_id"] = event_id
+    if attendance_session_id:
+        params["attendance_session_id"] = attendance_session_id
+    if date_from:
+        params["date_from"] = date_from
+    if date_to:
+        params["date_to"] = date_to
+    if branch_id:
+        params["branch_id"] = branch_id
+    if method:
+        params["method"] = method
+
+    response = get_client(request=request).list_attendance_logs(**params)
     records = prepare_attendance_records(response.get("results", []), request=request)
     return wrap_api_page(response, records, page_number, page_size)
 
 
-def fetch_all_attendance_logs(search_query: str = "", date_filter: str = "", request=None):
+def fetch_all_attendance_logs(
+    search_query: str = "",
+    date_filter: str = "",
+    event_id: str = "",
+    attendance_session_id: str = "",
+    date_from: str = "",
+    date_to: str = "",
+    branch_id: str = "",
+    method: str = "",
+    request=None,
+):
     page = 1
     page_size = 200
     records: list[Any] = []
     client = get_client(request=request)
+    params = {
+        "search": search_query,
+        "attendance_date": date_filter,
+        "page_size": page_size,
+    }
+    if event_id:
+        params["event_id"] = event_id
+    if attendance_session_id:
+        params["attendance_session_id"] = attendance_session_id
+    if date_from:
+        params["date_from"] = date_from
+    if date_to:
+        params["date_to"] = date_to
+    if branch_id:
+        params["branch_id"] = branch_id
+    if method:
+        params["method"] = method
 
     while True:
-        response = client.list_attendance_logs(
-            search=search_query,
-            attendance_date=date_filter,
-            page=page,
-            page_size=page_size,
-        )
+        response = client.list_attendance_logs(**{**params, "page": page})
         records.extend(prepare_attendance_records(response.get("results", []), request=request))
         if not response.get("next"):
             break

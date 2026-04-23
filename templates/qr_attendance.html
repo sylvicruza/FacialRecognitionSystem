@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block page_crumb %}Attendance{% endblock %}
+{% block page_title %}QR Check-In{% endblock %}
+{% block page_subtitle %}Create a scan link for the active event session.{% endblock %}
+
+{% block content %}
+<style>
+  .qr-page{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 430px;
+    gap:22px;
+    align-items:stretch;
+  }
+  .qr-panel{
+    position:relative;
+    overflow:hidden;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:30px;
+    box-shadow:0 24px 60px rgba(15,23,42,.075);
+  }
+  .qr-panel:before{
+    content:"";
+    position:absolute;
+    inset:auto -90px -120px auto;
+    width:300px;
+    height:300px;
+    border-radius:50%;
+    background:rgba(34,197,94,.08);
+    pointer-events:none;
+  }
+  .qr-info{padding:32px}
+  .label{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:18px;
+    padding:10px 13px;
+    border-radius:999px;
+    color:#0f6b3a;
+    background:#ecfdf3;
+    border:1px solid #d8f0df;
+    font-size:13px;
+    font-weight:900;
+  }
+  .qr-info h2{
+    max-width:680px;
+    margin:0;
+    color:#172033;
+    font-size:36px;
+    line-height:1.02;
+    font-weight:900;
+    letter-spacing:-.06em;
+  }
+  .qr-info p{
+    margin:12px 0 0;
+    color:var(--muted);
+    max-width:660px;
+    line-height:1.6;
+  }
+  .session-card{
+    margin-top:24px;
+    display:grid;
+    gap:10px;
+    max-width:620px;
+    padding:18px;
+    border-radius:22px;
+    background:#f7fbf8;
+    border:1px solid var(--line);
+  }
+  .session-row{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    color:#283548;
+    font-weight:900;
+  }
+  .session-row i{color:#16a34a;width:18px;text-align:center}
+  .session-stats{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .session-stats span{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 11px;
+    border-radius:999px;
+    background:#eaf8ef;
+    color:#0f6b3a;
+    border:1px solid #d6efdd;
+    font-size:12px;
+    font-weight:900;
+  }
+  .steps{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin-top:28px;
+  }
+  .step{
+    min-height:150px;
+    padding:18px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:#fff;
+  }
+  .step b{
+    display:grid;
+    place-items:center;
+    width:38px;
+    height:38px;
+    margin-bottom:14px;
+    border-radius:15px;
+    color:#fff;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    box-shadow:0 14px 26px rgba(22,163,74,.20);
+  }
+  .step strong{display:block;color:#202939}
+  .step span{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.45}
+  .qr-box{
+    padding:30px;
+    display:grid;
+    place-items:center;
+    text-align:center;
+  }
+  .qr-title{margin:0 0 16px;color:#172033;font-size:22px;font-weight:900;letter-spacing:-.04em}
+  #qrCode{
+    width:318px;
+    height:318px;
+    display:grid;
+    place-items:center;
+    padding:18px;
+    border-radius:30px;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 22px 46px rgba(15,23,42,.08);
+  }
+  #qrCode img,
+  #qrCode canvas{
+    width:100% !important;
+    height:100% !important;
+  }
+  .qr-link{
+    width:100%;
+    margin-top:18px;
+    padding:13px 14px;
+    border-radius:17px;
+    background:#f7fbf8;
+    border:1px solid var(--line);
+    color:#344054;
+    font-size:13px;
+    word-break:break-all;
+  }
+  .btn-row{
+    width:100%;
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .qr-btn{
+    min-height:46px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 14px;
+    border-radius:15px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:#263244;
+    font-weight:900;
+    font-size:13px;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .qr-btn.primary{
+    grid-column:1 / -1;
+    border-color:transparent;
+    color:#fff;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    box-shadow:0 18px 36px rgba(22,163,74,.20);
+  }
+  .copy-note{
+    min-height:18px;
+    margin-top:10px;
+    color:#15803d;
+    font-size:12px;
+    font-weight:900;
+  }
+  @media print{
+    .sidebar,.app-topbar,.page-heading,.qr-info,.btn-row,.qr-link,.copy-note{display:none !important}
+    .main-content{margin:0 !important;padding:24px !important}
+    .qr-page{display:block;max-width:none}
+    .qr-panel{box-shadow:none;border:0}
+    .qr-box{min-height:90vh}
+    #qrCode{width:420px;height:420px}
+  }
+  @media (max-width: 1050px){
+    .qr-page{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+  }
+</style>
+
+<div class="qr-page">
+  <section class="qr-panel qr-info">
+    <div class="label">
+      <i class="fa-solid fa-qrcode"></i>
+      Event QR
+    </div>
+    <h2>{{ active_session.session_name|default:active_session.event_name }}</h2>
+    <p>Display this code at the entrance. Members scan it, enter their member code, email, or phone, and KairosTrack records the check-in against this exact event session.</p>
+
+    <div class="session-card">
+      <div class="session-row">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>{{ active_session.event_name }}</span>
+      </div>
+      {% if active_session.starts_at %}
+        <div class="session-row">
+          <i class="fa-solid fa-clock"></i>
+          <span>{{ active_session.starts_at }}</span>
+        </div>
+      {% endif %}
+      <div class="session-stats">
+        <span><i class="fa-solid fa-user-check"></i> {{ method_counts.present }} present</span>
+        <span><i class="fa-solid fa-user-xmark"></i> {{ method_counts.absent }} absent</span>
+        <span><i class="fa-solid fa-hourglass-half"></i> {{ method_counts.pending }} pending</span>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <b>1</b>
+        <strong>Confirm the session</strong>
+        <span>QR attendance is saved only to the active event session shown here.</span>
+      </div>
+      <div class="step">
+        <b>2</b>
+        <strong>Display or print</strong>
+        <span>Put the QR code at the entrance or share it with a trusted check-in desk.</span>
+      </div>
+      <div class="step">
+        <b>3</b>
+        <strong>Track in logs</strong>
+        <span>Every scan appears in attendance logs with the QR method.</span>
+      </div>
+    </div>
+  </section>
+
+  <aside class="qr-panel qr-box">
+    <h3 class="qr-title">Scan to check in</h3>
+    <div id="qrCode" aria-label="QR code for {{ qr_url }}"></div>
+    <div class="qr-link" id="qrLink">{{ qr_url }}</div>
+    <div class="btn-row">
+      <a class="qr-btn primary" href="{{ qr_url }}" target="_blank" rel="noopener">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Test Check-In
+      </a>
+      <button class="qr-btn" type="button" id="copyQr">
+        <i class="fa-solid fa-link"></i> Copy Link
+      </button>
+      <button class="qr-btn" type="button" id="downloadQr">
+        <i class="fa-solid fa-download"></i> Download
+      </button>
+      <button class="qr-btn" type="button" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+      <a class="qr-btn" href="{% url 'person_attendance_list' %}?attendance_session_id={{ active_session.id }}">
+        <i class="fa-solid fa-table-list"></i> Logs
+      </a>
+      <a class="qr-btn" href="{{ session_report_url }}">
+        <i class="fa-solid fa-chart-simple"></i> Report
+      </a>
+    </div>
+    <div class="copy-note" id="copyNote" aria-live="polite"></div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  const qrText = "{{ qr_url|escapejs }}";
+  const qrNode = document.getElementById("qrCode");
+  new QRCode(qrNode, {
+    text: qrText,
+    width: 280,
+    height: 280,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  const note = document.getElementById("copyNote");
+
+  document.getElementById("copyQr").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(qrText);
+      note.textContent = "Check-in link copied.";
+    } catch (error) {
+      note.textContent = "Copy failed. You can select the link above.";
+    }
+  });
+
+  document.getElementById("downloadQr").addEventListener("click", () => {
+    const canvas = qrNode.querySelector("canvas");
+    const image = qrNode.querySelector("img");
+    const link = document.createElement("a");
+    link.download = "kairostrack-event-qr.png";
+    link.href = canvas ? canvas.toDataURL("image/png") : image.src;
+    link.click();
+  });
+</script>
+{% endblock %}

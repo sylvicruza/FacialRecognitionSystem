@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">KairosTrack logo</title>
+  <desc id="desc">A green time and attendance mark with a clock, check, and face recognition frame.</desc>
+  <defs>
+    <linearGradient id="bg" x1="18" y1="14" x2="110" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#32d27f"/>
+      <stop offset=".55" stop-color="#16a34a"/>
+      <stop offset="1" stop-color="#075e3a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="35" y1="18" x2="92" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-18%" y="-18%" width="136%" height="136%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#063d26" flood-opacity=".32"/>
+    </filter>
+  </defs>
+  <rect x="12" y="12" width="104" height="104" rx="28" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M24 39c0-8.3 6.7-15 15-15h50c8.3 0 15 6.7 15 15v50c0 8.3-6.7 15-15 15H39c-8.3 0-15-6.7-15-15V39Z" fill="url(#shine)"/>
+  <path d="M43 37h42c3.9 0 7 3.1 7 7v42c0 3.9-3.1 7-7 7H43c-3.9 0-7-3.1-7-7V44c0-3.9 3.1-7 7-7Z" fill="#ecfdf5" opacity=".96"/>
+  <path d="M48 37v-8M80 37v-8M38 53h52" fill="none" stroke="#075e3a" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="64" cy="70" r="20" fill="#dcfce7"/>
+  <path d="M64 58v13l9 6" fill="none" stroke="#075e3a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m53 85 7 7 17-20" fill="none" stroke="#16a34a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M46 47h-6v-6M82 47h6v-6M46 83h-6v6M82 83h6v6" fill="none" stroke="#16a34a" stroke-width="5" stroke-linecap="round"/>
+</svg>

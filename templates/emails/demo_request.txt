@@ -1,0 +1,13 @@
+New KairosTrack demo request
+
+Name: {{ name }}
+Email: {{ email }}
+Organisation: {{ organisation }}
+Phone: {{ phone }}
+Interested plan: {{ plan }}
+Submitted: {{ submitted_at|date:"d M Y, H:i" }}
+
+Message:
+{{ message }}
+
+Reply directly to this email to contact the requester.

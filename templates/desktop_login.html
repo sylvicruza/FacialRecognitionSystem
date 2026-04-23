@@ -4,434 +4,649 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Time and Attendance Login</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>KairosTrack Sign In</title>
+  <link rel="icon" type="image/png" href="{% static 'images/kairostrack-icon.png' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg-1:#071522;
-      --bg-2:#0d2136;
-      --ink:#0f172a;
-      --muted:#64748b;
-      --line:#dbe4ee;
-      --card:#f8fbff;
-      --white:#ffffff;
-      --brand:#1fb56d;
-      --brand-2:#149e5c;
-      --accent:#89c8ff;
-      --glow:rgba(31,181,109,.22);
-      --radius-xl:32px;
-      --radius-lg:22px;
-      --shadow:0 28px 80px rgba(2,6,23,.32);
+    :root {
+      --deep: #001b13;
+      --deep-2: #06281d;
+      --green: #16a34a;
+      --green-dark: #0f6b2d;
+      --mint: #effaf2;
+      --ink: #101827;
+      --muted: #667085;
+      --line: #e7ece9;
+      --card: #ffffff;
+      --shadow: 0 30px 80px rgba(15, 23, 42, .16);
     }
 
-    *{ box-sizing:border-box; }
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      min-height:100vh;
-      font-family:'Manrope', sans-serif;
-      color:var(--white);
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Manrope, sans-serif;
+      color: var(--ink);
+      background: #f8faf8;
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: calc(100vh - 62px);
+      display: grid;
+      grid-template-columns: 56% 44%;
       background:
-        radial-gradient(760px 420px at 15% 15%, rgba(31,181,109,.18), transparent 62%),
-        radial-gradient(820px 460px at 86% 10%, rgba(137,200,255,.16), transparent 60%),
-        linear-gradient(160deg, var(--bg-1), var(--bg-2));
-      overflow-x:hidden;
+        linear-gradient(104deg, var(--deep) 0%, var(--deep) 58%, transparent 58.1%),
+        radial-gradient(circle, rgba(15, 107, 45, .09) 1.2px, transparent 1.4px) 100% 0 / 17px 17px,
+        #fbfcfb;
     }
 
-    .shell{
-      min-height:100vh;
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      position:relative;
+    .story {
+      position: relative;
+      min-height: 680px;
+      padding: 52px 42px 48px;
+      color: #fff;
+      overflow: hidden;
     }
 
-    .shell::before,
-    .shell::after{
-      content:"";
-      position:absolute;
-      border-radius:999px;
-      filter:blur(12px);
-      pointer-events:none;
-    }
-
-    .shell::before{
-      width:280px;
-      height:280px;
-      background:rgba(31,181,109,.10);
-      top:60px;
-      left:80px;
-    }
-
-    .shell::after{
-      width:360px;
-      height:360px;
-      background:rgba(137,200,255,.08);
-      right:80px;
-      bottom:40px;
-    }
-
-    .brand-side{
-      padding:40px 42px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .brand-panel{
-      width:min(100%, 560px);
-      padding:34px;
-      border-radius:36px;
-      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      border:1px solid rgba(255,255,255,.10);
-      backdrop-filter:blur(16px);
-      box-shadow:0 24px 70px rgba(2,6,23,.18);
-    }
-
-    .brand-row{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      margin-bottom:34px;
-    }
-
-    .logo{
-      width:62px;
-      height:62px;
-      border-radius:20px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      display:grid;
-      place-items:center;
-      padding:8px;
-      overflow:hidden;
-      flex:0 0 auto;
-    }
-
-    .logo img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-    }
-
-    .brand-meta{
-      line-height:1.2;
-    }
-
-    .brand-meta .kicker{
-      font-size:12px;
-      color:rgba(255,255,255,.66);
-      letter-spacing:.04em;
-      text-transform:uppercase;
-    }
-
-    .brand-meta .title{
-      margin-top:4px;
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:-.03em;
-    }
-
-    .headline{
-      max-width:470px;
-      font-size:52px;
-      line-height:.98;
-      letter-spacing:-.06em;
-      font-weight:800;
-      margin:0;
-    }
-
-    .subcopy{
-      margin:18px 0 0;
-      max-width:420px;
-      color:rgba(255,255,255,.72);
-      font-size:15px;
-      line-height:1.6;
-    }
-
-    .points{
-      margin-top:34px;
-      display:grid;
-      gap:12px;
-    }
-
-    .point{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:14px 16px;
-      border-radius:18px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      color:rgba(255,255,255,.86);
-      font-size:14px;
-    }
-
-    .point i{
-      width:34px;
-      height:34px;
-      border-radius:12px;
-      display:grid;
-      place-items:center;
-      color:#042312;
-      background:linear-gradient(135deg, #29ca7e, #86d5ff);
-      flex:0 0 auto;
-    }
-
-    .login-side{
-      padding:32px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .login-card{
-      width:min(100%, 430px);
-      border-radius:var(--radius-xl);
-      background:rgba(250,252,255,.97);
-      color:var(--ink);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.45);
-    }
-
-    .login-head{
-      padding:30px 30px 18px;
+    .story::before {
+      content: "";
+      position: absolute;
+      width: 470px;
+      height: 470px;
+      right: 68px;
+      top: 206px;
+      border-radius: 999px;
       background:
-        radial-gradient(260px 120px at 12% 0%, rgba(31,181,109,.14), transparent 70%),
-        linear-gradient(180deg, #ffffff, #f9fbff);
-      border-bottom:1px solid rgba(219,228,238,.92);
+        radial-gradient(circle, rgba(25, 168, 76, .18) 0 34%, transparent 35%),
+        repeating-radial-gradient(circle, rgba(34, 197, 94, .16) 0 2px, transparent 2px 28px);
+      opacity: .75;
     }
 
-    .login-head h1{
-      margin:0;
-      font-size:34px;
-      font-weight:800;
-      letter-spacing:-.05em;
+    .brand {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
-    .login-head p{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:14px;
+    .brand-mark {
+      width: 62px;
+      height: 62px;
+      padding: 4px;
+      border-radius: 19px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.05));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 20px 42px rgba(34, 197, 94, .25);
+      overflow: hidden;
     }
 
-    .status{
-      margin-top:16px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(31,181,109,.10);
-      color:#187248;
-      font-size:12px;
-      font-weight:700;
-      border:1px solid rgba(31,181,109,.12);
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 15px;
     }
 
-    .login-body{
-      padding:26px 30px 30px;
+    .brand-title {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      line-height: 1;
     }
 
-    .alert{
-      border:none;
-      border-radius:18px;
-      font-size:13px;
-      line-height:1.55;
-      margin-bottom:16px;
+    .brand-title span { color: #4ade80; }
+
+    .brand-subtitle {
+      margin-top: 7px;
+      color: rgba(255, 255, 255, .72);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .17em;
     }
 
-    .alert-danger{
-      background:#fff0f0;
-      color:#b42318;
+    .hero-copy {
+      position: relative;
+      z-index: 2;
+      max-width: 530px;
+      margin-top: 84px;
     }
 
-    .alert-success,
-    .alert-info{
-      background:#eef9f3;
-      color:#17653f;
+    .hero-copy h1 {
+      margin: 0;
+      font-size: clamp(38px, 4vw, 50px);
+      line-height: 1.08;
+      letter-spacing: -.06em;
+      font-weight: 900;
     }
 
-    .form-label{
-      font-size:13px;
-      font-weight:800;
-      color:#344256;
-      margin-bottom:8px;
+    .hero-copy h1 span {
+      display: inline-block;
+      color: #24d665;
     }
 
-    .form-control{
-      height:56px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:#f2f7fd;
-      font-size:15px;
-      padding:0 16px;
-      box-shadow:none;
+    .hero-copy p {
+      max-width: 415px;
+      margin: 20px 0 0;
+      color: rgba(255, 255, 255, .75);
+      font-size: 15px;
+      line-height: 1.7;
+      font-weight: 700;
     }
 
-    .form-control:focus{
-      border-color:#88cfff;
-      box-shadow:0 0 0 .2rem rgba(137,200,255,.16);
-      background:#f8fbff;
+    .feature-list {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 370px);
+      display: grid;
+      gap: 16px;
+      margin-top: 34px;
     }
 
-    .submit{
-      width:100%;
-      height:58px;
-      border:none;
-      border-radius:18px;
-      background:linear-gradient(135deg, var(--brand), var(--brand-2));
-      color:#f3fff8;
-      font-size:15px;
-      font-weight:800;
-      box-shadow:0 18px 34px var(--glow);
-      transition:transform .08s ease, box-shadow .2s ease;
+    .feature {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 13px;
+      align-items: center;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
     }
 
-    .submit:hover{
-      box-shadow:0 22px 40px rgba(31,181,109,.28);
+    .feature:last-child { border-bottom: 0; }
+
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: rgba(34, 197, 94, .72);
+      color: #eaffef;
     }
 
-    .submit:active{
-      transform:scale(.99);
+    .feature b {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
     }
 
-    .login-note{
-      margin-top:16px;
-      text-align:center;
-      color:var(--muted);
-      font-size:12px;
+    .feature span {
+      display: block;
+      margin-top: 3px;
+      color: rgba(255, 255, 255, .65);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 700;
     }
 
-    .login-note a{
-      color:var(--brand-2);
-      font-weight:800;
+    .camera-scene {
+      position: absolute;
+      z-index: 3;
+      right: 82px;
+      top: 280px;
+      width: 322px;
+      height: 290px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
     }
 
-    @media (max-width: 1100px){
-      .shell{
-        grid-template-columns:1fr;
+    .camera-scene::after {
+      content: "";
+      position: absolute;
+      left: 82px;
+      right: 54px;
+      bottom: 18px;
+      height: 116px;
+      background: linear-gradient(180deg, #0d542a, #062b17);
+      transform: skewY(-8deg);
+      box-shadow: 0 30px 55px rgba(0, 0, 0, .32);
+    }
+
+    .camera-scene img {
+      position: relative;
+      z-index: 2;
+      width: 292px;
+      height: auto;
+      filter: drop-shadow(0 30px 30px rgba(0, 0, 0, .26));
+    }
+
+    .quote {
+      position: relative;
+      z-index: 4;
+      width: min(100%, 440px);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 28px;
+      padding: 17px 19px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .075);
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .quote i {
+      color: #4ade80;
+      font-size: 24px;
+    }
+
+    .quote p {
+      margin: 0;
+      color: rgba(255, 255, 255, .86);
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .quote small {
+      display: block;
+      margin-top: 5px;
+      color: rgba(255, 255, 255, .56);
+      font-weight: 700;
+    }
+
+    .login-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 54px 56px;
+    }
+
+    .login-card {
+      width: min(100%, 430px);
+      padding: 48px 42px 32px;
+      border-radius: 24px;
+      background: var(--card);
+      border: 1px solid rgba(231, 236, 233, .9);
+      box-shadow: var(--shadow);
+    }
+
+    .login-card h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.08;
+      letter-spacing: -.05em;
+      font-weight: 900;
+    }
+
+    .login-card .lede {
+      margin: 10px 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .secure {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--mint);
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .alert {
+      margin: 0 0 18px;
+      padding: 13px 14px;
+      border-radius: 12px;
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #ffe4e6;
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 800;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    label {
+      color: #344054;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .soft-link {
+      color: #15803d;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .input-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-shell > i {
+      position: absolute;
+      left: 16px;
+      color: #98a2b3;
+      font-size: 15px;
+    }
+
+    .input-shell .toggle-password {
+      left: auto;
+      right: 16px;
+      cursor: pointer;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 44px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      outline: 0;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    input:focus {
+      border-color: #7dd99b;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .13);
+    }
+
+    .submit {
+      width: 100%;
+      height: 52px;
+      margin-top: 6px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green-dark);
+      color: #fff;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 18px 34px rgba(15, 107, 45, .2);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 40px rgba(15, 107, 45, .24);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 24px 0;
+      color: #667085;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+
+    .org-button {
+      width: 100%;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: #344054;
+      font: inherit;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .org-button i {
+      color: #15803d;
+    }
+
+    .card-note {
+      margin-top: 28px;
+      text-align: center;
+      color: #667085;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .card-note a {
+      color: #15803d;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .trust-strip {
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 34px;
+      padding: 0 20px;
+      background: #fff;
+      border-top: 1px solid #eef2ef;
+      color: #667085;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .trust-strip span {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      white-space: nowrap;
+    }
+
+    .trust-strip i {
+      color: #15803d;
+    }
+
+    @media (max-width: 1160px) {
+      .page {
+        grid-template-columns: 1fr;
+        background: var(--deep);
       }
 
-      .brand-side{
-        padding:24px 24px 8px;
+      .story {
+        min-height: auto;
+        padding-bottom: 34px;
       }
 
-      .login-side{
-        padding:16px 24px 28px;
+      .camera-scene {
+        display: none;
       }
 
-      .headline{
-        font-size:40px;
+      .login-wrap {
+        background:
+          radial-gradient(circle, rgba(15, 107, 45, .08) 1.2px, transparent 1.4px) 100% 0 / 17px 17px,
+          #fbfcfb;
       }
     }
 
-    @media (max-width: 640px){
-      .brand-panel{
-        padding:24px;
+    @media (max-width: 680px) {
+      .story {
+        padding: 32px 24px;
       }
 
-      .headline{
-        font-size:34px;
+      .hero-copy {
+        margin-top: 46px;
       }
 
-      .login-card{
-        border-radius:24px;
+      .quote {
+        display: none;
       }
 
-      .login-head,
-      .login-body{
-        padding-left:20px;
-        padding-right:20px;
+      .login-wrap {
+        padding: 28px 18px;
+      }
+
+      .login-card {
+        padding: 34px 24px 28px;
+      }
+
+      .trust-strip {
+        height: auto;
+        min-height: 62px;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 16px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="brand-side">
-      <div class="brand-panel">
-        <div class="brand-row">
-          <div class="logo">
-            <img src="{% static 'images/time-attendance-icon.png' %}" alt="Time and Attendance Icon">
-          </div>
-          <div class="brand-meta">
-            <div class="kicker">Opened Heavens Chapel</div>
-            <div class="title">Time and Attendance</div>
-          </div>
+  <main class="page">
+    <section class="story">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="{% static 'images/kairostrack-logo.png' %}" alt="KairosTrack">
         </div>
+        <div>
+          <div class="brand-title">KAIROS<span>TRACK</span></div>
+          <div class="brand-subtitle">ATTENDANCE PLATFORM</div>
+        </div>
+      </div>
 
-        <h2 class="headline">Local cameras. Shared records.</h2>
-        <p class="subcopy">Sign in to continue to the desktop workspace.</p>
+      <div class="hero-copy">
+        <h1>Smarter attendance.<br><span>Stronger</span> organisations.</h1>
+        <p>KairosTrack helps teams manage attendance, members and camera systems from one powerful platform.</p>
+      </div>
 
-        <div class="points">
-          <div class="point">
-            <i class="fa-solid fa-camera-retro"></i>
-            <span>Private camera access stays on this machine.</span>
-          </div>
-          <div class="point">
-            <i class="fa-solid fa-user-shield"></i>
-            <span>Each staff user signs in with their own account.</span>
-          </div>
-          <div class="point">
-            <i class="fa-solid fa-database"></i>
-            <span>Members, cameras, and logs sync with the hosted backend.</span>
-          </div>
+      <div class="feature-list">
+        <div class="feature">
+          <div class="feature-icon"><i class="fa-solid fa-video"></i></div>
+          <div><b>Real-time attendance tracking</b><span>Monitor check-ins as they happen.</span></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="fa-solid fa-users"></i></div>
+          <div><b>Multi-camera support</b><span>Connect local cameras, webcams or RTSP feeds.</span></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="fa-solid fa-cloud"></i></div>
+          <div><b>Secure and reliable</b><span>Your records stay protected and backed up.</span></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <div><b>Reports and exports</b><span>Export to CSV, Excel, PDF and more.</span></div>
+        </div>
+      </div>
+
+      <div class="camera-scene">
+        <img src="{% static 'images/dashboard-camera-transparent.png' %}" alt="">
+      </div>
+
+      <div class="quote">
+        <i class="fa-solid fa-quote-left"></i>
+        <div>
+          <p>KairosTrack made attendance simple, reliable and faster for our team.</p>
+          <small>Grace Living Church</small>
         </div>
       </div>
     </section>
 
-    <section class="login-side">
+    <section class="login-wrap">
       <div class="login-card">
-        <div class="login-head">
-          <h1>Sign In</h1>
-          <p>Use your staff username and password.</p>
-          <div class="status">
-            <i class="fa-solid fa-link"></i>
-            Connected to hosted attendance API
-          </div>
+        <h2>Welcome back!</h2>
+        <p class="lede">Sign in to access your KairosTrack workspace.</p>
+
+        <div class="secure">
+          <i class="fa-solid fa-shield-halved"></i>
+          Secure connection established
         </div>
 
-        <div class="login-body">
-          {% if messages %}
-            {% for message in messages %}
-              <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
+        {% if error %}
+          <div class="alert">{{ error }}</div>
+        {% endif %}
 
-          {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-          {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
 
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ next_url }}">
-
-            <div class="mb-3">
-              <label class="form-label" for="username">Username</label>
-              <input class="form-control" id="username" name="username" type="text" autocomplete="username" placeholder="Enter username" required>
+          <div class="field">
+            <div class="field-head">
+              <label for="username">Username</label>
             </div>
-
-            <div class="mb-4">
-              <label class="form-label" for="password">Password</label>
-              <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+            <div class="input-shell">
+              <i class="fa-regular fa-user"></i>
+              <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter your username" required>
             </div>
-
-            <button class="submit" type="submit">
-              <i class="fa-solid fa-right-to-bracket"></i>
-              Continue
-            </button>
-          </form>
-
-          <div class="login-note">
-            Desktop access is for staff accounts.
-            <a href="{% url 'product_about' %}">Learn more</a>
           </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="password">Password</label>
+              <a class="soft-link" href="{% url 'upgrade_request' %}?plan=Support">Forgot password?</a>
+            </div>
+            <div class="input-shell">
+              <i class="fa-solid fa-lock"></i>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+              <i class="fa-regular fa-eye-slash toggle-password" id="togglePassword"></i>
+            </div>
+          </div>
+
+          <button class="submit" type="submit">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+          </button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <a class="org-button" href="{% url 'desktop_signup' %}">
+          <i class="fa-regular fa-building"></i>
+          Sign in with Organisation ID
+        </a>
+
+        <div class="card-note">
+          New to KairosTrack? <a href="{% url 'product_about' %}#demo">Contact your administrator</a>
         </div>
       </div>
     </section>
-  </div>
+  </main>
+
+  <footer class="trust-strip">
+    <span><i class="fa-solid fa-shield-halved"></i> Enterprise-grade security</span>
+    <span><i class="fa-regular fa-cloud"></i> 99.9% uptime guarantee</span>
+    <span><i class="fa-solid fa-lock"></i> Your data is always protected</span>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById("togglePassword");
+    const password = document.getElementById("password");
+
+    toggle?.addEventListener("click", () => {
+      const shouldShow = password.type === "password";
+      password.type = shouldShow ? "text" : "password";
+      toggle.classList.toggle("fa-eye", shouldShow);
+      toggle.classList.toggle("fa-eye-slash", !shouldShow);
+    });
+  </script>
 </body>
 </html>

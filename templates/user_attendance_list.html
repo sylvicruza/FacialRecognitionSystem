@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block page_crumb %}Attendance{% endblock %}
+{% block page_title %}Attendance Logs{% endblock %}
+{% block page_subtitle %}Review records and export the current view.{% endblock %}
 {% block content %}
 
 <style>
@@ -92,12 +95,6 @@
     color: rgba(255,255,255,.72);
   }
 
-  .hero-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-
   .chip-link{
     display:inline-flex;
     align-items:center;
@@ -185,8 +182,14 @@
 
   @media (min-width: 768px){
     .filter-grid{
-      grid-template-columns: 1.35fr .85fr auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items:end;
+    }
+  }
+
+  @media (min-width: 1100px){
+    .filter-grid{
+      grid-template-columns: 1.2fr .8fr .95fr .95fr auto;
     }
   }
 
@@ -567,29 +570,6 @@
 
 <div class="page-wrap">
 
-  <div class="hero">
-    <div class="hero-top">
-      <div class="title">
-        <div class="avatar" aria-hidden="true">
-          <i class="fa-solid fa-calendar-check"></i>
-        </div>
-        <div>
-          <h1>Attendance Logs</h1>
-          <p>Review records and export the current view.</p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-        <a class="chip-link" href="{% url 'stream_all_cameras' %}">
-          <i class="fa-solid fa-camera"></i> Mark Attendance
-        </a>
-      </div>
-    </div>
-  </div>
-
   <div class="cardx">
     <div class="cardx-head">
       <div>
@@ -630,6 +610,34 @@
               >
             </div>
 
+            <div class="fgroup">
+              <label for="event_id">
+                <i class="fa-solid fa-calendar-check"></i> Event
+              </label>
+              <select id="event_id" name="event_id" class="form-select soft">
+                <option value="">All events</option>
+                {% for event in events %}
+                  <option value="{{ event.id }}" {% if event_filter == event.id|stringformat:"s" %}selected{% endif %}>
+                    {{ event.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="fgroup">
+              <label for="attendance_session_id">
+                <i class="fa-solid fa-clock"></i> Session
+              </label>
+              <select id="attendance_session_id" name="attendance_session_id" class="form-select soft">
+                <option value="">All sessions</option>
+                {% for session in sessions %}
+                  <option value="{{ session.id }}" {% if session_filter == session.id|stringformat:"s" %}selected{% endif %}>
+                    {{ session.session_name|default:session.event_name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
             <div class="btn-stack">
               <button type="submit" class="btnx primary" title="Apply filters">
                 <i class="fa-solid fa-filter"></i> Apply
@@ -656,6 +664,8 @@
           <form method="get" action="{% url 'attendance_export_download' %}" class="w-100 d-flex flex-column gap-2">
             <input type="hidden" name="search" value="{{ search_query }}">
             <input type="hidden" name="attendance_date" value="{{ date_filter }}">
+            <input type="hidden" name="event_id" value="{{ event_filter }}">
+            <input type="hidden" name="attendance_session_id" value="{{ session_filter }}">
 
             <select name="format" class="form-select" aria-label="Export format">
               <option value="csv">CSV</option>
@@ -696,6 +706,10 @@
         <thead>
           <tr>
             <th style="min-width:280px;">Member</th>
+            <th style="min-width:180px;">Event</th>
+            <th style="min-width:190px;">Session</th>
+            <th style="width:120px;">Status</th>
+            <th style="width:120px;">Method</th>
             <th style="width:140px;">Date</th>
             <th style="width:150px;">Check-In</th>
             <th style="width:150px;">Check-Out</th>
@@ -720,11 +734,21 @@
 
                     <div class="member-meta">
                       <div class="name">{{ attendance.person.name|default:"Unknown" }}</div>
-                      <div class="sub">Portal ID: {{ attendance.person.portal_id|default:"—" }}</div>
+                      <div class="sub">Member Code: {{ attendance.person.member_code|default:attendance.person.portal_id|default:"-" }}</div>
                     </div>
                   </div>
                 </td>
 
+                <td>{{ attendance.event_name|default:"General" }}</td>
+                <td>{{ attendance.session_name|default:"-" }}</td>
+                <td>
+                  {% if attendance.status == "absent" %}
+                    <span class="badge-pill badge-warn"><span class="dot"></span> Absent</span>
+                  {% else %}
+                    <span class="badge-pill badge-ok"><span class="dot"></span> {{ attendance.status|default:"Present"|title }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ attendance.method|default:"-"|title }}</td>
                 <td>{{ attendance.date }}</td>
 
                 <td>
@@ -769,7 +793,7 @@
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="6">
+              <td colspan="10">
                 <div class="empty">
                   <div class="ic"><i class="fa-solid fa-circle-info"></i></div>
                   <h3>No records found</h3>
@@ -792,10 +816,10 @@
         <div class="pills">
           {% with sp=search_query|urlencode df=date_filter|urlencode ps=page_size %}
             {% if attendance_page.has_previous %}
-              <a class="pill" href="?page=1&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+              <a class="pill" href="?page=1&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
                 <i class="fa-solid fa-angles-left"></i> First
               </a>
-              <a class="pill" href="?page={{ attendance_page.previous_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+              <a class="pill" href="?page={{ attendance_page.previous_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
                 <i class="fa-solid fa-chevron-left"></i> Prev
               </a>
             {% else %}
@@ -808,10 +832,10 @@
             </span>
 
             {% if attendance_page.has_next %}
-              <a class="pill" href="?page={{ attendance_page.next_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+              <a class="pill" href="?page={{ attendance_page.next_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
                 Next <i class="fa-solid fa-chevron-right"></i>
               </a>
-              <a class="pill" href="?page={{ attendance_page.paginator.num_pages }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}">
+              <a class="pill" href="?page={{ attendance_page.paginator.num_pages }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
                 Last <i class="fa-solid fa-angles-right"></i>
               </a>
             {% else %}
@@ -842,7 +866,7 @@
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label fw-bold">Recipient Email</label>
-            <input type="email" name="to_email" class="form-control" placeholder="e.g. admin@ohc.org" required>
+            <input type="email" name="to_email" class="form-control" placeholder="e.g. admin@example.com" required>
             <div class="form-text">The current filtered report will be attached.</div>
           </div>
 
@@ -857,6 +881,8 @@
 
           <input type="hidden" name="search" value="{{ search_query }}">
           <input type="hidden" name="attendance_date" value="{{ date_filter }}">
+          <input type="hidden" name="event_id" value="{{ event_filter }}">
+          <input type="hidden" name="attendance_session_id" value="{{ session_filter }}">
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
         </div>
 

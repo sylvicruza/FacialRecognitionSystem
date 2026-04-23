@@ -1,7 +1,25 @@
 {% extends "base.html" %}
+{% block page_crumb %}Attendance{% endblock %}
+{% block page_title %}{{ config.name }} Live Stream{% endblock %}
+{% block page_subtitle %}View this camera feed.{% endblock %}
 {% block content %}
-<body>
-    <h2>{{ config.name }} - Live Stream</h2>
-    <img src="{% url 'video_feed' config.id %}" width="640" height="480" alt="notavailable">
-</body>
+<div style="display:grid; gap:16px; max-width:860px;">
+  <div style="padding:18px 20px; border:1px solid var(--line); border-radius:20px; background:var(--paper);">
+    {% if active_session %}
+      <strong>Active event:</strong> {{ active_session.session_name|default:active_session.event_name }}
+    {% else %}
+      <strong>No active event selected.</strong>
+      <a href="{% url 'attendance_sessions' %}" style="color:var(--green);font-weight:900;">Select an event session</a>
+      before marking attendance.
+    {% endif %}
+  </div>
+
+  <img
+    src="{% url 'video_feed' config.id %}{% if active_session %}?attendance_session_id={{ active_session.id }}{% endif %}"
+    width="860"
+    height="484"
+    alt="{{ config.name }} live stream"
+    style="max-width:100%;height:auto;border-radius:20px;background:#06131f;"
+  >
+</div>
 {% endblock %}

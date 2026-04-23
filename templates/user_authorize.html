@@ -1,11 +1,9 @@
 {% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Authorize Member{% endblock %}
+{% block page_subtitle %}Update this member's attendance access status.{% endblock %}
 {% block content %}
 <style>
-    body {
-        background-color: #f8f9fa;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     .container {
         margin-top: 60px;
         max-width: 700px;
@@ -81,11 +79,9 @@
 
 <div class="container">
     <div class="card">
-        <h1 class="card-title">Authorize Member</h1>
-
         <div class="student-details">
             <div class="detail"><strong>Name:</strong> {{ person.name }}</div>
-            <div class="detail"><strong>Portal ID:</strong> {{ person.portal_id }}</div>
+            <div class="detail"><strong>Member Code:</strong> {{ person.member_code|default:person.portal_id }}</div>
             <div class="detail"><strong>Authorized:</strong>
                 {% if person.authorized %}
                     <span class="badge bg-success">Yes</span>

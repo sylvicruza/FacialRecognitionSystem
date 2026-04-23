@@ -1,664 +1,1025 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% load static %}
 
-{% block page_title %}OHC Dashboard{% endblock %}
+{% block page_crumb %}Dashboard{% endblock %}
+{% block page_title %}KairosTrack{% endblock %}
 {% block page_subtitle %}Monitor attendance, manage members, and oversee camera setups.{% endblock %}
 
 {% block content %}
 <style>
-  .home-wrap{
-    max-width:1240px;
+  .dashboard{
+    max-width:1320px;
     margin:0 auto;
   }
 
-  .hero, .glass-card, .topbar{
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-
-  .hero, .glass-card{
-    contain: paint;
-  }
-
-  .fadeUp{
-    opacity:0;
-    transform: translateY(10px);
-    animation: fadeUp .55s ease forwards;
-  }
-  .d1{ animation-delay: .04s; }
-  .d2{ animation-delay: .08s; }
-  .d3{ animation-delay: .12s; }
-  .d4{ animation-delay: .16s; }
-
-  @keyframes fadeUp{
-    to{ opacity:1; transform: translateY(0); }
-  }
-
-  .hero{
-    border-radius:22px;
-    padding:20px;
-    background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-    border: 1px solid rgba(255,255,255,.14);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 20px 50px rgba(2,6,23,.18);
-    overflow:hidden;
-    position:relative;
-    margin-bottom:14px;
-  }
-
-  .hero:before{
-    content:"";
-    position:absolute;
-    inset:-2px;
-    background:
-      radial-gradient(600px 240px at 20% 0%, rgba(34,197,94,.20), transparent 55%),
-      radial-gradient(520px 260px at 85% 10%, rgba(56,189,248,.18), transparent 60%);
-    pointer-events:none;
-  }
-
-  .hero-inner{
-    position:relative;
+  .welcome{
     display:flex;
+    align-items:center;
+    justify-content:space-between;
     gap:18px;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-  }
-
-  .hero-title{
-    min-width:260px;
-  }
-
-  .hero-title h2{
-    margin:0;
-    font-weight:800;
-    letter-spacing:-0.03em;
-    color: rgba(255,255,255,.95);
-    font-size:20px;
-    line-height:1.1;
-  }
-
-  .hero-title p{
-    margin:6px 0 0;
-    color: rgba(255,255,255,.72);
-    font-size:12px;
-    line-height:1.45;
-    max-width:620px;
-  }
-
-  .hero-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  .hbtn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    border-radius:14px;
-    padding:10px 12px;
-    font-weight:800;
-    font-size:13px;
-    text-decoration:none;
-    transition: transform .05s ease, opacity .2s ease, background .2s ease, box-shadow .2s ease;
-    user-select:none;
-    white-space:nowrap;
-  }
-
-  .hbtn:hover{
-    box-shadow: 0 16px 34px rgba(2,6,23,.18);
-  }
-
-  .hbtn:active{
-    transform: scale(.98);
-  }
-
-  .hbtn.primary{
-    background: linear-gradient(135deg, rgba(34,197,94,1), rgba(22,163,74,1));
-    color:#052012;
-    box-shadow: 0 18px 40px rgba(34,197,94,.18);
-  }
-
-  .hbtn.glass{
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.14);
-    color: rgba(255,255,255,.92);
-    backdrop-filter: blur(12px);
-  }
-
-  .hbtn.glass:hover{
-    background: rgba(255,255,255,.10);
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns: 1.6fr .9fr;
-    gap:14px;
-    align-items:start;
-  }
-
-  @media (max-width: 1100px){
-    .grid{ grid-template-columns:1fr; }
-  }
-
-  .glass-card{
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius:22px;
-    backdrop-filter: blur(14px);
-    box-shadow: 0 20px 50px rgba(2,6,23,.16);
-    overflow:hidden;
-  }
-
-  .card-head{
-    padding:14px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    border-bottom: 1px solid rgba(255,255,255,.10);
-  }
-
-  .card-head .t{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-
-  .card-head .t b{
-    color: rgba(255,255,255,.95);
-    font-weight:800;
-    letter-spacing:-0.02em;
-  }
-
-  .card-head .t span{
-    color: rgba(255,255,255,.70);
-    font-size:12px;
-    line-height:1.4;
-  }
-
-  .chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 10px;
-    border-radius:999px;
-    border: 1px solid rgba(255,255,255,.14);
-    background: rgba(255,255,255,.06);
-    color: rgba(255,255,255,.85);
-    font-size:12px;
-    white-space:nowrap;
-  }
-
-  .kpis{
-    padding:14px;
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap:12px;
-  }
-
-  @media (max-width: 560px){
-    .kpis{ grid-template-columns:1fr; }
-  }
-
-  .kpi{
-    background: rgba(255,255,255,.94);
-    border: 1px solid rgba(226,232,240,.9);
-    border-radius:18px;
-    padding:14px;
-    box-shadow: 0 12px 24px rgba(15,23,42,.08);
-    transition: transform .08s ease, box-shadow .2s ease;
-    cursor:pointer;
-    position: relative;
-    overflow:hidden;
-  }
-
-  .kpi:before{
-    content:"";
-    position:absolute;
-    inset:-2px;
+    padding:26px 28px;
+    border:1px solid rgba(22,163,74,.10);
+    border-radius:26px;
     background:
-      radial-gradient(320px 120px at 20% 0%, rgba(34,197,94,.18), transparent 55%),
-      radial-gradient(260px 140px at 90% 20%, rgba(56,189,248,.14), transparent 60%);
-    opacity:0;
-    transition: opacity .25s ease;
+      radial-gradient(520px 180px at 88% 18%, rgba(34,197,94,.13), transparent 56%),
+      linear-gradient(135deg, #ffffff, #fbfffc);
+    box-shadow:0 22px 55px rgba(15,23,42,.08);
+    margin-bottom:18px;
   }
 
-  .kpi:hover:before{ opacity:1; }
-
-  .kpi:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 18px 34px rgba(15,23,42,.12);
-  }
-
-  .kpi a{
-    text-decoration:none;
-    color:inherit;
-    display:block;
-    position:relative;
-  }
-
-  .kpi-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-  }
-
-  .ico{
-    width:42px;
-    height:42px;
-    border-radius:16px;
-    display:grid;
-    place-items:center;
-    color:#06121d;
-    font-size:16px;
-    background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(56,189,248,.18));
-    border: 1px solid rgba(226,232,240,.8);
-  }
-
-  .label{
-    margin-top:10px;
-    color:#334155;
-    font-size:12px;
-    font-weight:800;
-    letter-spacing:.02em;
-  }
-
-  .val{
-    margin-top:4px;
+  .welcome h2{
+    margin:0;
     font-size:24px;
     font-weight:900;
-    letter-spacing:-0.03em;
-    color:#0f172a;
-    line-height:1;
+    letter-spacing:-.04em;
   }
 
-  .sub{
-    margin-top:6px;
-    color:#64748b;
-    font-size:12px;
-    line-height:1.4;
+  .welcome p{
+    margin:7px 0 0;
+    color:var(--muted);
+    font-size:14px;
   }
 
-  .quick{
-    padding:14px;
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-  }
-
-  @media (max-width: 640px){
-    .quick{ grid-template-columns:1fr; }
-  }
-
-  .qa{
-    background: rgba(255,255,255,.94);
-    border: 1px solid rgba(226,232,240,.9);
-    border-radius:18px;
-    padding:14px;
-    box-shadow: 0 12px 24px rgba(15,23,42,.08);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    transition: transform .08s ease, box-shadow .2s ease;
-  }
-
-  .qa:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 18px 34px rgba(15,23,42,.12);
-  }
-
-  .qa a{
-    text-decoration:none;
-    color:inherit;
-  }
-
-  .qa .row1{
+  .action-row{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .plan-badge-wrap{
+    position:relative;
+  }
+
+  .plan-badge{
+    min-height:48px;
+    display:inline-flex;
+    align-items:center;
     gap:10px;
+    padding:12px 16px;
+    border-radius:15px;
+    border:1px solid #d8f0df;
+    background:#effbf3;
+    color:#0f6b3a;
+    font-weight:900;
+    font-size:14px;
+    box-shadow:0 12px 30px rgba(15,23,42,.06);
   }
 
-  .qa .title{
+  .plan-badge small{
+    color:#4b6358;
+    font-size:12px;
     font-weight:800;
-    letter-spacing:-0.02em;
-    color:#0f172a;
   }
 
-  .qa .desc{
-    color:#64748b;
+  .plan-pop{
+    position:absolute;
+    top:calc(100% + 10px);
+    right:0;
+    z-index:12;
+    width:min(360px, 80vw);
+    padding:16px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:#fff;
+    box-shadow:0 22px 54px rgba(15,23,42,.14);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(8px);
+    transition:.18s ease;
+  }
+
+  .plan-badge-wrap:hover .plan-pop,
+  .plan-badge-wrap:focus-within .plan-pop{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+  }
+
+  .plan-pop-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .plan-pop-head b{
+    display:block;
+    color:#172033;
+    font-size:16px;
+    font-weight:950;
+  }
+
+  .plan-pop-head span{
+    display:block;
+    margin-top:4px;
+    color:var(--muted);
     font-size:12px;
     line-height:1.45;
-    margin-top:-6px;
   }
 
-  .side{
-    position: sticky;
-    top: 92px;
+  .plan-pop-list{
+    display:grid;
+    gap:8px;
+    margin:0;
+    padding:0;
+    list-style:none;
+  }
+
+  .plan-pop-list li{
     display:flex;
-    flex-direction:column;
-    gap:14px;
-  }
-
-  @media (max-width:1100px){
-    .side{ position:static; }
-  }
-
-  .mini{
-    padding:14px;
-  }
-
-  .mini .line{
-    display:flex;
-    justify-content:space-between;
     align-items:center;
-    padding:10px 0;
-    border-bottom: 1px solid rgba(255,255,255,.10);
-    color: rgba(255,255,255,.85);
-    font-size:13px;
+    justify-content:space-between;
     gap:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#f8fbf9;
+    border:1px solid #e7efea;
+    color:#344054;
+    font-size:13px;
+    font-weight:800;
   }
 
-  .mini .line:last-child{
-    border-bottom:none;
+  .plan-pop-list li.enabled{
+    color:#0f6b3a;
+    background:#effbf3;
+    border-color:#d8f0df;
   }
 
-  .pill2{
-    font-size:12px;
-    padding:6px 10px;
-    border-radius:999px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.14);
-    color: rgba(255,255,255,.92);
-    white-space:nowrap;
+  .plan-pop-list i{
+    width:18px;
   }
 
-  .note{
-    padding:14px;
-    color: rgba(255,255,255,.78);
-    font-size:12px;
-    line-height:1.5;
+  .dash-btn{
+    min-height:48px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    padding:12px 18px;
+    border-radius:15px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:#263244;
+    font-weight:900;
+    font-size:14px;
+    box-shadow:0 12px 30px rgba(15,23,42,.06);
+    transition:transform .08s ease, box-shadow .18s ease, border .18s ease;
   }
 
-  .note .tip{
-    padding: 0 0 12px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,.10);
+  .dash-btn:hover{
+    color:#101828;
+    transform:translateY(-1px);
+    border-color:#d4ded8;
+    box-shadow:var(--shadow);
   }
 
-  .note .tip:last-child{
-    border-bottom:none;
-    margin-bottom:0;
-    padding-bottom:0;
+  .dash-btn.primary{
+    color:#fff;
+    border-color:transparent;
+    background:linear-gradient(135deg, #22c55e, #16a34a);
+    box-shadow:0 18px 36px rgba(22,163,74,.20);
   }
 
-  .note b{
-    color: rgba(255,255,255,.95);
-  }
-
-  .pulseDot{
-    width:8px;
-    height:8px;
+  .live-dot{
+    width:9px;
+    height:9px;
     border-radius:50%;
-    background: #22c55e;
-    box-shadow: 0 0 0 0 rgba(34,197,94,.55);
-    animation: pulse 1.6s infinite;
-    display:inline-block;
+    background:#22c55e;
+    box-shadow:0 0 0 0 rgba(34,197,94,.48);
+    animation:pulse 1.7s infinite;
   }
 
   @keyframes pulse{
-    0%{ box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
-    70%{ box-shadow: 0 0 0 10px rgba(34,197,94,0); }
-    100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    0%{ box-shadow:0 0 0 0 rgba(34,197,94,.48); }
+    70%{ box-shadow:0 0 0 10px rgba(34,197,94,0); }
+    100%{ box-shadow:0 0 0 0 rgba(34,197,94,0); }
+  }
+
+  .setup-strip{
+    display:grid;
+    grid-template-columns:320px minmax(0,1fr);
+    gap:18px;
+    align-items:stretch;
+    margin-bottom:18px;
+  }
+
+  .setup-card,
+  .method-strip{
+    border:1px solid var(--line);
+    border-radius:24px;
+    background:#fff;
+    box-shadow:0 18px 44px rgba(15,23,42,.06);
+  }
+
+  .setup-card{
+    padding:20px;
+    background:
+      radial-gradient(280px 120px at 95% 0%, rgba(34,197,94,.12), transparent 60%),
+      #fff;
+  }
+
+  .setup-card b{
+    display:block;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.04em;
+  }
+
+  .setup-card span{
+    display:block;
+    margin-top:5px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.45;
+  }
+
+  .setup-bar{
+    height:10px;
+    margin:16px 0;
+    border-radius:999px;
+    background:#eef4f0;
+    overflow:hidden;
+  }
+
+  .setup-bar div{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+  }
+
+  .method-strip{
+    padding:18px;
+  }
+
+  .method-strip-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:13px;
+  }
+
+  .method-strip-head b{
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+    letter-spacing:-.035em;
+  }
+
+  .method-strip-head span{
+    color:var(--muted);
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .method-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .method-chip{
+    min-height:58px;
+    display:grid;
+    grid-template-columns:28px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+    padding:10px 12px;
+    border-radius:15px;
+    border:1px solid #d8f0df;
+    color:#0f6b3a;
+    background:#ecfdf3;
+    font-size:13px;
+    font-weight:900;
+  }
+
+  .setup-card.incomplete{
+    border-color:#cfeede;
+    background:
+      radial-gradient(360px 150px at 98% 0%, rgba(34,197,94,.15), transparent 60%),
+      #f4fff7;
+  }
+
+  .method-chip.locked{
+    color:#667085;
+    background:#f8fafc;
+    border-color:#e2e8f0;
+  }
+
+  .method-chip.mobile{
+    color:#1d4ed8;
+    background:#f8fbff;
+    border-color:#dbeafe;
+  }
+
+  .method-chip > i{
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    color:#fff;
+    background:#16a34a;
+  }
+
+  .method-chip.locked > i{
+    background:#94a3b8;
+  }
+
+  .method-chip.mobile > i{
+    background:#2563eb;
+  }
+
+  .method-chip small{
+    display:block;
+    margin-top:2px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:800;
+    line-height:1.3;
+  }
+
+  .method-state{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:950;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    white-space:nowrap;
+  }
+
+  .dash-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.5fr) minmax(330px, .95fr);
+    gap:18px;
+    align-items:start;
+  }
+
+  .panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:26px;
+    box-shadow:0 22px 54px rgba(15,23,42,.075);
+    overflow:hidden;
+  }
+
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:22px 22px 12px;
+  }
+
+  .panel-title b{
+    display:block;
+    color:#202939;
+    font-size:20px;
+    font-weight:900;
+    letter-spacing:-.045em;
+  }
+
+  .panel-title span{
+    display:block;
+    margin-top:2px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .date-pill,
+  .secure-pill,
+  .mini-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border-radius:13px;
+    border:1px solid var(--line);
+    background:#fbfdfc;
+    color:#344054;
+    font-size:12px;
+    font-weight:900;
+    padding:9px 12px;
+    white-space:nowrap;
+  }
+
+  .secure-pill{
+    color:#137a43;
+    background:#eefaf2;
+    border-color:#dff3e5;
+  }
+
+  .cards{
+    padding:14px 20px 20px;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:16px;
+  }
+
+  .metric{
+    position:relative;
+    display:block;
+    min-height:142px;
+    padding:20px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:
+      radial-gradient(210px 120px at 96% 100%, rgba(22,163,74,.10), transparent 64%),
+      linear-gradient(180deg, #ffffff, #fbfdfc);
+    color:inherit;
+    overflow:hidden;
+    transition:transform .08s ease, box-shadow .18s ease, border .18s ease;
+  }
+
+  .metric:before{
+    content:"";
+    position:absolute;
+    inset:auto -30px -48px auto;
+    width:138px;
+    height:138px;
+    border-radius:999px;
+    background:rgba(34,197,94,.08);
+  }
+
+  .metric:hover{
+    color:inherit;
+    transform:translateY(-2px);
+    border-color:#bfe4c9;
+    box-shadow:0 20px 42px rgba(15,23,42,.10);
+  }
+
+  .metric-top{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .metric-icon,
+  .activity-icon{
+    width:50px;
+    height:50px;
+    border-radius:17px;
+    display:grid;
+    place-items:center;
+    background:
+      radial-gradient(circle at 70% 20%, rgba(255,255,255,.58), transparent 25%),
+      linear-gradient(135deg, #22c55e, #0f8f43);
+    color:#fff;
+    font-size:18px;
+    box-shadow:0 14px 26px rgba(22,163,74,.22);
+  }
+
+  .metric-label{
+    position:relative;
+    margin:18px 0 0;
+    color:#344054;
+    font-size:14px;
+    font-weight:900;
+  }
+
+  .metric-value{
+    position:relative;
+    margin-top:4px;
+    color:#172033;
+    font-size:34px;
+    font-weight:900;
+    letter-spacing:-.05em;
+    line-height:1;
+  }
+
+  .metric-sub{
+    position:relative;
+    margin-top:8px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .activity-row .activity-icon{
+    display:grid;
+    margin-top:0;
+    color:#fff;
+  }
+
+  .tip-banner{
+    position:relative;
+    margin-top:18px;
+    min-height:166px;
+    padding:28px 390px 24px 32px;
+    border-radius:24px;
+    background:
+      radial-gradient(520px 190px at 78% 84%, rgba(34,197,94,.14), transparent 62%),
+      linear-gradient(135deg, #f1fbf4 0%, #e4f7ea 58%, #d7f0df 100%);
+    border:1px solid #d2efd9;
+    box-shadow:0 18px 44px rgba(22,163,74,.10);
+    overflow:hidden;
+  }
+
+  .tip-banner:before{
+    content:"";
+    position:absolute;
+    inset:0 0 0 auto;
+    width:46%;
+    background:
+      radial-gradient(circle, rgba(22,163,74,.20) 1.5px, transparent 2px) 0 0 / 12px 12px,
+      radial-gradient(360px 150px at 44% 94%, rgba(22,163,74,.13), transparent 66%);
+    opacity:.72;
+    pointer-events:none;
+  }
+
+  .tip-banner:after{
+    content:"";
+    position:absolute;
+    right:82px;
+    bottom:8px;
+    width:260px;
+    height:142px;
+    background:url("{% static 'images/dashboard-camera-transparent.png' %}") center / contain no-repeat;
+    filter:drop-shadow(0 22px 18px rgba(15, 23, 42, .16));
+    pointer-events:none;
+  }
+
+  .tip-banner h3{
+    position:relative;
+    z-index:1;
+    margin:0;
+    color:#10351f;
+    font-size:21px;
+    font-weight:900;
+    letter-spacing:-.03em;
+    max-width:430px;
+  }
+
+  .tip-banner ul{
+    position:relative;
+    z-index:1;
+    margin:14px 0 0;
+    padding:0;
+    list-style:none;
+    color:#315946;
+    font-size:14px;
+    line-height:1.45;
+    display:grid;
+    gap:9px;
+    max-width:455px;
+  }
+
+  .tip-banner li{
+    display:grid;
+    grid-template-columns:18px minmax(0, 1fr);
+    align-items:start;
+  }
+
+  .tip-banner li:before{
+    content:"\2713";
+    color:var(--green);
+    font-weight:900;
+    line-height:1.45;
+  }
+
+  .side-stack{
+    display:grid;
+    gap:18px;
+  }
+
+  .status-list,
+  .activity-list{
+    padding:10px 20px 20px;
+  }
+
+  .status-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:13px 0;
+    border-bottom:1px solid #eef2f0;
+    color:#344054;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .status-row:last-child{
+    border-bottom:none;
+  }
+
+  .status-row i{
+    width:24px;
+    color:var(--green);
+  }
+
+  .mini-pill{
+    min-width:34px;
+    padding:6px 10px;
+    color:#15803d;
+    background:#e5f7eb;
+    border-color:#d8f0df;
+  }
+
+  .activity-row{
+    display:grid;
+    grid-template-columns:50px 1fr auto;
+    gap:12px;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid #eef2f0;
+  }
+
+  .activity-row:last-child{
+    border-bottom:none;
+  }
+
+  .activity-row b{
+    display:block;
+    color:#263244;
+    font-size:14px;
+    font-weight:900;
+  }
+
+  .activity-row div span{
+    display:block;
+    margin-top:3px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .activity-time{
+    color:var(--muted);
+    font-size:12px;
+    white-space:nowrap;
+  }
+
+  .view-link{
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:8px 12px;
+    color:#344054;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .view-link:hover{
+    color:#172033;
+    border-color:#d4ded8;
+  }
+
+  .fade{
+    opacity:0;
+    transform:translateY(10px);
+    animation:fadeUp .45s ease forwards;
+  }
+
+  .d1{ animation-delay:.03s; }
+  .d2{ animation-delay:.07s; }
+  .d3{ animation-delay:.11s; }
+  .d4{ animation-delay:.15s; }
+
+  @keyframes fadeUp{
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 1180px){
+    .dash-grid{ grid-template-columns:1fr; }
+    .setup-strip{ grid-template-columns:1fr; }
+    .plan-pop{ right:auto; left:0; width:min(360px, calc(100vw - 40px)); }
+  }
+
+  @media (max-width: 680px){
+    .welcome{
+      align-items:flex-start;
+      flex-direction:column;
+      padding:20px;
+    }
+    .cards{
+      grid-template-columns:1fr;
+    }
+    .tip-banner:after{ opacity:.18; }
+    .tip-banner:before{ opacity:.3; }
+    .tip-banner{ padding-right:20px; }
+    .method-list{ grid-template-columns:1fr; }
   }
 </style>
 
-<div class="home-wrap">
-
-  <div class="hero fadeUp d1">
-    <div class="hero-inner">
-      <div class="hero-title">
-        <h2>Welcome back 👋</h2>
-        <p>Fast access to registration, attendance, and camera setup.</p>
-      </div>
-
-      <div class="hero-actions">
-        <a class="hbtn primary" href="{% url 'search_user' %}">
-          <i class="fa-solid fa-user-plus"></i> Register Member
-        </a>
-        <a class="hbtn glass" href="{% url 'stream_all_cameras' %}">
-          <span class="pulseDot"></span> Mark Attendance
-        </a>
-        <a class="hbtn glass" href="{% url 'camera_config_list' %}">
-          <i class="fa-solid fa-gear"></i> Camera Setup
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid">
-
-    <div class="glass-card fadeUp d2">
-      <div class="card-head">
-        <div class="t">
-          <b>Overview</b>
-          <span>Key system numbers</span>
-        </div>
-        <div class="chip">
-          <i class="fa-regular fa-calendar"></i>
-          <span id="todayDate"></span>
-        </div>
-      </div>
-
-      <div class="kpis">
-
-        <div class="kpi" onclick="location.href='{% url 'person_list' %}'">
-          <a href="{% url 'person_list' %}">
-            <div class="kpi-top">
-              <div class="ico"><i class="fa-solid fa-users"></i></div>
-              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
-            </div>
-            <div class="label">Members</div>
-            <div class="val" data-count="{{ total_persons }}">0</div>
-            <div class="sub">All registered members</div>
-          </a>
-        </div>
-
-        <div class="kpi" onclick="location.href='{% url 'person_attendance_list' %}'">
-          <a href="{% url 'person_attendance_list' %}">
-            <div class="kpi-top">
-              <div class="ico"><i class="fa-solid fa-calendar-check"></i></div>
-              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
-            </div>
-            <div class="label">Attendance</div>
-            <div class="val" data-count="{{ total_attendance }}">0</div>
-            <div class="sub">Attendance records</div>
-          </a>
-        </div>
-
-        <div class="kpi" onclick="location.href='{% url 'camera_config_list' %}'">
-          <a href="{% url 'camera_config_list' %}">
-            <div class="kpi-top">
-              <div class="ico"><i class="fa-solid fa-camera-retro"></i></div>
-              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
-            </div>
-            <div class="label">Cameras</div>
-            <div class="val" data-count="{{ total_cameras }}">0</div>
-            <div class="sub">Saved camera setups</div>
-          </a>
-        </div>
-
-        <div class="kpi" onclick="location.href='{% url 'stream_all_cameras' %}'">
-          <a href="{% url 'stream_all_cameras' %}">
-            <div class="kpi-top">
-              <div class="ico"><i class="fa-solid fa-video"></i></div>
-              <span class="sub"><i class="fa-solid fa-arrow-right"></i></span>
-            </div>
-            <div class="label">Mark Attendance</div>
-            <div class="val">Open</div>
-            <div class="sub">Open live monitor</div>
-          </a>
-        </div>
-
-      </div>
-
-      <div class="card-head" style="border-top:1px solid rgba(255,255,255,.10); border-bottom:none;">
-        <div class="t">
-          <b>Quick Actions</b>
-          <span>Common tasks</span>
-        </div>
-      </div>
-
-      <div class="quick">
-        <div class="qa">
-          <a href="{% url 'search_user' %}">
-            <div class="row1">
-              <div class="ico"><i class="fa-solid fa-user-plus"></i></div>
-              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
-            </div>
-            <div class="title">Register Member</div>
-            <div class="desc">Search a portal record and capture a face photo.</div>
-          </a>
-        </div>
-
-        <div class="qa">
-          <a href="{% url 'stream_all_cameras' %}">
-            <div class="row1">
-              <div class="ico"><i class="fa-solid fa-camera"></i></div>
-              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
-            </div>
-            <div class="title">Mark Attendance</div>
-            <div class="desc">Open live streams and record attendance.</div>
-          </a>
-        </div>
-
-        <div class="qa">
-          <a href="{% url 'person_attendance_list' %}">
-            <div class="row1">
-              <div class="ico"><i class="fa-solid fa-clipboard-list"></i></div>
-              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
-            </div>
-            <div class="title">Attendance Logs</div>
-            <div class="desc">Search and review attendance history.</div>
-          </a>
-        </div>
-
-        <div class="qa">
-          <a href="{% url 'camera_config_list' %}">
-            <div class="row1">
-              <div class="ico"><i class="fa-solid fa-gear"></i></div>
-              <i class="fa-solid fa-arrow-right" style="color:#64748b;"></i>
-            </div>
-            <div class="title">Camera Setup</div>
-            <div class="desc">Add sources and tune thresholds.</div>
-          </a>
-        </div>
-      </div>
+<div class="dashboard">
+  <section class="welcome fade d1">
+    <div>
+      <h2>Welcome back, {{ desktop_user_name|default:"Staff" }}!</h2>
+      {% if active_session %}
+        <p>Active event: <strong>{{ active_session.session_name|default:active_session.event_name }}</strong>. Attendance will be recorded against this session.</p>
+      {% else %}
+        <p>No active event session selected yet. Choose one before marking attendance.</p>
+      {% endif %}
     </div>
 
-    <div class="side fadeUp d3">
-      <div class="glass-card">
-        <div class="card-head">
-          <div class="t">
-            <b>Status</b>
-            <span>Current snapshot</span>
+    <div class="action-row">
+      <div class="plan-badge-wrap">
+        <a class="plan-badge" href="{% url 'getting_started' %}">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>
+            {{ plan.name|default:"KairosTrack Plan" }}
+            <small>{{ plan.tier|default:"Current tier"|title }}</small>
+          </span>
+        </a>
+        <div class="plan-pop">
+          <div class="plan-pop-head">
+            <div>
+              <b>{{ plan.name|default:"KairosTrack Plan" }}</b>
+              <span>Open plan details, setup progress, and upgrade options.</span>
+            </div>
+            <a class="view-link" href="{% url 'getting_started' %}">Open</a>
           </div>
-          <div class="chip"><i class="fa-solid fa-shield-halved"></i> Secure</div>
+          <ul class="plan-pop-list">
+            {% for method in attendance_methods %}
+              <li class="{% if method.status == 'available' or method.status == 'mobile' %}enabled{% endif %}">
+                <span><i class="fa-solid {{ method.icon }}"></i> {{ method.name }}</span>
+                <span>
+                  {% if method.status == "available" %}Included{% elif method.status == "mobile" %}Mobile{% else %}{{ method.plan }}+{% endif %}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <a class="dash-btn" href="{% url 'attendance_sessions' %}">
+        <i class="fa-solid fa-calendar-check"></i>
+        {% if active_session %}Change Event{% else %}Select Event{% endif %}
+      </a>
+      <a class="dash-btn primary" href="{% url 'search_user' %}">
+        <i class="fa-solid fa-plus"></i> Register Member
+      </a>
+      {% if setup_next_step %}
+        <a class="dash-btn" href="{{ setup_next_step.href }}">
+          <i class="fa-solid fa-route"></i> {{ setup_next_step.cta }}
+        </a>
+      {% elif setup_recommended_action %}
+        <a class="dash-btn" href="{{ setup_recommended_action.href }}">
+          <i class="fa-solid fa-play"></i> {{ setup_recommended_action.cta }}
+        </a>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if not setup_is_complete %}
+    <section class="setup-strip fade d1">
+      <div class="setup-card incomplete">
+        <b>{{ plan.name|default:"KairosTrack" }} setup</b>
+        <span>{{ setup_completed }} of {{ setup_total }} steps complete.</span>
+        <div class="setup-bar"><div style="width:{{ setup_progress_percent|default:0 }}%;"></div></div>
+        <a class="dash-btn primary" href="{% url 'getting_started' %}">
+          <i class="fa-solid fa-arrow-right"></i>
+          Continue setup
+        </a>
+      </div>
+
+      <div class="method-strip">
+        <div class="method-strip-head">
+          <div>
+            <b>Plan access</b>
+            <span>Clear feature availability for this plan.</span>
+          </div>
+          <a class="view-link" href="{% url 'getting_started' %}">View Plan</a>
+        </div>
+        <div class="method-list">
+          {% for method in attendance_methods %}
+            {% if method.status == "available" %}
+              <a class="method-chip" href="{{ method.href }}">
+                <i class="fa-solid {{ method.icon }}"></i>
+                <span>{{ method.name }}<small>{{ method.description }}</small></span>
+                <span class="method-state"><i class="fa-solid fa-check" style="color:#16a34a;"></i> Included</span>
+              </a>
+            {% elif method.status == "mobile" %}
+              <span class="method-chip mobile">
+                <i class="fa-solid {{ method.icon }}"></i>
+                <span>{{ method.name }}<small>{{ method.description }}</small></span>
+                <span class="method-state"><i class="fa-solid fa-mobile-screen" style="color:#2563eb;"></i> Mobile</span>
+              </span>
+            {% else %}
+              <span class="method-chip locked">
+                <i class="fa-solid {{ method.icon }}"></i>
+                <span>{{ method.name }}<small>{{ method.description }}</small></span>
+                <span class="method-state"><i class="fa-solid fa-xmark" style="color:#b42318;"></i> {{ method.plan }}+</span>
+              </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="dash-grid">
+    <div>
+      <div class="panel fade d2">
+        <div class="panel-head">
+          <div class="panel-title">
+            <b>Overview</b>
+            <span>Key system numbers</span>
+          </div>
+          <span class="date-pill">
+            <i class="fa-regular fa-calendar"></i>
+            <span id="dashDate"></span>
+          </span>
         </div>
 
-        <div class="mini">
-          <div class="line">
+        <div class="cards">
+          <a class="metric" href="{% url 'person_list' %}">
+            <div class="metric-top">
+              <span class="metric-icon"><i class="fa-solid fa-users"></i></span>
+              <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i>
+            </div>
+            <div class="metric-label">Total Members</div>
+            <div class="metric-value" data-count="{{ total_persons }}">0</div>
+            <div class="metric-sub">All registered members</div>
+          </a>
+
+          <a class="metric" href="{% url 'person_attendance_list' %}">
+            <div class="metric-top">
+              <span class="metric-icon"><i class="fa-solid fa-calendar-check"></i></span>
+              <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i>
+            </div>
+            <div class="metric-label">Checked In Today</div>
+            <div class="metric-value" data-count="{{ total_check_ins }}">0</div>
+            <div class="metric-sub">Real-time attendance</div>
+          </a>
+
+          <a class="metric" href="{% url 'camera_config_list' %}">
+            <div class="metric-top">
+              <span class="metric-icon"><i class="fa-solid fa-video"></i></span>
+              <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i>
+            </div>
+            <div class="metric-label">Cameras Online</div>
+            <div class="metric-value" data-count="{{ total_cameras }}">0</div>
+            <div class="metric-sub">All systems active</div>
+          </a>
+
+          <a class="metric" href="{% url 'stream_all_cameras' %}">
+            <div class="metric-top">
+              <span class="metric-icon"><i class="fa-solid fa-face-smile"></i></span>
+              <i class="fa-solid fa-arrow-right" style="color:#16a34a;"></i>
+            </div>
+            <div class="metric-label">Face Recognition</div>
+            <div class="metric-value">AI</div>
+            <div class="metric-sub">Smart and secure</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="tip-banner fade d4">
+        <h3><i class="fa-solid fa-lightbulb me-2"></i>Tips for better performance</h3>
+        <ul>
+          <li>Ensure good lighting for face recognition accuracy.</li>
+          <li>Keep cameras at eye level for best capture.</li>
+          <li>Regularly check camera connectivity.</li>
+        </ul>
+      </div>
+    </div>
+
+    <aside class="side-stack fade d3">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <b>System Status</b>
+            <span>Live system snapshot</span>
+          </div>
+          <span class="secure-pill"><i class="fa-solid fa-shield-halved"></i> Secure</span>
+        </div>
+
+        <div class="status-list">
+          <div class="status-row">
             <span><i class="fa-solid fa-clock"></i> Time</span>
-            <span class="pill2" id="clock"></span>
+            <span id="dashClock"></span>
           </div>
-          <div class="line">
+          <div class="status-row">
             <span><i class="fa-solid fa-users"></i> Members</span>
-            <span class="pill2">{{ total_persons }}</span>
+            <span class="mini-pill">{{ total_persons }}</span>
           </div>
-          <div class="line">
+          <div class="status-row">
             <span><i class="fa-solid fa-camera-retro"></i> Cameras</span>
-            <span class="pill2">{{ total_cameras }}</span>
+            <span class="mini-pill">{{ total_cameras }}</span>
           </div>
-          <div class="line">
-            <span><i class="fa-solid fa-clipboard-check"></i> Attendance</span>
-            <span class="pill2">{{ total_attendance }}</span>
+          <div class="status-row">
+            <span><i class="fa-solid fa-clipboard-check"></i> Attendance Today</span>
+            <span class="mini-pill">{{ total_attendance }}</span>
           </div>
-          <div class="line">
+          <div class="status-row">
             <span><i class="fa-solid fa-right-to-bracket"></i> Check-Ins</span>
-            <span class="pill2">{{ total_check_ins }}</span>
+            <span class="mini-pill">{{ total_check_ins }}</span>
           </div>
-          <div class="line">
+          <div class="status-row">
             <span><i class="fa-solid fa-right-from-bracket"></i> Check-Outs</span>
-            <span class="pill2">{{ total_check_outs }}</span>
+            <span class="mini-pill">{{ total_check_outs }}</span>
           </div>
+          {% if active_session %}
+            <div class="status-row">
+              <span><i class="fa-solid fa-calendar-check"></i> Session Present</span>
+              <span class="mini-pill">{{ active_session_present }}</span>
+            </div>
+            <div class="status-row">
+              <span><i class="fa-solid fa-user-xmark"></i> Session Absent</span>
+              <span class="mini-pill">{{ active_session_absent }}</span>
+            </div>
+            <div class="status-row">
+              <span><i class="fa-solid fa-hourglass-half"></i> Session Pending</span>
+              <span class="mini-pill">{{ active_session_pending }}</span>
+            </div>
+          {% endif %}
         </div>
       </div>
 
-      <div class="glass-card fadeUp d4">
-        <div class="card-head">
-          <div class="t">
-            <b>Tips</b>
-            <span>Better capture and smoother flow</span>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <b>Live Activity</b>
+            <span>Recent system events</span>
           </div>
-          <div class="chip"><i class="fa-solid fa-lightbulb"></i> Guide</div>
+          <a class="view-link" href="{% url 'person_attendance_list' %}{% if active_session %}?attendance_session_id={{ active_session.id }}{% endif %}">View All</a>
         </div>
 
-        <div class="note">
-          <div class="tip"><b>Registration:</b> Use a well-lit spot near the entrance.</div>
-          <div class="tip"><b>Face capture:</b> Keep the face clear and centered.</div>
-          <div class="tip"><b>Attendance:</b> Keep the live monitor open during service.</div>
+        <div class="activity-list">
+          <div class="activity-row">
+            <span class="activity-icon"><i class="fa-solid fa-user-plus"></i></span>
+            <div>
+              <b>Member records synced</b>
+              <span>{{ total_persons }} profiles available</span>
+            </div>
+            <span class="activity-time">Now</span>
+          </div>
+          <div class="activity-row">
+            <span class="activity-icon"><i class="fa-solid fa-calendar-check"></i></span>
+            <div>
+              <b>Attendance marked</b>
+              <span>{{ total_check_ins }} members checked in</span>
+            </div>
+            <span class="activity-time">Today</span>
+          </div>
+          <div class="activity-row">
+            <span class="activity-icon"><i class="fa-solid fa-video"></i></span>
+            <div>
+              <b>Camera connected</b>
+              <span>{{ total_cameras }} camera setup{{ total_cameras|pluralize }} saved</span>
+            </div>
+            <span class="activity-time">Live</span>
+          </div>
+          <div class="activity-row">
+            <span class="activity-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+            <div>
+              <b>Check-out recorded</b>
+              <span>{{ total_check_outs }} members checked out</span>
+            </div>
+            <span class="activity-time">Today</span>
+          </div>
         </div>
       </div>
-    </div>
-
-  </div>
+    </aside>
+  </section>
 </div>
 
 <script>
-  const pad = (n)=> String(n).padStart(2,'0');
+  (function(){
+    const pad = (n) => String(n).padStart(2, "0");
+    const dateEl = document.getElementById("dashDate");
+    const clockEl = document.getElementById("dashClock");
 
-  const dateEl = document.getElementById("todayDate");
-  const clockEl = document.getElementById("clock");
-
-  let lastDate = "";
-  function tick(){
-    const now = new Date();
-    const d = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
-    if(d !== lastDate){
-      dateEl.textContent = d;
-      lastDate = d;
+    function tick(){
+      const now = new Date();
+      if(dateEl){
+        dateEl.textContent = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+      }
+      if(clockEl){
+        clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      }
     }
-    clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  }
-  tick();
-  setInterval(tick, 1000);
 
-  function animateCount(el, target){
-    const start = 0;
-    const dur = 900;
-    const t0 = performance.now();
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  (function(){
     const fmt = new Intl.NumberFormat();
+    document.querySelectorAll("[data-count]").forEach((el) => {
+      const target = Number.parseInt(el.getAttribute("data-count") || "0", 10) || 0;
+      const start = performance.now();
+      const duration = 800;
 
-    function step(t){
-      const p = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const val = Math.floor(start + (target - start) * eased);
-      el.textContent = fmt.format(val);
-      if(p < 1) requestAnimationFrame(step);
-    }
+      function frame(now){
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = fmt.format(Math.floor(target * eased));
+        if(progress < 1){
+          requestAnimationFrame(frame);
+        }
+      }
 
-    requestAnimationFrame(step);
-  }
-
-  requestAnimationFrame(() => {
-    document.querySelectorAll(".val[data-count]").forEach(el=>{
-      const raw = el.getAttribute("data-count") || "0";
-      const target = parseInt(raw, 10) || 0;
-      animateCount(el, target);
+      requestAnimationFrame(frame);
     });
-  });
+  })();
 </script>
 {% endblock %}
+

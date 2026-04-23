@@ -1,11 +1,9 @@
 {% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Delete Member{% endblock %}
+{% block page_subtitle %}Confirm whether this member should be removed.{% endblock %}
 {% block content %}
 <style>
-    body {
-        background-color: #f8f9fa;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     .container {
         margin-top: 80px;
         max-width: 600px;
@@ -67,7 +65,6 @@
 
 <div class="container">
     <div class="card">
-        <h1>Delete Member</h1>
         <p>Are you sure you want to delete <strong>{{ person.name }}</strong>?</p>
         <div class="actions">
             <form method="post">

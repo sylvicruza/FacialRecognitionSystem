@@ -1,752 +1,260 @@
 {% extends "base.html" %}
 {% block title %}Register Member{% endblock %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Register Member{% endblock %}
+{% block page_subtitle %}Create a KairosTrack member first. Use external lookup only after an integration is connected.{% endblock %}
 
 {% block content %}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-
 <style>
-  :root{
-    --bg1:#07111f;
-    --bg2:#0b1830;
-    --panel:#ffffff;
-    --panelSoft:rgba(255,255,255,.94);
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-    --shadow:0 24px 60px rgba(2,6,23,.28);
-    --softShadow:0 12px 28px rgba(15,23,42,.08);
-
-    --brand:#22c55e;
-    --brand2:#16a34a;
-    --accent:#2563eb;
-    --danger:#ef4444;
-
-    --glass:rgba(255,255,255,.08);
-    --glassBorder:rgba(255,255,255,.14);
-    --radius:22px;
-  }
-
-  .pagebg{
-    min-height:calc(100vh - 80px);
-    margin:-1rem -1rem 0;
-    background:
-      radial-gradient(900px 500px at 12% 5%, rgba(34,197,94,.16), transparent 60%),
-      radial-gradient(850px 480px at 88% 15%, rgba(56,189,248,.14), transparent 58%),
-      linear-gradient(180deg,var(--bg1),var(--bg2));
-  }
-
-  .wrap{
-    max-width:1240px;
-    margin:0 auto;
-    padding:28px 18px 40px;
-    color:#fff;
-  }
-
-  .top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:16px;
-    margin-bottom:18px;
-    flex-wrap:wrap;
-  }
-
-.page-title{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.page-icon{
-  width:44px;
-  height:44px;
-  border-radius:16px;
-  background:linear-gradient(135deg,#22c55e,#38bdf8);
-  color:#07111f;
-  display:grid;
-  place-items:center;
-  box-shadow:0 12px 28px rgba(34,197,94,.22);
-  flex:0 0 auto;
-}
-
-.page-copy h1{
-  margin:0;
-  font-size:18px;
-  line-height:1.15;
-  letter-spacing:-.02em;
-  font-weight:800;
-}
-
-.page-copy p{
-  margin:4px 0 0;
-  color:rgba(255,255,255,.72);
-  font-size:12px;
-  line-height:1.45;
-  max-width:680px;
-}
-
-  .grid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:20px;
-    align-items:start;
-  }
-
-  @media (max-width: 1060px){
-    .grid{ grid-template-columns:1fr; }
-  }
-
-  .panel{
-    background:var(--panelSoft);
-    color:var(--text);
-    border:1px solid rgba(255,255,255,.16);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    overflow:hidden;
-    backdrop-filter:blur(10px);
-  }
-
-  .panel-head{
-    padding:18px 20px 16px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:16px;
-    flex-wrap:wrap;
-  }
-
-  .panel-head .title h2{
-    margin:0;
-    font-size:20px;
-    font-weight:800;
-    letter-spacing:-.03em;
-  }
-
-  .panel-head .title p{
-    margin:6px 0 0;
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.45;
-  }
-
-  .stepper{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-.step{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 11px;
-  border-radius:999px;
-  border:1px solid #e8edf5;
-  background:rgba(255,255,255,.92);
-  font-size:12px;
-  font-weight:700;
-  color:#0f172a;
-  box-shadow:none;
-}
-
-  .step .n{
-    width:20px;
-    height:20px;
-    border-radius:50%;
-    background:rgba(34,197,94,.12);
-    color:#15803d;
-    font-size:11px;
-    font-weight:900;
-    display:grid;
-    place-items:center;
-  }
-
-  .panel-body{
-    padding:20px;
-  }
-
-  .subtle-box{
-    margin-bottom:16px;
-    padding:14px 15px;
-    border-radius:16px;
-    background:linear-gradient(180deg,#f8fafc,#ffffff);
-    border:1px solid var(--border);
-    color:var(--muted);
-    font-size:13px;
-    line-height:1.45;
-  }
-
-  .field{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    margin-bottom:15px;
-  }
-
-  .field label{
-    font-size:12px;
-    font-weight:800;
-    color:#0f172a;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-
-  .hint{
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.4;
-  }
-
-  .soft{
-    border-radius:16px !important;
-    border:1px solid var(--border) !important;
-    padding:14px 15px !important;
-    background:#fff !important;
-    box-shadow:0 10px 24px rgba(15,23,42,.05) !important;
-    outline:none !important;
-    min-height:46px;
-  }
-
-  .soft:focus{
-    border-color:rgba(37,99,235,.35) !important;
-    box-shadow:0 0 0 4px rgba(37,99,235,.08), 0 10px 24px rgba(15,23,42,.05) !important;
-  }
-
-  .btnx{
-    border:none;
-    border-radius:16px;
-    padding:14px 16px;
-    font-size:13px;
-    font-weight:800;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    text-decoration:none;
-    cursor:pointer;
-    transition:all .18s ease;
-    box-shadow:var(--softShadow);
-    white-space:nowrap;
-  }
-
-  .btnx:hover{ transform:translateY(-1px); }
-  .btnx:active{ transform:scale(.98); }
-
-  .btnx.block{ width:100%; }
-
-  .btnx.primary{
-    background:linear-gradient(135deg,var(--brand),var(--brand2));
-    color:#052012;
-  }
-
-  .btnx.secondary{
-    background:linear-gradient(135deg,#64b5f6,#2563eb);
-    color:#04101d;
-  }
-
-  .btnx.soft{
-    background:#fff;
-    border:1px solid var(--border);
-    color:#0f172a;
-  }
-
-.btnx.ghost{
-  background:#fbfcfe;
-  border:1px dashed #d6deea;
-  color:#0f172a;
-  box-shadow:none;
-}
-
-  .alertbox{
-    margin-bottom:16px;
-    padding:14px 15px;
-    border-radius:16px;
-    font-size:13px;
-    line-height:1.45;
-    border:1px solid var(--border);
-  }
-
-  .alertbox.info{
-    background:rgba(56,189,248,.10);
-    border-color:rgba(56,189,248,.24);
-  }
-
-  .alertbox.danger{
-    background:rgba(239,68,68,.08);
-    border-color:rgba(239,68,68,.22);
-  }
-
-  .results{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
-
-  .result-meta{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:14px;
-    flex-wrap:wrap;
-  }
-
-  .badge{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:800;
-    border:1px solid rgba(34,197,94,.22);
-    background:rgba(34,197,94,.10);
-    color:#166534;
-  }
-
-.r-card{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:18px;
-  padding:14px 16px;
-  display:grid;
-  grid-template-columns: 1fr auto;
-  gap:12px;
-  align-items:center;
-  box-shadow:0 10px 22px rgba(15,23,42,.04);
-}
-
-  @media (max-width: 640px){
-    .r-card{
-      grid-template-columns:1fr;
-    }
-  }
-
-  .r-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-width:0;
-  }
-
-  .result-avatar{
-    width:46px;
-    height:46px;
-    border-radius:16px;
-    background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(34,197,94,.18));
-    border:1px solid var(--border);
-    display:grid;
-    place-items:center;
-    font-weight:900;
-    color:#0f172a;
-    flex:0 0 auto;
-  }
-
-  .r-meta{
-    min-width:0;
-  }
-
-  .r-meta .name{
-    font-weight:800;
-    font-size:15px;
-    letter-spacing:-.02em;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-
-  .r-meta .sub{
-    color:var(--muted);
-    font-size:12px;
-    margin-top:4px;
-  }
-
-  .result-action{
-    display:flex;
-    justify-content:flex-end;
-  }
-
-  @media (max-width: 640px){
-    .result-action{
-      justify-content:stretch;
-    }
-   .result-action .btnx{
-  min-width: 148px;
-}
-  }
-
-  .empty{
-    border:1px dashed #d6dee8;
-    border-radius:18px;
-    background:#f8fafc;
-    padding:28px 18px;
-    text-align:center;
-  }
-
-  .empty .icon{
-    width:58px;
-    height:58px;
-    margin:0 auto 12px;
-    border-radius:18px;
-    background:#fff;
-    border:1px solid var(--border);
-    display:grid;
-    place-items:center;
-    box-shadow:0 10px 24px rgba(15,23,42,.05);
-    color:#0f172a;
-  }
-
-  .split-actions{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-    margin-top:16px;
-  }
-
-  .portal-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-
-  .portal-grid .field.full{
-    grid-column:1 / -1;
-  }
-
-  @media (max-width: 720px){
-    .portal-grid{ grid-template-columns:1fr; }
-    .portal-grid .field.full{ grid-column:auto; }
-  }
-
-  .foot{
-    display:flex;
-    justify-content:flex-start;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-top:18px;
-  }
-
-  .link{
-    color:#fff;
-    text-decoration:none;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:12px 15px;
-    border-radius:999px;
-    border:1px solid var(--glassBorder);
-    background:var(--glass);
-    backdrop-filter:blur(10px);
-  }
+  .register-shell{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:24px 26px;border:1px solid rgba(22,163,74,.14);border-radius:28px;background:radial-gradient(520px 190px at 88% 0%,rgba(34,197,94,.14),transparent 60%),linear-gradient(135deg,#fff,#fbfffc);box-shadow:0 22px 54px rgba(15,23,42,.075)}
+  .hero h2{margin:0;color:#172033;font-size:30px;font-weight:950;letter-spacing:-.05em}
+  .hero p{margin:7px 0 0;color:var(--muted);line-height:1.55}
+  .status-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border-radius:999px;font-size:12px;font-weight:950;border:1px solid #d8f0df;background:#ecfdf3;color:#087533;white-space:nowrap}
+  .status-pill.off{border-color:#e2e8f0;background:#f8fafc;color:#64748b}
+  .grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:18px;align-items:start}
+  .panel{background:#fff;border:1px solid #dfe9e3;border-radius:26px;box-shadow:0 22px 54px rgba(15,23,42,.075);overflow:hidden}
+  .panel-head{padding:20px 22px;border-bottom:1px solid #edf2ef;display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+  .panel-title h3{margin:0;color:#172033;font-size:21px;font-weight:950;letter-spacing:-.04em}
+  .panel-title p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+  .panel-body{padding:22px}
+  .stepper{display:flex;gap:8px;flex-wrap:wrap}
+  .step{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid #e8edf5;border-radius:999px;background:#fff;color:#172033;font-size:12px;font-weight:900}
+  .step .n{width:21px;height:21px;border-radius:999px;display:grid;place-items:center;background:#dcfce7;color:#15803d;font-size:11px;font-weight:950}
+  .field{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  .field label{font-size:12px;font-weight:950;color:#263244;display:flex;align-items:center;gap:8px}
+  .field input,.field select{width:100%;min-height:50px;border:1px solid #dfe7ef;background:#f8fbff;border-radius:16px;padding:0 14px;color:#111827;outline:none}
+  .field input:focus,.field select:focus{border-color:#90d4b1;box-shadow:0 0 0 4px rgba(34,197,94,.12);background:#fff}
+  .hint{color:var(--muted);font-size:12px;line-height:1.45}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}
+  .btnx{min-height:48px;border:none;border-radius:16px;padding:12px 16px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .btnx.primary{background:linear-gradient(135deg,#22c55e,#16a34a);color:#052012;box-shadow:0 18px 34px rgba(22,163,74,.18)}
+  .btnx.soft{background:#fff;color:#172033;border:1px solid var(--line)}
+  .btnx.blue{background:linear-gradient(135deg,#60a5fa,#2563eb);color:#061323}
+  .notice{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;padding:15px;border-radius:18px;border:1px solid #d8f0df;background:#f2fbf5;color:#123222;margin-bottom:16px}
+  .notice.off{border-color:#e2e8f0;background:#f8fafc;color:#475467}
+  .notice.warn{border-color:#fecaca;background:#fff5f5;color:#991b1b}
+  .notice i{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:#16a34a;color:#fff}
+  .notice.off i{background:#94a3b8}.notice.warn i{background:#ef4444}
+  .notice b{display:block;font-weight:950}.notice span{display:block;margin-top:4px;font-size:13px;line-height:1.45;color:inherit;opacity:.82}
+  .result-list{display:grid;gap:12px}
+  .result-card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fff}
+  .avatar{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:#ecfdf3;color:#087533;font-weight:950}
+  .person{display:flex;gap:12px;align-items:center;min-width:0}.person b{display:block;color:#172033}.person span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  .empty{padding:30px 18px;border:1px dashed #d6dee8;border-radius:20px;background:#f8fafc;text-align:center;color:#64748b}
+  .empty i{width:58px;height:58px;margin:0 auto 12px;border-radius:18px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:#172033}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .choice{padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff,#fbfdfc)}
+  .choice.primary-choice{border-color:#cfeede;background:linear-gradient(135deg,#effdf5,#fff)}
+  .choice i.choice-icon{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:#16a34a;color:#fff;margin-bottom:12px}
+  .choice h3{margin:0;color:#172033;font-size:18px;font-weight:950;letter-spacing:-.03em}
+  .choice p{margin:7px 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
+  @media(max-width:980px){.grid,.hero,.choice-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}}
 </style>
 
-<div class="pagebg">
-  <div class="wrap">
-
-    <div class="top">
-  <div class="page-title">
-    <div class="page-copy">
-      <h1>Register Member</h1>
-      <p>Find an existing portal member or create a new record before capture.</p>
+<div class="register-shell">
+  <section class="hero">
+    <div>
+      <h2>Create members inside KairosTrack.</h2>
+      <p>For a new workspace, member records belong to this organization only. External lookup is optional and must be connected first.</p>
     </div>
-  </div>
-</div>
+    {% if integration_enabled %}
+      <span class="status-pill"><i class="fa-solid fa-plug-circle-check"></i> Integration connected</span>
+    {% else %}
+      <span class="status-pill off"><i class="fa-solid fa-plug-circle-xmark"></i> No integration connected</span>
+    {% endif %}
+  </section>
 
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="title">
-            <h2>Find Person</h2>
-            <p>Search the portal first.</p>
-          </div>
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h3>Choose how you want to add members</h3>
+        <p>Single registration captures a face photo now. Bulk import creates many records first, then photos can be added later.</p>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="choice-grid">
+        <div class="choice primary-choice">
+          <i class="fa-solid fa-user-plus choice-icon"></i>
+          <h3>Single member</h3>
+          <p>Best when the person is present and you want to capture their face photo immediately.</p>
+          <a class="btnx primary" href="#directRegisterForm"><i class="fa-solid fa-arrow-down"></i> Use single registration</a>
+        </div>
+        <div class="choice">
+          <i class="fa-solid fa-file-import choice-icon"></i>
+          <h3>Bulk import</h3>
+          <p>Upload CSV or Excel to create many members at once. Imported members can be given photos later.</p>
+          <a class="btnx soft" href="{% url 'member_import' %}"><i class="fa-solid fa-table"></i> Import members</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          <div class="stepper">
-            <div class="step"><span class="n">1</span> Search</div>
-            <div class="step"><span class="n">2</span> Select</div>
-            <div class="step"><span class="n">3</span> Capture</div>
+  {% if error %}
+    <div class="notice warn">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div><b>Action needed</b><span>{{ error }}</span></div>
+    </div>
+  {% endif %}
+
+  <section class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h3>Create KairosTrack Member</h3>
+          <p>Add the member directly to this workspace, then continue to photo capture.</p>
+        </div>
+        <div class="stepper">
+          <span class="step"><span class="n">1</span> Details</span>
+          <span class="step"><span class="n">2</span> Photo</span>
+          <span class="step"><span class="n">3</span> Save</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="notice">
+          <i class="fa-solid fa-shield-halved"></i>
+          <div>
+            <b>This is the safe default.</b>
+            <span>No outside portal is searched. The member is created only in the signed-in organization.</span>
           </div>
         </div>
 
-        <div class="panel-body">
-          <div class="subtle-box">
-            Search the portal first. If the person is not listed, create a new record.
+        <form method="POST" id="directRegisterForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="portal_register">
+          <div class="form-grid">
+            <div class="field">
+              <label for="first_name"><i class="fa-solid fa-user"></i> First Name</label>
+              <input id="first_name" name="first_name" value="{{ prefill_first_name|default:'' }}" placeholder="e.g. John" required>
+            </div>
+            <div class="field">
+              <label for="last_name"><i class="fa-solid fa-user-tag"></i> Last Name</label>
+              <input id="last_name" name="last_name" value="{{ prefill_last_name|default:searched_last_name|default:'' }}" placeholder="e.g. Johnson" required>
+            </div>
+            <div class="field">
+              <label for="gender"><i class="fa-solid fa-venus-mars"></i> Gender</label>
+              <select id="gender" name="gender">
+                <option value="">Optional</option>
+                <option value="1" {% if prefill_gender == "1" %}selected{% endif %}>Male</option>
+                <option value="2" {% if prefill_gender == "2" %}selected{% endif %}>Female</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cellPhone"><i class="fa-solid fa-phone"></i> Phone</label>
+              <input id="cellPhone" name="cellPhone" value="{{ prefill_cellPhone|default:'' }}" placeholder="Optional phone">
+            </div>
+            <div class="field full">
+              <label for="email"><i class="fa-solid fa-envelope"></i> Email</label>
+              <input id="email" name="email" type="email" value="{{ prefill_email|default:'' }}" placeholder="Optional email">
+            </div>
+            <div class="field full">
+              <label for="address1"><i class="fa-solid fa-location-dot"></i> Address</label>
+              <input id="address1" name="address1" value="{{ prefill_address1|default:'' }}" placeholder="Optional address">
+            </div>
           </div>
+          <button type="submit" id="directRegisterBtn" class="btnx primary" style="width:100%;">
+            <i class="fa-solid fa-camera"></i> Continue to Photo Capture
+          </button>
+        </form>
+      </div>
+    </div>
 
+    <aside class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h3>External Lookup</h3>
+          <p>Only use this when this organization has connected its own member system.</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        {% if integration_enabled %}
+          <div class="notice">
+            <i class="fa-solid fa-plug-circle-check"></i>
+            <div><b>{{ integration_name }} connected</b><span>Searches will use this workspace’s configured external member source.</span></div>
+          </div>
           <form method="POST" id="searchForm">
             {% csrf_token %}
             <input type="hidden" name="action" value="search">
-
             <div class="field">
-              <label for="last_name"><i class="fa-solid fa-user"></i> Last Name</label>
-              <input
-                type="text"
-                id="last_name"
-                name="last_name"
-                class="form-control soft"
-                placeholder="e.g. Johnson"
-                value="{{ searched_last_name|default:'' }}"
-                required
-                autocomplete="off"
-              />
-              <div class="hint">Partial surname also works.</div>
+              <label for="integration_last_name"><i class="fa-solid fa-magnifying-glass"></i> Last Name</label>
+              <input id="integration_last_name" name="last_name" value="{{ searched_last_name|default:'' }}" placeholder="e.g. Johnson" autocomplete="off">
+              <div class="hint">Search only if the external source belongs to this organization.</div>
             </div>
-
-            <button type="submit" id="searchBtn" class="btnx secondary block">
-              <i class="fa-solid fa-magnifying-glass"></i> Search Portal
+            <button type="submit" id="searchBtn" class="btnx blue" style="width:100%;">
+              <i class="fa-solid fa-magnifying-glass"></i> Search Connected Integration
             </button>
           </form>
 
-          {% if error and not show_portal_register %}
-            <div class="alertbox danger" style="margin-top:16px;">
-              {{ error }}
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="title">
-            <h2>
-              {% if show_portal_register %}
-                New Record
-              {% elif search_performed %}
-                Results
-              {% else %}
-                Ready
-              {% endif %}
-            </h2>
-            <p>
-              {% if show_portal_register %}
-                Add the person’s basic details.
-              {% elif search_performed %}
-                Select a match or create a new record.
-              {% else %}
-                Search results will appear here.
-              {% endif %}
-            </p>
-          </div>
-
-          {% if user_data %}
-            <div class="badge">
-              <i class="fa-solid fa-check"></i> {{ user_data|length }} match{{ user_data|length|pluralize }}
-            </div>
-          {% endif %}
-        </div>
-
-        <div class="panel-body">
-
-          {% if show_portal_register %}
-            <div class="alertbox info">
-              Create a new portal record to continue.
-            </div>
-
-            <form method="POST" id="portalRegisterForm">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="portal_register">
-
-              <div class="portal-grid">
-                <div class="field">
-                  <label for="first_name"><i class="fa-solid fa-user"></i> First Name</label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    name="first_name"
-                    class="form-control soft"
-                    value="{{ prefill_first_name|default:'' }}"
-                    placeholder="e.g. John"
-                    required
-                  >
-                </div>
-
-                <div class="field">
-                  <label for="portal_last_name"><i class="fa-solid fa-user-tag"></i> Last Name</label>
-                  <input
-                    type="text"
-                    id="portal_last_name"
-                    name="last_name"
-                    class="form-control soft"
-                    value="{{ prefill_last_name|default:searched_last_name|default:'' }}"
-                    placeholder="e.g. Johnson"
-                    required
-                  >
-                </div>
-
-                <div class="field">
-                  <label for="gender"><i class="fa-solid fa-venus-mars"></i> Gender</label>
-                  <select id="gender" name="gender" class="form-control soft" required>
-                    <option value="">Select gender</option>
-                    <option value="1" {% if prefill_gender == "1" %}selected{% endif %}>Male</option>
-                    <option value="2" {% if prefill_gender == "2" %}selected{% endif %}>Female</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="cellPhone"><i class="fa-solid fa-phone"></i> Phone</label>
-                  <input
-                    type="text"
-                    id="cellPhone"
-                    name="cellPhone"
-                    class="form-control soft"
-                    value="{{ prefill_cellPhone|default:'' }}"
-                    placeholder="e.g. 07123456789"
-                  >
-                </div>
-
-                <div class="field full">
-                  <label for="email"><i class="fa-solid fa-envelope"></i> Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-control soft"
-                    value="{{ prefill_email|default:'' }}"
-                    placeholder="e.g. john@example.com"
-                  >
-                </div>
-
-                <div class="field full">
-                  <label for="address1"><i class="fa-solid fa-location-dot"></i> Address</label>
-                  <input
-                    type="text"
-                    id="address1"
-                    name="address1"
-                    class="form-control soft"
-                    value="{{ prefill_address1|default:'' }}"
-                    placeholder="e.g. 12 Example Street"
-                  >
-                </div>
-              </div>
-
-              <div class="split-actions">
-                <button type="submit" id="portalRegisterBtn" class="btnx primary block">
-                  <i class="fa-solid fa-id-card"></i> Create and Continue
-                </button>
-
-                {% if searched_last_name %}
-                  <button type="submit" form="backToResultsForm" class="btnx soft block">
-                    <i class="fa-solid fa-arrow-left"></i> Back to Results
-                  </button>
-                {% endif %}
-              </div>
-            </form>
-
-            {% if searched_last_name %}
-              <form method="POST" id="backToResultsForm" style="display:none;">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="search">
-                <input type="hidden" name="last_name" value="{{ searched_last_name }}">
-              </form>
-            {% endif %}
-
-          {% elif user_data %}
-
-            <div class="results">
-              {% for user in user_data %}
-                <div class="r-card">
-                  <div class="r-left">
-                    <div class="result-avatar">{{ user.text|slice:":1" }}</div>
-                    <div class="r-meta">
-                      <div class="name">{{ user.text }}</div>
-                      <div class="sub">Portal ID: <b>{{ user.objid }}</b></div>
+          <div style="margin-top:16px;">
+            {% if user_data %}
+              <div class="result-list">
+                {% for user in user_data %}
+                  <div class="result-card">
+                    <div class="person">
+                      <div class="avatar">{{ user.text|slice:":1" }}</div>
+                      <div>
+                        <b>{{ user.text }}</b>
+                        <span>External ID: {{ user.objid }}</span>
+                      </div>
                     </div>
-                  </div>
-
-                  <div class="result-action">
-                    <a
-                      class="btnx soft"
-                      href="{% url 'register_user' %}?portal_id={{ user.objid }}&name={{ user.text|urlencode }}"
-                    >
-                      <i class="fa-solid fa-camera"></i> Continue
+                    <a class="btnx soft" href="{% url 'register_user' %}?portal_id={{ user.objid }}&name={{ user.text|urlencode }}">
+                      <i class="fa-solid fa-camera"></i> Use
                     </a>
                   </div>
-                </div>
-              {% endfor %}
-            </div>
-
-            {% if show_create_option %}
-              <div class="split-actions">
-                <form method="POST">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="show_portal_register">
-                  <input type="hidden" name="searched_last_name" value="{{ searched_last_name|default:'' }}">
-                  <button type="submit" class="btnx ghost block">
-                    <i class="fa-solid fa-user-plus"></i> Create New Record
-                  </button>
-                </form>
+                {% endfor %}
+              </div>
+            {% elif search_performed %}
+              <div class="empty">
+                <i class="fa-solid fa-users-viewfinder"></i>
+                <b>No match found</b>
+                <div style="margin-top:6px;">Create the member directly in KairosTrack instead.</div>
+              </div>
+            {% else %}
+              <div class="empty">
+                <i class="fa-solid fa-plug"></i>
+                <b>Optional lookup</b>
+                <div style="margin-top:6px;">Connected integration results will appear here.</div>
               </div>
             {% endif %}
-
-          {% elif search_performed %}
-            <div class="empty">
-              <div class="icon">
-                <i class="fa-solid fa-users-viewfinder"></i>
-              </div>
-              <div style="font-weight:800; color:#0f172a; font-size:16px;">No Match Found</div>
-              <div style="margin-top:6px; color:#64748b;">
-                No portal member matched this search.
-              </div>
-
-              <div class="split-actions" style="margin-top:16px;">
-                <form method="POST">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="show_portal_register">
-                  <input type="hidden" name="searched_last_name" value="{{ searched_last_name|default:'' }}">
-                  <button type="submit" class="btnx primary block">
-                    <i class="fa-solid fa-user-plus"></i> Create New Record
-                  </button>
-                </form>
-              </div>
+          </div>
+        {% else %}
+          <div class="notice off">
+            <i class="fa-solid fa-lock"></i>
+            <div>
+              <b>No external integration is connected.</b>
+              <span>This workspace will not search any outside portal, so it cannot accidentally show another organization’s data.</span>
             </div>
-
-          {% else %}
-            <div class="empty">
-              <div class="icon">
-                <i class="fa-solid fa-magnifying-glass"></i>
-              </div>
-              <div style="font-weight:800; color:#0f172a; font-size:16px;">Search to Begin</div>
-              <div style="margin-top:6px; color:#64748b;">
-                Matching results will appear here.
-              </div>
-            </div>
-          {% endif %}
-        </div>
+          </div>
+          <div class="empty">
+            <i class="fa-solid fa-database"></i>
+            <b>KairosTrack-only mode</b>
+            <div style="margin-top:6px;">Use the form on the left to create members for this organization.</div>
+          </div>
+        {% endif %}
       </div>
-    </div>
-
-    <div class="foot">
-      <a class="link" href="{% url 'home' %}">
-        <i class="fa-solid fa-arrow-left"></i> Back to Home
-      </a>
-    </div>
-  </div>
+    </aside>
+  </section>
 </div>
 
 <script>
-  const form = document.getElementById("searchForm");
-  const btn = document.getElementById("searchBtn");
-  const input = document.getElementById("last_name");
+  const directForm = document.getElementById("directRegisterForm");
+  const directBtn = document.getElementById("directRegisterBtn");
+  const searchForm = document.getElementById("searchForm");
+  const searchBtn = document.getElementById("searchBtn");
+  const firstName = document.getElementById("first_name");
 
-  if (input && !document.getElementById("portalRegisterForm")) {
-    input.focus();
-  }
+  firstName?.focus();
 
-  form?.addEventListener("submit", () => {
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Searching...`;
-    btn.style.opacity = "0.85";
-    btn.style.pointerEvents = "none";
+  directForm?.addEventListener("submit", () => {
+    directBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Preparing photo capture...`;
+    directBtn.style.opacity = "0.85";
+    directBtn.style.pointerEvents = "none";
   });
 
-  const portalRegisterForm = document.getElementById("portalRegisterForm");
-  const portalRegisterBtn = document.getElementById("portalRegisterBtn");
-
-  portalRegisterForm?.addEventListener("submit", () => {
-    portalRegisterBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Creating record...`;
-    portalRegisterBtn.style.opacity = "0.85";
-    portalRegisterBtn.style.pointerEvents = "none";
+  searchForm?.addEventListener("submit", () => {
+    searchBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Searching connected source...`;
+    searchBtn.style.opacity = "0.85";
+    searchBtn.style.pointerEvents = "none";
   });
 </script>
 {% endblock %}

@@ -55,8 +55,8 @@ jobs:
         run: |
           if (Test-Path release) { Remove-Item release -Recurse -Force }
           New-Item -ItemType Directory -Path release | Out-Null
-          Compress-Archive -Path dist\TimeAndAttendance.exe -DestinationPath release\TimeAndAttendance-portable-${{ steps.version.outputs.app_version }}.zip
-          Copy-Item "release\TimeAndAttendance-portable-${{ steps.version.outputs.app_version }}.zip" "release\TimeAndAttendance-portable-latest.zip"
+          Compress-Archive -Path dist\KairosTrack.exe -DestinationPath release\KairosTrack-portable-${{ steps.version.outputs.app_version }}.zip
+          Copy-Item "release\KairosTrack-portable-${{ steps.version.outputs.app_version }}.zip" "release\KairosTrack-portable-latest.zip"
 
       - name: Install Inno Setup
         shell: powershell
@@ -67,13 +67,13 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=${{ steps.version.outputs.app_version }}" "TimeAndAttendanceInstaller.iss"
-          Copy-Item "installer_output\TimeAndAttendanceSetup-${{ steps.version.outputs.app_version }}.exe" "release\TimeAndAttendanceSetup-${{ steps.version.outputs.app_version }}.exe"
-          Copy-Item "installer_output\TimeAndAttendanceSetup-${{ steps.version.outputs.app_version }}.exe" "release\TimeAndAttendanceSetup-latest.exe"
+          Copy-Item "installer_output\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe" "release\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe"
+          Copy-Item "installer_output\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe" "release\KairosTrackSetup-latest.exe"
 
       - name: Upload pipeline artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: time-and-attendance-windows
+          name: kairostrack-windows
           path: release/*
           if-no-files-found: error
 
@@ -82,8 +82,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/TimeAndAttendance-portable-${{ steps.version.outputs.app_version }}.zip
-            release/TimeAndAttendance-portable-latest.zip
-            release/TimeAndAttendanceSetup-${{ steps.version.outputs.app_version }}.exe
-            release/TimeAndAttendanceSetup-latest.exe
+            release/KairosTrack-portable-${{ steps.version.outputs.app_version }}.zip
+            release/KairosTrack-portable-latest.zip
+            release/KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe
+            release/KairosTrackSetup-latest.exe
           generate_release_notes: true

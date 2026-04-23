@@ -25,7 +25,7 @@ def _desktop_runtime_dir() -> Path:
     if configured:
         root = Path(configured)
     elif os.getenv("ATTENDANCE_DESKTOP_MODE") == "1" or getattr(sys, "frozen", False):
-        root = Path(os.getenv("LOCALAPPDATA", str(BASE_DIR))) / "TimeAndAttendance"
+        root = Path(os.getenv("LOCALAPPDATA", str(BASE_DIR))) / "KairosTrack"
     else:
         root = BASE_DIR
     root.mkdir(parents=True, exist_ok=True)
@@ -155,6 +155,11 @@ ATTENDANCE_API_TIMEOUT = int(os.getenv("ATTENDANCE_API_TIMEOUT", "30"))
 ATTENDANCE_API_VERIFY_SSL = os.getenv("ATTENDANCE_API_VERIFY_SSL", "True") == "True"
 TIME_ATTENDANCE_DOWNLOAD_URL = os.getenv(
     "TIME_ATTENDANCE_DOWNLOAD_URL",
+    "https://github.com/sylvicruza/FacialRecognitionSystem/releases/latest/download/KairosTrackSetup-latest.exe",
+)
+KAIROSTRACK_DESKTOP_VERSION = os.getenv("KAIROSTRACK_DESKTOP_VERSION", "1.0.0")
+KAIROSTRACK_UPDATE_CHECK_URL = os.getenv(
+    "KAIROSTRACK_UPDATE_CHECK_URL",
     "https://github.com/sylvicruza/FacialRecognitionSystem/releases/latest",
 )
 
@@ -173,4 +178,5 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = "welfare@openedheavenschapel.co.uk"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-DEMO_REQUEST_EMAIL = os.getenv("DEMO_REQUEST_EMAIL", EMAIL_HOST_USER)
+DEMO_REQUEST_EMAIL = os.getenv("DEMO_REQUEST_EMAIL", "sylvicruza@gmail.com")
+EXTERNAL_MEMBER_INTEGRATION_ENABLED = os.getenv("EXTERNAL_MEMBER_INTEGRATION_ENABLED", "false").lower() in {"1", "true", "yes", "on"}

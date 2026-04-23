@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Attendance Monitor</title>
+  <title>KairosTrack Face Recognition</title>
 
   <style>
     :root{
@@ -13,8 +13,8 @@
       --muted:#6b7280;
       --border:#e5e7eb;
       --shadow:0 10px 30px rgba(17,24,39,.08);
-      --brand:#0ea5e9;
-      --brand2:#2563eb;
+      --brand:#16a34a;
+      --brand2:#0f7a38;
       --ok:#16a34a;
       --warn:#f59e0b;
       --bad:#ef4444;
@@ -73,12 +73,12 @@
     }
 
     .chip{
-      background:#eef2ff;
-      border:1px solid #e0e7ff;
+      background:#eaf8ef;
+      border:1px solid #d6efdd;
       padding:8px 12px;
       border-radius:999px;
       font-size:12px;
-      color:#3730a3;
+      color:#0f6b3a;
       display:inline-flex;
       gap:8px;
       align-items:center;
@@ -531,15 +531,25 @@
   <div class="page">
     <div class="header">
       <div class="title">
-        <h1>Attendance Monitor</h1>
-        <p>Monitor camera feeds and today’s attendance activity.</p>
+        <h1>Face Recognition Attendance</h1>
+        {% if active_session %}
+          <p>Active event: <b>{{ active_session.session_name|default:active_session.event_name }}</b>. Camera check-ins are recorded against this session.</p>
+        {% else %}
+          <p>No active event selected. Choose an event session before starting streams.</p>
+        {% endif %}
       </div>
 
       <div class="topbar">
+        <a class="chip neutral" href="{% url 'attendance_sessions' %}">Event Session</a>
+        {% if active_session %}
+          <a class="chip neutral" href="{{ session_report_url }}">Session Report</a>
+          <span class="chip neutral">{{ method_counts.present }} present</span>
+          <span class="chip neutral">{{ method_counts.pending }} pending</span>
+        {% endif %}
         <div class="chip neutral">📅 <span id="todayDate"></span></div>
         <div class="chip neutral">🕒 <span id="clock"></span></div>
-        <a class="chip neutral" href="{% url 'camera_config_list' %}">⚙️ Camera Settings</a>
-        <button class="mode-btn" onclick="toggleServiceMode()">🎥 Service Mode</button>
+        <a class="chip neutral" href="{% url 'camera_config_list' %}">Camera Settings</a>
+        <button class="mode-btn" onclick="toggleServiceMode()">Service Mode</button>
       </div>
     </div>
 
@@ -565,6 +575,7 @@
                 class="stream-img"
                 alt="{{ c.name }}"
                 data-src="{% url 'video_feed' c.id %}"
+                data-session-id="{% if active_session %}{{ active_session.id }}{% endif %}"
                 src=""
               />
 
@@ -738,6 +749,9 @@
       params.set("boxes", opts.boxes ? "1" : "0");
       params.set("names", opts.names ? "1" : "0");
       params.set("sound", opts.sound ? "1" : "0");
+      if(img.dataset.sessionId){
+        params.set("attendance_session_id", img.dataset.sessionId);
+      }
 
       return `${base}?${params.toString()}`;
     }
@@ -880,7 +894,8 @@
       if(e.key.toLowerCase() === "r") refreshLog();
     });
 
-    const LOG_ENDPOINT = "/api/attendance/today/?limit=60";
+    const ACTIVE_SESSION_ID = "{% if active_session %}{{ active_session.id }}{% endif %}";
+    const LOG_ENDPOINT = `/api/attendance/today/?limit=60${ACTIVE_SESSION_ID ? `&attendance_session_id=${ACTIVE_SESSION_ID}` : ""}`;
     let lastSeenIds = new Set();
     let lastSince = null;
     let pollingTimer = null;

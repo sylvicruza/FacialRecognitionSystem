@@ -1,11 +1,9 @@
 {% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Registration Successful{% endblock %}
+{% block page_subtitle %}The member can now wait for admin approval.{% endblock %}
 {% block content %}
 <style>
-    body {
-        background-color: #f8f9fa;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     .success-container {
         margin-top: 100px;
         display: flex;
@@ -54,22 +52,6 @@
         margin-bottom: 30px;
     }
 
-    .home-button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 0.5rem;
-        padding: 0.75rem 2rem;
-        font-size: 1rem;
-        font-weight: 500;
-        transition: background-color 0.3s;
-        text-decoration: none;
-    }
-
-    .home-button:hover {
-        background-color: #218838;
-        color: white;
-    }
 </style>
 
 <div class="container success-container">
@@ -81,9 +63,6 @@
                 </div>
                 <h2 class="card-title">Registration Successful!</h2>
                 <p class="card-subtitle">Please wait for the admin to approve your registration.</p>
-                <a href="{% url 'home' %}" class="home-button">
-                    <i class="fas fa-home me-2"></i>Back to Home
-                </a>
             </div>
         </div>
     </div>

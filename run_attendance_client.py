@@ -66,10 +66,10 @@ def main():
     if port != preferred_port:
         print(
             f"Port {preferred_port} is busy. "
-            f"Time and Attendance desktop will use http://{host}:{port}/login/ instead."
+            f"KairosTrack desktop will use http://{host}:{port}/login/ instead."
         )
     else:
-        print(f"Time and Attendance desktop starting on http://{host}:{port}/login/")
+        print(f"KairosTrack desktop starting on http://{host}:{port}/login/")
     application = StaticFilesHandler(get_wsgi_application())
     serve(application, host=host, port=port, threads=threads)
 

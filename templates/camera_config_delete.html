@@ -1,9 +1,9 @@
 {% extends "base.html" %}
+{% block page_crumb %}Setup{% endblock %}
+{% block page_title %}Delete Camera Configuration{% endblock %}
+{% block page_subtitle %}Confirm whether this camera setup should be removed.{% endblock %}
 {% block content %}
-<body>
-
     <div class="container">
-        <h1>Delete Camera Configuration</h1>
         <p>Are you sure you want to delete "<strong>{{ config.name }}</strong>"?</p>
 
         <form method="POST">
@@ -14,6 +14,4 @@
             </div>
         </form>
     </div>
-
-</body>
 {% endblock %}

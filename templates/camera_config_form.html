@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block page_crumb %}Setup{% endblock %}
+{% block page_title %}{% if config and config.id %}Edit Camera Setup{% else %}New Camera Setup{% endif %}{% endblock %}
+{% block page_subtitle %}Add a camera source and recognition threshold.{% endblock %}
 {% block content %}
 
 <style>
@@ -91,12 +94,6 @@
     line-height:1.45;
     color: rgba(255,255,255,.72);
     max-width: 640px;
-  }
-
-  .hero-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
   }
 
   .chip-link{
@@ -337,35 +334,6 @@
 
 <div class="page-wrap">
 
-  <div class="hero">
-    <div class="hero-top">
-      <div class="title">
-        <div class="avatar" aria-hidden="true">
-          <i class="fa-solid fa-sliders"></i>
-        </div>
-        <div>
-          <h1>
-            {% if config and config.id %}
-              Edit Camera Setup
-            {% else %}
-              New Camera Setup
-            {% endif %}
-          </h1>
-          <p>Add a camera source and threshold.</p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <a class="chip-link" href="{% url 'camera_config_list' %}">
-          <i class="fa-solid fa-list"></i> Config List
-        </a>
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-      </div>
-    </div>
-  </div>
-
   <div class="cardx">
 
     <div class="cardx-head">
@@ -467,9 +435,6 @@
           <div class="right">
             <a class="btnx ghost" href="{% url 'camera_config_list' %}">
               <i class="fa-solid fa-arrow-left"></i> Back to List
-            </a>
-            <a class="btnx" href="{% url 'home' %}">
-              <i class="fa-solid fa-house"></i> Home
             </a>
           </div>
         </div>

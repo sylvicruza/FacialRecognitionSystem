@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block page_crumb %}Setup{% endblock %}
+{% block page_title %}Camera Setup{% endblock %}
+{% block page_subtitle %}Manage camera sources and recognition thresholds.{% endblock %}
 {% block content %}
 
 <style>
@@ -91,12 +94,6 @@
     line-height:1.45;
     color: rgba(255,255,255,.72);
     max-width: 680px;
-  }
-
-  .hero-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
   }
 
   .chip-link{
@@ -403,29 +400,6 @@
 
 <div class="page-wrap">
 
-  <div class="hero">
-    <div class="hero-top">
-      <div class="title">
-        <div class="avatar" aria-hidden="true">
-          <i class="fa-solid fa-video"></i>
-        </div>
-        <div>
-          <h1>Camera Setup</h1>
-          <p>Manage camera sources and recognition thresholds.</p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-        <a class="chip-link" href="{% url 'stream_all_cameras' %}">
-          <i class="fa-solid fa-eye"></i> Live View
-        </a>
-      </div>
-    </div>
-  </div>
-
   <div class="cardx">
     <div class="cardx-head">
       <div>
@@ -515,14 +489,6 @@
         or paste an RTSP/HTTP URL for IP cameras.
       </div>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a class="btnx ghost" href="{% url 'stream_all_cameras' %}">
-          <i class="fa-solid fa-camera"></i> Open Live View
-        </a>
-        <a class="btnx" href="{% url 'home' %}">
-          <i class="fa-solid fa-arrow-left"></i> Back to Home
-        </a>
-      </div>
     </div>
   </div>
 

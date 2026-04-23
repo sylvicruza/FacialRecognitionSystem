@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block page_crumb %}Setup{% endblock %}
+{% block page_title %}Getting Started{% endblock %}
+{% block page_subtitle %}Complete the setup path, then start recording attendance when ready.{% endblock %}
+
+{% block content %}
+<style>
+  .setup-page{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+  .setup-hero{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:stretch;padding:28px;border:1px solid rgba(22,163,74,.14);border-radius:30px;background:radial-gradient(560px 210px at 88% 8%,rgba(34,197,94,.16),transparent 60%),linear-gradient(135deg,#fff,#fbfffc);box-shadow:0 24px 60px rgba(15,23,42,.08)}
+  .plan-pill{display:inline-flex;align-items:center;gap:9px;margin-bottom:14px;padding:10px 13px;border-radius:999px;color:#0f6b3a;background:#ecfdf3;border:1px solid #d8f0df;font-weight:900;font-size:13px}
+  .setup-hero h2{margin:0;color:#172033;font-size:34px;line-height:1.05;font-weight:950;letter-spacing:-.06em}
+  .setup-hero p{margin:10px 0 0;color:var(--muted);line-height:1.65;max-width:680px}
+  .progress-card{display:grid;align-content:center;padding:22px;border:1px solid var(--line);border-radius:24px;background:#fff}
+  .progress-card strong{display:block;color:#172033;font-size:42px;line-height:1;font-weight:950;letter-spacing:-.06em}
+  .progress-card span{display:block;margin-top:8px;color:var(--muted);font-weight:900}
+  .bar{height:12px;margin-top:16px;border-radius:999px;background:#eef4f0;overflow:hidden}
+  .bar div{height:100%;border-radius:999px;background:linear-gradient(135deg,#22c55e,#16a34a)}
+  .next-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:22px 24px;border:1px solid #cfeede;border-radius:26px;background:linear-gradient(135deg,#edfbf3,#fbfffc);box-shadow:0 18px 46px rgba(22,163,74,.09)}
+  .next-label{display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;color:#087533;font-size:12px;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
+  .next-card h3{margin:0;color:#123222;font-size:24px;font-weight:950;letter-spacing:-.045em}
+  .next-card p{margin:6px 0 0;color:#4b6358;line-height:1.5}
+  .btnx{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:15px;border:1px solid var(--line);background:#fff;color:#263244;font-weight:950;font-size:13px;text-decoration:none;white-space:nowrap}
+  .btnx.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 18px 36px rgba(22,163,74,.18)}
+  .setup-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:18px;align-items:start}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:0 22px 54px rgba(15,23,42,.075);overflow:hidden}
+  .panel-head{padding:22px 24px 12px}.panel-head b{display:block;color:#202939;font-size:20px;font-weight:950;letter-spacing:-.045em}.panel-head span{display:block;margin-top:4px;color:var(--muted);font-size:13px}
+  .checklist{padding:8px 20px 22px;display:grid;gap:12px}
+  .check-item{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:20px;background:#fff}
+  .check-item.done{border-color:#cfeede;background:#f7fff9}
+  .check-item.next{border-color:#22c55e;background:linear-gradient(135deg,#effdf5,#fff);box-shadow:0 16px 36px rgba(22,163,74,.12)}
+  .check-icon{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#94a3b8,#64748b);font-size:18px}
+  .check-item.done .check-icon{background:linear-gradient(135deg,#22c55e,#16a34a)}
+  .check-item.next .check-icon{background:linear-gradient(135deg,#16a34a,#087533);box-shadow:0 14px 30px rgba(22,163,74,.24)}
+  .check-main{min-width:0}.check-main strong{display:block;color:#202939;font-weight:950}.check-main span{display:block;margin-top:4px;color:var(--muted);font-size:13px;line-height:1.45}
+  .state-pill{display:inline-flex;align-items:center;gap:6px;width:max-content;margin-bottom:7px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.06em}
+  .state-pill.done{color:#087533;background:#dcfce7}.state-pill.next{color:#fff;background:#16a34a}.state-pill.pending{color:#64748b;background:#f1f5f9}
+  .features{padding:8px 20px 22px;display:grid;gap:10px}
+  .feature-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:13px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fff}
+  .feature-row.available{border-color:#d8f0df;background:#fbfffc}.feature-row.mobile{border-color:#dbeafe;background:#f8fbff}.feature-row.locked{background:#fbfbfc;color:#667085}
+  .feature-icon{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#22c55e,#0f8f43)}
+  .feature-row.mobile .feature-icon{background:linear-gradient(135deg,#3b82f6,#2563eb)}.feature-row.locked .feature-icon{background:linear-gradient(135deg,#94a3b8,#64748b)}
+  .feature-copy b{display:flex;align-items:center;gap:8px;color:#172033;font-weight:950}.feature-copy small{display:block;margin-top:4px;color:var(--muted);line-height:1.45}
+  .feature-status{display:grid;gap:6px;justify-items:end;font-size:12px;font-weight:950}
+  .feature-status .yes{color:#087533}.feature-status .no{color:#b42318}.feature-status .mobile-note{color:#2563eb}
+  .mini-link{color:#344054;text-decoration:none;border:1px solid var(--line);padding:7px 10px;border-radius:12px;background:#fff}
+  .snapshot{padding:8px 20px 22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .count-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid #eef2f0;border-radius:16px;color:#344054;font-weight:850;background:#fff}
+  .count-row i{color:#16a34a;width:22px}.mini{min-width:36px;text-align:center;padding:6px 10px;border-radius:999px;background:#e5f7eb;color:#15803d;font-weight:950}
+  @media(max-width:1050px){.setup-hero,.setup-grid{grid-template-columns:1fr}.next-card{grid-template-columns:1fr}.snapshot{grid-template-columns:1fr}}
+  @media(max-width:640px){.check-item,.feature-row{grid-template-columns:44px minmax(0,1fr)}.check-item .btnx,.feature-status{grid-column:2}.feature-status{justify-items:start}.setup-hero h2{font-size:28px}}
+</style>
+
+<div class="setup-page">
+  <section class="setup-hero">
+    <div>
+      <div class="plan-pill">
+        <i class="fa-solid fa-layer-group"></i>
+        {{ plan.name|default:"KairosTrack" }} Plan
+      </div>
+      <h2>Finish the required setup first.</h2>
+      <p>KairosTrack works best when the foundation is complete: organization, branch, members, event, and an open session. Attendance marking is the next action, not a setup blocker.</p>
+    </div>
+    <div class="progress-card">
+      <strong>{{ setup_progress_percent }}%</strong>
+      <span>{{ setup_completed }} of {{ setup_total }} setup steps complete</span>
+      <div class="bar"><div style="width:{{ setup_progress_percent }}%;"></div></div>
+    </div>
+  </section>
+
+  {% if setup_next_step %}
+    <section class="next-card">
+      <div>
+        <div class="next-label"><i class="fa-solid fa-arrow-trend-up"></i> Next required step</div>
+        <h3>{{ setup_next_step.title }}</h3>
+        <p>{{ setup_next_step.description }}</p>
+      </div>
+      <a class="btnx primary" href="{{ setup_next_step.href }}">
+        <i class="fa-solid fa-arrow-right"></i> {{ setup_next_step.cta }}
+      </a>
+    </section>
+  {% elif setup_recommended_action %}
+    <section class="next-card">
+      <div>
+        <div class="next-label"><i class="fa-solid fa-lightbulb"></i> Recommended next action</div>
+        <h3>{{ setup_recommended_action.title }}</h3>
+        <p>{{ setup_recommended_action.description }}</p>
+      </div>
+      <a class="btnx primary" href="{{ setup_recommended_action.href }}">
+        <i class="fa-solid fa-arrow-right"></i> {{ setup_recommended_action.cta }}
+      </a>
+    </section>
+  {% endif %}
+
+  <section class="setup-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <b>Setup Checklist</b>
+        <span>Green is complete. The highlighted row is the next thing to do.</span>
+      </div>
+      <div class="checklist">
+        {% for item in setup_checklist %}
+          <div class="check-item {{ item.status }}">
+            <div class="check-icon">
+              {% if item.done %}<i class="fa-solid fa-check"></i>{% else %}<i class="fa-solid {{ item.icon }}"></i>{% endif %}
+            </div>
+            <div class="check-main">
+              <span class="state-pill {{ item.status }}">
+                {% if item.done %}<i class="fa-solid fa-check"></i>{% elif item.is_next %}<i class="fa-solid fa-arrow-right"></i>{% else %}<i class="fa-solid fa-clock"></i>{% endif %}
+                {{ item.status_label }}
+              </span>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.description }}</span>
+            </div>
+            <a class="btnx {% if item.is_next %}primary{% endif %}" href="{{ item.href }}">{{ item.cta }}</a>
+          </div>
+        {% empty %}
+          <div class="check-item pending">
+            <div class="check-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="check-main">
+              <span class="state-pill pending">Unavailable</span>
+              <strong>Setup unavailable</strong>
+              <span>Sign in again or check the backend connection.</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside style="display:grid;gap:18px;">
+      <div class="panel">
+        <div class="panel-head">
+          <b>Plan Feature Access</b>
+          <span>What this plan can use right now.</span>
+        </div>
+        <div class="features">
+          {% for method in attendance_methods %}
+            <div class="feature-row {{ method.status }}">
+              <div class="feature-icon"><i class="fa-solid {{ method.icon }}"></i></div>
+              <div class="feature-copy">
+                <b>{{ method.name }}</b>
+                <small>{{ method.description }} {{ method.note }}</small>
+              </div>
+              <div class="feature-status">
+                {% if method.status == "available" %}
+                  <span class="yes"><i class="fa-solid fa-check"></i> Included</span>
+                  <a class="mini-link" href="{{ method.href }}">Open</a>
+                {% elif method.status == "mobile" %}
+                  <span class="mobile-note"><i class="fa-solid fa-check"></i> Mobile</span>
+                  <span class="mini-link">{{ method.action_label }}</span>
+                {% else %}
+                  <span class="no"><i class="fa-solid fa-xmark"></i> Not included</span>
+                  <a class="mini-link" href="{% url 'upgrade_request' %}?plan={{ method.plan|urlencode }}">{{ method.action_label }}</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <b>Workspace Snapshot</b>
+          <span>Setup numbers only. Complete the checklist first.</span>
+        </div>
+        <div class="snapshot">
+          <div class="count-row"><span><i class="fa-solid fa-location-dot"></i> Branches</span><span class="mini">{{ setup_counts.branches|default:0 }}</span></div>
+          <div class="count-row"><span><i class="fa-solid fa-users"></i> Members</span><span class="mini">{{ setup_counts.members|default:0 }}</span></div>
+          <div class="count-row"><span><i class="fa-solid fa-calendar-days"></i> Events</span><span class="mini">{{ setup_counts.events|default:0 }}</span></div>
+          <div class="count-row"><span><i class="fa-solid fa-calendar-check"></i> Sessions</span><span class="mini">{{ setup_counts.open_sessions|default:0 }}</span></div>
+          <div class="count-row"><span><i class="fa-solid fa-clipboard-check"></i> Records</span><span class="mini">{{ setup_counts.attendance|default:0 }}</span></div>
+          <div class="count-row"><span><i class="fa-solid fa-camera-retro"></i> Cameras</span><span class="mini">{{ setup_counts.cameras|default:0 }}</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+</div>
+{% endblock %}

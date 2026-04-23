@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}All Members{% endblock %}
+{% block page_subtitle %}View and manage registered members.{% endblock %}
 {% block content %}
 
 <style>
@@ -94,13 +97,6 @@
     font-size:12px;
     line-height:1.45;
     color: rgba(255,255,255,.72);
-  }
-
-  .hero-actions{
-    position:relative;
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
   }
 
   .chip-link{
@@ -215,6 +211,92 @@
     border:1px solid rgba(34,197,94,.25);
     background: rgba(34,197,94,.10);
     color:#065f46;
+  }
+
+  .limit-card{
+    margin-top:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding:16px;
+    border-radius:18px;
+    border:1px solid rgba(34,197,94,.22);
+    background:#f0fbf4;
+    color:#14532d;
+    box-shadow:var(--softShadow);
+  }
+
+  .limit-card.warning{
+    border-color:#fed7aa;
+    background:#fff7ed;
+    color:#9a3412;
+  }
+
+  .limit-card b{display:block;font-weight:900}
+  .limit-card span{display:block;margin-top:3px;font-size:12px;color:inherit;opacity:.78}
+
+  .onboarding-card{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    align-items:center;
+    padding:16px;
+    border-radius:18px;
+    border:1px solid rgba(34,197,94,.22);
+    background:#f0fbf4;
+    color:#14532d;
+    box-shadow:var(--softShadow);
+  }
+
+  .onboarding-card b{display:block;font-weight:900}
+  .onboarding-card span{display:block;margin-top:3px;font-size:12px;opacity:.78}
+
+  .copy-inline{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    min-width:min(100%,520px);
+  }
+
+  .copy-inline input{
+    width:100%;
+    min-height:40px;
+    border:1px solid rgba(34,197,94,.22);
+    background:#fff;
+    border-radius:13px;
+    padding:0 12px;
+    color:#14532d;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .filters{
+    margin-top:16px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .filter-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:#334155;
+    font-size:12px;
+    font-weight:900;
+    box-shadow:var(--softShadow);
+  }
+
+  .filter-chip.active{
+    background:#dcfce7;
+    border-color:#bbf7d0;
+    color:#14532d;
   }
 
   .cardx{
@@ -403,6 +485,12 @@
     background: rgba(34,197,94,.06);
   }
 
+  .btn-mini.disabled{
+    opacity:.55;
+    pointer-events:none;
+    filter:grayscale(.35);
+  }
+
   .btn-mini:active{
     transform: scale(.98);
   }
@@ -471,32 +559,13 @@
     .search input{
       width: 100%;
     }
+    .onboarding-card{grid-template-columns:1fr;}
+    .copy-inline{flex-direction:column;align-items:stretch;}
   }
 </style>
 
 <div class="page-wrap reveal">
   <div class="hero">
-    <div class="hero-top">
-      <div class="hero-title">
-        <div class="hero-badge">
-          <i class="fa-solid fa-users"></i>
-        </div>
-        <div class="hero-copy">
-          <h1>Members</h1>
-          <p>View and manage registered members.</p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <a class="chip-link" href="{% url 'search_user' %}">
-          <i class="fa-solid fa-user-plus"></i> Register Member
-        </a>
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-      </div>
-    </div>
-
     <div class="hero-bottom">
       <div class="kpis">
         <div class="kpi">
@@ -517,7 +586,7 @@
 
       <div class="search">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input id="tableSearch" type="text" placeholder="Search by name or portal ID…" autocomplete="off">
+        <input id="tableSearch" type="text" placeholder="Search by name or member code..." autocomplete="off">
       </div>
     </div>
   </div>
@@ -532,19 +601,69 @@
     </div>
   {% endif %}
 
+  {% if member_limit.is_limited %}
+    <div class="limit-card {% if member_limit.is_reached %}warning{% endif %}">
+      <div>
+        <b>Member usage: {{ member_limit.current }} / {{ member_limit.limit }}</b>
+        {% if member_limit.is_reached %}
+          <span>Your current plan is full. Upgrade before adding or importing more members.</span>
+        {% else %}
+          <span>{{ member_limit.remaining }} member slot{{ member_limit.remaining|pluralize }} remaining on this plan.</span>
+        {% endif %}
+      </div>
+      <a class="btn-mini" href="{% url 'product_pricing' %}">
+        <i class="fa-solid fa-arrow-up"></i> View Plans
+      </a>
+    </div>
+  {% endif %}
+
+  {% if registration_url %}
+    <div class="onboarding-card">
+      <div>
+        <b>Member self-registration link</b>
+        <span>Share this link with members. New submissions appear as pending until staff approve them.</span>
+      </div>
+      <div class="copy-inline">
+        <input id="selfRegistrationUrl" value="{{ registration_url }}" readonly>
+        <button class="btn-mini" type="button" onclick="navigator.clipboard.writeText(document.getElementById('selfRegistrationUrl').value)">
+          <i class="fa-regular fa-copy"></i> Copy
+        </button>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="filters">
+    <a class="filter-chip {% if filter_value == 'all' %}active{% endif %}" href="?filter=all{% if search %}&search={{ search|urlencode }}{% endif %}">
+      <i class="fa-solid fa-users"></i> All <span>{{ member_counts.all }}</span>
+    </a>
+    <a class="filter-chip {% if filter_value == 'pending' %}active{% endif %}" href="?filter=pending{% if search %}&search={{ search|urlencode }}{% endif %}">
+      <i class="fa-solid fa-user-clock"></i> Pending <span>{{ member_counts.pending }}</span>
+    </a>
+    <a class="filter-chip {% if filter_value == 'authorized' %}active{% endif %}" href="?filter=authorized{% if search %}&search={{ search|urlencode }}{% endif %}">
+      <i class="fa-solid fa-user-check"></i> Approved <span>{{ member_counts.authorized }}</span>
+    </a>
+    <a class="filter-chip {% if filter_value == 'self_registered' %}active{% endif %}" href="?filter=self_registered{% if search %}&search={{ search|urlencode }}{% endif %}">
+      <i class="fa-solid fa-mobile-screen"></i> Self-registered <span>{{ member_counts.self_registered }}</span>
+    </a>
+    <a class="filter-chip {% if filter_value == 'imported' %}active{% endif %}" href="?filter=imported{% if search %}&search={{ search|urlencode }}{% endif %}">
+      <i class="fa-solid fa-file-import"></i> Imported <span>{{ member_counts.imported }}</span>
+    </a>
+  </div>
+
   <div class="cardx">
     <div class="cardx-head">
       <div class="left">
         <div class="h">All Members</div>
         <div class="s">Select a member to view details.</div>
       </div>
-
       <div class="card-actions">
-        <a class="btn-mini" href="{% url 'stream_all_cameras' %}">
-          <i class="fa-solid fa-camera"></i> Mark Attendance
-        </a>
-        <a class="btn-mini" href="{% url 'person_attendance_list' %}">
-          <i class="fa-solid fa-clipboard-list"></i> Attendance Logs
+        {% if can_import_members %}
+          <a class="btn-mini {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'member_import' %}">
+            <i class="fa-solid fa-file-import"></i> Import CSV
+          </a>
+        {% endif %}
+        <a class="btn-mini {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'search_user' %}">
+          <i class="fa-solid fa-user-plus"></i> Add Member
         </a>
       </div>
     </div>
@@ -554,7 +673,8 @@
         <thead>
           <tr>
             <th style="min-width: 320px;">Member</th>
-            <th style="min-width: 140px;">Portal ID</th>
+            <th style="min-width: 160px;">Member Code</th>
+            <th style="min-width: 150px;">Source</th>
             <th style="min-width: 160px;">Authorized</th>
             <th style="min-width: 160px;">Action</th>
           </tr>
@@ -570,14 +690,31 @@
                   </div>
                   <div class="pmeta">
                     <div class="name">{{ person.name }}</div>
-                    <div class="sub">Member Profile</div>
+                    <div class="sub">
+                      {{ person.email|default:"Member Profile" }}
+                      {% if person.external_id %} · ID: {{ person.external_id }}{% endif %}
+                    </div>
                   </div>
                 </div>
               </td>
 
               <td>
                 <span class="badge-soft">
-                  <i class="fa-solid fa-id-card-clip"></i> {{ person.portal_id }}
+                  <i class="fa-solid fa-id-card-clip"></i> {{ person.member_code|default:person.portal_id }}
+                </span>
+              </td>
+
+              <td>
+                <span class="badge-soft">
+                  {% if person.source == "self_registered" %}
+                    <i class="fa-solid fa-mobile-screen"></i> Self-registered
+                  {% elif person.source == "imported" %}
+                    <i class="fa-solid fa-file-import"></i> Imported
+                  {% elif person.source == "integration" %}
+                    <i class="fa-solid fa-plug"></i> Integration
+                  {% else %}
+                    <i class="fa-solid fa-keyboard"></i> Direct
+                  {% endif %}
                 </span>
               </td>
 
@@ -594,14 +731,26 @@
               </td>
 
               <td>
-                <a class="btn-mini" href="{% url 'person_detail' pk=person.pk %}">
-                  <i class="fa-solid fa-eye"></i> View
-                </a>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <a class="btn-mini" href="{% url 'person_detail' pk=person.pk %}">
+                    <i class="fa-solid fa-eye"></i> View
+                  </a>
+                  {% if not person.authorized %}
+                    <form method="post" action="{% url 'person_authorize' pk=person.pk %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="authorized" value="1">
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button class="btn-mini" type="submit">
+                        <i class="fa-solid fa-user-check"></i> Approve
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4">
+              <td colspan="5">
                 <div class="empty">
                   <div class="icon">
                     <i class="fa-solid fa-circle-info"></i>
@@ -653,7 +802,7 @@
     rows.forEach(r => {
       if (r.querySelector("td[colspan]")) return;
 
-      const badge = r.querySelector("td:nth-child(3) .badge-soft");
+      const badge = r.querySelector("td:nth-child(4) .badge-soft");
       if (!badge) return;
 
       if (badge.classList.contains("ok")) ok++;

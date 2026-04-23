@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block page_crumb %}Reports{% endblock %}
+{% block page_title %}Attendance Reports{% endblock %}
+{% block page_subtitle %}Review event, member, method, branch, and date range performance.{% endblock %}
+
+{% block content %}
+<style>
+  .reports-page{max-width:1180px;margin:0 auto;display:grid;gap:18px;}
+  .cardx{background:var(--paper);border:1px solid var(--line);border-radius:26px;box-shadow:0 22px 54px rgba(15,23,42,.075);padding:22px;}
+  .filter-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:10px;align-items:end;}
+  .field{display:grid;gap:7px}.field label{font-size:12px;font-weight:900;color:#344054}.field input,.field select{min-height:44px;border:1px solid var(--line);border-radius:14px;padding:9px 12px;background:#fbfdfc;font:inherit;}
+  .btnx{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#263244;font-weight:900;font-size:13px;text-decoration:none;cursor:pointer;}
+  .btnx.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);}
+  .report-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+  .report-toolbar p{margin:0;color:var(--muted);font-weight:800;}
+  .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+  .metric{padding:18px;border:1px solid var(--line);border-radius:22px;background:#fff;position:relative;overflow:hidden}.metric:after{content:"";position:absolute;right:-35px;bottom:-45px;width:120px;height:120px;border-radius:50%;background:#eaf8ef}.metric i{color:var(--green);font-size:22px}.metric span{display:block;margin-top:14px;color:var(--muted);font-weight:900}.metric b{display:block;margin-top:3px;font-size:32px;line-height:1;color:#111827}
+  .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .list{display:grid;gap:10px;margin-top:14px}.item{display:flex;justify-content:space-between;gap:12px;padding:13px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc}.item strong{color:#172033}.item span{color:var(--green);font-weight:900}
+  .empty{padding:18px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center;font-weight:800}
+  @media(max-width:1000px){.filter-grid,.metric-grid,.report-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="reports-page">
+  <section class="cardx">
+    <form class="filter-grid" method="get">
+      <div class="field"><label>Date from</label><input type="date" name="date_from" value="{{ date_from }}"></div>
+      <div class="field"><label>Date to</label><input type="date" name="date_to" value="{{ date_to }}"></div>
+      <div class="field">
+        <label>Event</label>
+        <select name="event_id">
+          <option value="">All events</option>
+          {% for event in events %}
+            <option value="{{ event.id }}" {% if event_id == event.id|stringformat:"s" %}selected{% endif %}>{{ event.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Branch</label>
+        <select name="branch_id">
+          <option value="">All branches</option>
+          {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Method</label>
+        <select name="method">
+          <option value="">All methods</option>
+          <option value="manual" {% if method == "manual" %}selected{% endif %}>Manual</option>
+          <option value="swipe" {% if method == "swipe" %}selected{% endif %}>Swipe</option>
+          <option value="qr" {% if method == "qr" %}selected{% endif %}>QR</option>
+          <option value="member_self" {% if method == "member_self" %}selected{% endif %}>Self check-in</option>
+          <option value="nfc" {% if method == "nfc" %}selected{% endif %}>NFC</option>
+          <option value="face" {% if method == "face" %}selected{% endif %}>Face</option>
+          <option value="geotracking" {% if method == "geotracking" %}selected{% endif %}>GeoTracking</option>
+        </select>
+      </div>
+      <button class="btnx primary" type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
+    </form>
+    <div class="report-toolbar">
+      <p>Download the current report filters for sharing or filing.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="btnx" href="{% url 'attendance_export_download' %}?{{ export_query }}{% if export_query %}&{% endif %}format=csv"><i class="fa-solid fa-file-csv"></i> CSV</a>
+        <a class="btnx" href="{% url 'attendance_export_download' %}?{{ export_query }}{% if export_query %}&{% endif %}format=xlsx"><i class="fa-solid fa-file-excel"></i> Excel</a>
+        <a class="btnx" href="{% url 'attendance_export_download' %}?{{ export_query }}{% if export_query %}&{% endif %}format=pdf"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="metric-grid">
+    <div class="metric"><i class="fa-solid fa-clipboard-check"></i><span>Total records</span><b>{{ report.counts.total|default:0 }}</b></div>
+    <div class="metric"><i class="fa-solid fa-user-check"></i><span>Present</span><b>{{ report.counts.present|default:0 }}</b></div>
+    <div class="metric"><i class="fa-solid fa-user-xmark"></i><span>Absent</span><b>{{ report.counts.absent|default:0 }}</b></div>
+    <div class="metric"><i class="fa-solid fa-right-from-bracket"></i><span>Checked out</span><b>{{ report.counts.checked_out|default:0 }}</b></div>
+  </section>
+
+  <section class="report-grid">
+    <div class="cardx">
+      <h3>Method Breakdown</h3>
+      <div class="list">
+        {% for item in report.methods %}
+          <div class="item"><strong>{{ item.key|title }}</strong><span>{{ item.count }}</span></div>
+        {% empty %}
+          <div class="empty">No method data for this period.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="cardx">
+      <h3>Top Events</h3>
+      <div class="list">
+        {% for item in report.top_events %}
+          <div class="item"><strong>{{ item.event_name }}</strong><span>{{ item.count }}</span></div>
+        {% empty %}
+          <div class="empty">No event data for this period.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="cardx">
+      <h3>Branches</h3>
+      <div class="list">
+        {% for item in report.branches %}
+          <div class="item"><strong>{{ item.branch_name }}</strong><span>{{ item.count }}</span></div>
+        {% empty %}
+          <div class="empty">No branch data for this period.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="cardx">
+      <h3>Daily Activity</h3>
+      <div class="list">
+        {% for item in report.daily %}
+          <div class="item"><strong>{{ item.date }}</strong><span>{{ item.count }}</span></div>
+        {% empty %}
+          <div class="empty">No daily records for this period.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

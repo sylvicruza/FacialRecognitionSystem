@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 project_root = Path.cwd()
-icon_path = project_root / "static" / "images" / "time-attendance-icon.ico"
+icon_path = project_root / "static" / "images" / "kairostrack-icon.ico"
 
 a = Analysis(
     ["run_attendance_client.py"],
@@ -36,7 +36,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="TimeAndAttendance",
+    name="KairosTrack",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Member Details{% endblock %}
+{% block page_subtitle %}View member information and manage access.{% endblock %}
 {% block content %}
 
 <style>
@@ -90,12 +93,6 @@
     font-size: 12px;
     line-height:1.45;
     color: rgba(255,255,255,.72);
-  }
-
-  .hero-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
   }
 
   .chip-link{
@@ -498,27 +495,6 @@
 
 <div class="page-wrap">
   <div class="hero">
-    <div class="hero-top">
-      <div class="title">
-        <div class="avatar" aria-hidden="true">
-          {{ person.name|default:"?"|slice:":1"|upper }}
-        </div>
-        <div class="title-copy">
-          <h1>Member Details</h1>
-          <p>View member information and manage access.</p>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <a class="chip-link" href="{% url 'person_list' %}">
-          <i class="fa-solid fa-arrow-left"></i> Back to List
-        </a>
-        <a class="chip-link" href="{% url 'home' %}">
-          <i class="fa-solid fa-house"></i> Dashboard
-        </a>
-      </div>
-    </div>
-
     <div class="chips">
       <div class="chip">
         <i class="fa-solid fa-user"></i>
@@ -527,7 +503,7 @@
 
       <div class="chip">
         <i class="fa-solid fa-id-card-clip"></i>
-        <span>{{ person.portal_id }}</span>
+        <span>{{ person.member_code|default:person.portal_id }}</span>
       </div>
 
       {% if person.authorized %}
@@ -547,7 +523,7 @@
       <div class="cardx-head">
         <div>
           <div class="h">Profile</div>
-          <div class="s">Member record from the portal.</div>
+          <div class="s">KairosTrack member record.</div>
         </div>
       </div>
 
@@ -559,12 +535,17 @@
 
         <div class="field">
           <div class="lab">
-            <i class="fa-solid fa-id-card-clip"></i> Portal ID
-            <button type="button" class="copy" id="copyPortalBtn" title="Copy Portal ID">
+            <i class="fa-solid fa-id-card-clip"></i> Member Code
+            <button type="button" class="copy" id="copyPortalBtn" title="Copy Member Code">
               <i class="fa-regular fa-copy"></i> Copy
             </button>
           </div>
-          <div class="val" id="portalIdValue">{{ person.portal_id }}</div>
+          <div class="val" id="portalIdValue">{{ person.member_code|default:person.portal_id }}</div>
+        </div>
+
+        <div class="field">
+          <div class="lab"><i class="fa-solid fa-link"></i> External ID</div>
+          <div class="val">{{ person.external_id|default:person.portal_id|default:"-" }}</div>
         </div>
 
         <div class="field">
@@ -599,6 +580,45 @@
             Authorized members can be used for attendance.
           </div>
         </div>
+
+        {% if request.session.attendance_desktop_plan.allow_nfc %}
+          <div class="field">
+            <div class="lab"><i class="fa-solid fa-wifi"></i> NFC Tag UID</div>
+            <div class="val">{{ person.nfc_uid|default:"No NFC tag assigned" }}</div>
+            <form method="post" action="{% url 'person_nfc_update' pk=person.pk %}" style="margin-top:12px;display:grid;gap:10px;">
+              {% csrf_token %}
+              <input
+                type="text"
+                name="nfc_uid"
+                value="{{ person.nfc_uid|default:'' }}"
+                class="form-control"
+                placeholder="Scan or paste card UID"
+                style="border-radius:14px;min-height:44px;"
+              >
+              <button type="submit" class="btnx primary" style="width:100%;">
+                <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
+              </button>
+            </form>
+            <div class="meta">
+              This UID is used by the NFC check-in screen.
+            </div>
+          </div>
+        {% endif %}
+
+        {% if person.member_qr_payload %}
+          <div class="field">
+            <div class="lab">
+              <i class="fa-solid fa-qrcode"></i> Member QR Payload
+              <button type="button" class="copy" id="copyQrBtn" title="Copy Member QR Payload">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+            <div class="val" id="qrPayloadValue">{{ person.member_qr_payload }}</div>
+            <div class="meta">
+              Staff mobile QR check-in uses this signed member payload.
+            </div>
+          </div>
+        {% endif %}
       </div>
 
       <div class="actions">
@@ -694,7 +714,7 @@
       </div>
 
       <div class="modal-body">
-        Delete <b>{{ person.name }}</b> (Portal ID: <b>{{ person.portal_id }}</b>)? This action cannot be undone.
+        Delete <b>{{ person.name }}</b> (Member Code: <b>{{ person.member_code|default:person.portal_id }}</b>)? This action cannot be undone.
       </div>
 
       <div class="modal-footer">
@@ -716,10 +736,10 @@
     setTimeout(() => t.classList.remove("show"), 1200);
   }
 
-  async function copyText(text){
+  async function copyText(text, message = "Copied Member Code"){
     try{
       await navigator.clipboard.writeText(text);
-      showToast("Copied Portal ID");
+      showToast(message);
     }catch(e){
       const ta = document.createElement("textarea");
       ta.value = text;
@@ -727,13 +747,18 @@
       ta.select();
       document.execCommand("copy");
       document.body.removeChild(ta);
-      showToast("Copied Portal ID");
+      showToast(message);
     }
   }
 
   document.getElementById("copyPortalBtn")?.addEventListener("click", () => {
     const val = document.getElementById("portalIdValue")?.innerText?.trim() || "";
     if(val) copyText(val);
+  });
+
+  document.getElementById("copyQrBtn")?.addEventListener("click", () => {
+    const val = document.getElementById("qrPayloadValue")?.innerText?.trim() || "";
+    if(val) copyText(val, "Copied Member QR");
   });
 
   const authCheckbox = document.getElementById("authorized");

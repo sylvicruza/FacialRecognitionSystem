@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+
+{% block page_crumb %}Attendance{% endblock %}
+{% block page_title %}Session Report{% endblock %}
+{% block page_subtitle %}Review attendance for one event occurrence.{% endblock %}
+
+{% block content %}
+<style>
+  .session-report{
+    max-width:1240px;
+    margin:0 auto;
+    display:grid;
+    gap:18px;
+  }
+
+  .report-card,
+  .report-hero{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:26px;
+    box-shadow:0 22px 54px rgba(15,23,42,.075);
+  }
+
+  .report-hero{
+    padding:26px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:20px;
+    align-items:center;
+    background:
+      radial-gradient(560px 230px at 90% 0%, rgba(34,197,94,.16), transparent 58%),
+      linear-gradient(135deg,#ffffff,#fbfffc);
+  }
+
+  .eyebrow{
+    color:var(--green2);
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+
+  .report-hero h2,
+  .report-card h3{
+    margin:6px 0 0;
+    color:#172033;
+    font-weight:900;
+    letter-spacing:-.045em;
+  }
+
+  .report-hero p,
+  .report-card p{
+    margin:7px 0 0;
+    color:var(--muted);
+  }
+
+  .action-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    gap:10px;
+  }
+
+  .report-btn{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 15px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:#263244;
+    font-weight:900;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  .report-btn.primary{
+    color:#fff;
+    border-color:transparent;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    box-shadow:0 16px 32px rgba(22,163,74,.18);
+  }
+
+  .report-btn.danger{
+    color:#b42318;
+    background:#fff7f7;
+    border-color:#ffd6d6;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    border-radius:999px;
+    color:#0f6b3a;
+    background:#eaf8ef;
+    border:1px solid #d6efdd;
+    font-weight:900;
+    font-size:13px;
+  }
+
+  .status-pill.closed{
+    color:#475467;
+    background:#f2f4f7;
+    border-color:#e4e7ec;
+  }
+
+  .metric-grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:14px;
+  }
+
+  .metric{
+    position:relative;
+    overflow:hidden;
+    padding:19px;
+    min-height:132px;
+    border:1px solid var(--line);
+    border-radius:24px;
+    background:#fff;
+  }
+
+  .metric::after{
+    content:"";
+    position:absolute;
+    right:-34px;
+    bottom:-44px;
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:#eaf8ef;
+  }
+
+  .metric i{
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    color:#fff;
+    background:linear-gradient(135deg,#22c55e,#0f7a38);
+    box-shadow:0 16px 32px rgba(22,163,74,.18);
+  }
+
+  .metric span{
+    display:block;
+    margin-top:15px;
+    color:#344054;
+    font-weight:900;
+    font-size:13px;
+  }
+
+  .metric strong{
+    display:block;
+    margin-top:5px;
+    color:#111827;
+    font-size:30px;
+    line-height:1;
+    font-weight:900;
+    letter-spacing:-.05em;
+  }
+
+  .report-grid{
+    display:grid;
+    grid-template-columns:1.35fr .85fr;
+    gap:18px;
+    align-items:start;
+  }
+
+  .report-card{
+    padding:22px;
+  }
+
+  .method-grid{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+  }
+
+  .method-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:14px;
+    border-radius:16px;
+    background:#fbfdfc;
+    border:1px solid var(--line);
+    color:#344054;
+    font-weight:900;
+  }
+
+  .method-row span:last-child{
+    min-width:44px;
+    text-align:center;
+    padding:7px 10px;
+    border-radius:999px;
+    color:#0f6b3a;
+    background:#eaf8ef;
+  }
+
+  .table-shell{
+    overflow:auto;
+    margin-top:18px;
+    border:1px solid var(--line);
+    border-radius:20px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:820px;
+  }
+
+  th,
+  td{
+    padding:15px 16px;
+    text-align:left;
+    border-bottom:1px solid #edf2ef;
+    vertical-align:middle;
+  }
+
+  th{
+    color:#667085;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    background:#fbfdfc;
+  }
+
+  td{
+    color:#202939;
+    font-size:14px;
+  }
+
+  tr:last-child td{ border-bottom:0; }
+
+  .member-name{
+    font-weight:900;
+  }
+
+  .member-meta{
+    margin-top:3px;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .row-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .tiny-btn{
+    min-height:34px;
+    padding:8px 11px;
+    border-radius:11px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:#344054;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .tiny-btn.present{
+    color:#0f6b3a;
+    background:#eaf8ef;
+    border-color:#d6efdd;
+  }
+
+  .tiny-btn.absent{
+    color:#b42318;
+    background:#fff7f7;
+    border-color:#ffd6d6;
+  }
+
+  .state{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    border-radius:999px;
+    font-weight:900;
+    font-size:12px;
+  }
+
+  .state.present{ color:#0f6b3a; background:#eaf8ef; }
+  .state.absent{ color:#b42318; background:#fff1f1; }
+  .state.pending{ color:#475467; background:#f2f4f7; }
+
+  .empty{
+    margin-top:18px;
+    padding:18px;
+    border:1px dashed #cfded5;
+    border-radius:18px;
+    color:var(--muted);
+    background:#fbfdfc;
+  }
+
+  @media (max-width: 1000px){
+    .report-hero,
+    .report-grid{
+      grid-template-columns:1fr;
+    }
+    .action-row{
+      justify-content:flex-start;
+    }
+    .metric-grid{
+      grid-template-columns:repeat(2, minmax(0,1fr));
+    }
+  }
+
+  @media (max-width: 640px){
+    .metric-grid{
+      grid-template-columns:1fr;
+    }
+  }
+</style>
+
+<div class="session-report">
+  <section class="report-hero">
+    <div>
+      <div class="eyebrow">Event session</div>
+      <h2>{{ session.session_name|default:session.event_name }}</h2>
+      <p>
+        {{ session.event_name|default:"Attendance event" }}
+        {% if session.starts_at %} - {{ session.starts_at }}{% endif %}
+      </p>
+    </div>
+
+    <div class="action-row">
+      <span class="status-pill {% if session.status == 'closed' %}closed{% endif %}">
+        <i class="fa-solid fa-circle-check"></i>
+        {% if is_active_session %}Active{% else %}{{ session.status|default:"Open"|title }}{% endif %}
+      </span>
+      {% if not is_active_session %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="select">
+          <button class="report-btn primary" type="submit">
+            <i class="fa-solid fa-bolt"></i> Make Active
+          </button>
+        </form>
+      {% endif %}
+      <a class="report-btn" href="#session-edit">
+        <i class="fa-solid fa-pen-to-square"></i> Edit
+      </a>
+      <a class="report-btn" href="{% url 'manual_attendance' %}">
+        <i class="fa-solid fa-list-check"></i> Manual
+      </a>
+      {% if can_use_qr %}
+        <a class="report-btn" href="{% url 'qr_attendance' %}">
+          <i class="fa-solid fa-qrcode"></i> QR
+        </a>
+      {% endif %}
+      {% if can_use_nfc %}
+        <a class="report-btn" href="{% url 'nfc_attendance' %}">
+          <i class="fa-solid fa-id-card-clip"></i> NFC
+        </a>
+      {% endif %}
+      {% if can_use_face %}
+        <a class="report-btn" href="{% url 'stream_all_cameras' %}">
+          <i class="fa-solid fa-face-smile"></i> Face
+        </a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="metric-grid">
+    <div class="metric">
+      <i class="fa-solid fa-users"></i>
+      <span>Members</span>
+      <strong>{{ total_members }}</strong>
+    </div>
+    <div class="metric">
+      <i class="fa-solid fa-user-check"></i>
+      <span>Present</span>
+      <strong>{{ present_count }}</strong>
+    </div>
+    <div class="metric">
+      <i class="fa-solid fa-user-xmark"></i>
+      <span>Absent</span>
+      <strong>{{ absent_count }}</strong>
+    </div>
+    <div class="metric">
+      <i class="fa-solid fa-hourglass-half"></i>
+      <span>Pending</span>
+      <strong>{{ pending_count }}</strong>
+    </div>
+  </section>
+
+  {% if session.allow_member_self_check_in %}
+    <section class="report-card" style="margin-bottom:18px;">
+      <div class="action-row" style="justify-content:space-between;">
+        <div>
+          <h3>Mobile Self Check-In</h3>
+          <p>Share this word only with people physically present. Members enter it in the mobile app to check in.</p>
+        </div>
+        <span class="status-pill">
+          <i class="fa-solid fa-key"></i>
+          {{ session.self_check_in_code|default:"No word set" }}
+        </span>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="report-card" id="session-edit" style="margin-bottom:18px;">
+    <div class="action-row" style="justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h3>Edit Session</h3>
+        <p>Update timing, status, and member check-in controls for this event session.</p>
+      </div>
+    </div>
+    <form method="post" style="padding:0 22px 22px;display:grid;gap:14px;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
+        <div>
+          <label for="session_name" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Session label</label>
+          <input id="session_name" name="session_name" value="{{ session_edit.session_name }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+        <div>
+          <label for="status" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Status</label>
+          <select id="status" name="status" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+            <option value="open" {% if session_edit.status == "open" %}selected{% endif %}>Open</option>
+            <option value="scheduled" {% if session_edit.status == "scheduled" %}selected{% endif %}>Scheduled</option>
+            <option value="closed" {% if session_edit.status == "closed" %}selected{% endif %}>Closed</option>
+            <option value="cancelled" {% if session_edit.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
+        <div>
+          <label for="starts_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Starts at</label>
+          <input id="starts_at" name="starts_at" type="datetime-local" value="{{ session_edit.starts_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+        <div>
+          <label for="ends_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Ends at</label>
+          <input id="ends_at" name="ends_at" type="datetime-local" value="{{ session_edit.ends_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+      </div>
+      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
+        <label style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;font-weight:800;color:#344054;">
+          <input type="checkbox" name="allow_member_self_check_in" {% if session_edit.allow_member_self_check_in %}checked{% endif %} style="width:auto;min-height:auto;margin-top:4px;">
+          <span>Allow mobile self check-in with a word of the day</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;font-weight:800;color:#344054;">
+          <input type="checkbox" name="allow_member_geo_check_in" {% if session_edit.allow_member_geo_check_in %}checked{% endif %} style="width:auto;min-height:auto;margin-top:4px;">
+          <span>Allow member GeoTracking check-in for this session</span>
+        </label>
+      </div>
+      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
+        <div>
+          <label for="self_check_in_code" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Self check-in word</label>
+          <input id="self_check_in_code" name="self_check_in_code" value="{{ session_edit.self_check_in_code }}" placeholder="e.g. Heaven, Peace, Gate" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border:1px solid #d8f0df;border-radius:14px;background:#effbf3;color:#315946;font-size:13px;line-height:1.5;">
+          <i class="fa-solid fa-circle-info" style="color:#16a34a;margin-top:2px;"></i>
+          <span>Share the word only with people physically present. Members enter it in the mobile app before KairosTrack marks them present.</span>
+        </div>
+      </div>
+      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
+        <div>
+          <label for="check_in_opens_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Check-in opens</label>
+          <input id="check_in_opens_at" name="check_in_opens_at" type="datetime-local" value="{{ session_edit.check_in_opens_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+        <div>
+          <label for="check_in_closes_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Check-in closes</label>
+          <input id="check_in_closes_at" name="check_in_closes_at" type="datetime-local" value="{{ session_edit.check_in_closes_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="report-btn primary" type="submit">
+          <i class="fa-solid fa-floppy-disk"></i> Save Session Changes
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="report-grid">
+    <div class="report-card">
+      <div class="action-row" style="justify-content:space-between;">
+        <div>
+          <h3>Member Attendance</h3>
+          <p>Mark or review each member for this session.</p>
+        </div>
+        <div class="action-row">
+          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=csv">CSV</a>
+          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=xlsx">Excel</a>
+          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=pdf">PDF</a>
+        </div>
+      </div>
+
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Status</th>
+              <th>Method</th>
+              <th>Check-in</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td>
+                  <div class="member-name">{{ row.person.name }}</div>
+                  <div class="member-meta">{{ row.person.member_code|default:row.person.portal_id|default:"No member code" }}</div>
+                </td>
+                <td>
+                  <span class="state {{ row.status }}">{{ row.status_label }}</span>
+                </td>
+                <td>{{ row.method_label }}</td>
+                <td>{% if row.record %}{{ row.record.check_in_time|default:"-" }}{% else %}-{% endif %}</td>
+                <td>
+                  <div class="row-actions">
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="mark">
+                      <input type="hidden" name="person_id" value="{{ row.person.id }}">
+                      <input type="hidden" name="status" value="present">
+                      <button class="tiny-btn present" type="submit">Present</button>
+                    </form>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="mark">
+                      <input type="hidden" name="person_id" value="{{ row.person.id }}">
+                      <input type="hidden" name="status" value="absent">
+                      <button class="tiny-btn absent" type="submit">Absent</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5">No authorized members are available yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <aside class="report-card">
+      <h3>Check-in Methods</h3>
+      <p>How attendance was captured for this session.</p>
+
+      {% if method_cards %}
+        <div class="method-grid">
+          {% for method in method_cards %}
+            <div class="method-row">
+              <span>{{ method.label }}</span>
+              <span>{{ method.count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty">No attendance has been marked yet.</div>
+      {% endif %}
+
+      <div class="method-grid" style="margin-top:18px;">
+        {% if session.status != "closed" %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="status">
+            <input type="hidden" name="status" value="closed">
+            <button class="report-btn danger" type="submit">
+              <i class="fa-solid fa-lock"></i> Close Session
+            </button>
+          </form>
+        {% else %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="status">
+            <input type="hidden" name="status" value="open">
+            <button class="report-btn primary" type="submit">
+              <i class="fa-solid fa-unlock"></i> Reopen Session
+            </button>
+          </form>
+        {% endif %}
+        <a class="report-btn" href="{% url 'person_attendance_list' %}?attendance_session_id={{ session.id }}">
+          <i class="fa-solid fa-table-list"></i> Full Log
+        </a>
+      </div>
+    </aside>
+  </section>
+</div>
+{% endblock %}

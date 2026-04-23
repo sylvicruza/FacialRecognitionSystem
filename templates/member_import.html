@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}Import Members{% endblock %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Import Members{% endblock %}
+{% block page_subtitle %}Preview CSV or Excel member files before creating or updating records.{% endblock %}
+
+{% block content %}
+<style>
+  .import-wrap{
+    display:grid;
+    grid-template-columns:minmax(0, .85fr) minmax(0, 1.15fr);
+    gap:18px;
+    align-items:start;
+  }
+
+  .panel{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:26px;
+    box-shadow:0 22px 54px rgba(15,23,42,.08);
+    overflow:hidden;
+  }
+
+  .panel.pad{ padding:22px; }
+
+  .guide{
+    background:
+      radial-gradient(520px 240px at 82% 0%, rgba(34,197,94,.18), transparent 70%),
+      linear-gradient(135deg,#06291b,#10364a);
+    color:#fff;
+  }
+
+  .guide h2,
+  .panel h2{
+    margin:0;
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:-.035em;
+  }
+
+  .guide p,
+  .panel p{
+    color:#64748b;
+    margin:8px 0 0;
+    line-height:1.55;
+  }
+
+  .guide p{ color:rgba(255,255,255,.75); }
+
+  .columns{
+    display:grid;
+    gap:10px;
+    margin-top:20px;
+  }
+
+  .column{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px;
+    border-radius:16px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    color:rgba(255,255,255,.9);
+    font-weight:750;
+  }
+
+  .column i{
+    width:30px;
+    height:30px;
+    display:grid;
+    place-items:center;
+    border-radius:11px;
+    color:#06291b;
+    background:#62e6a0;
+    flex:0 0 auto;
+  }
+
+  .panel-head{
+    padding:20px 22px;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .panel-body{ padding:22px; }
+
+  .field{
+    display:grid;
+    gap:7px;
+    margin-bottom:14px;
+  }
+
+  .field label{
+    color:#334155;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .field input,
+  .field select{
+    width:100%;
+    min-height:52px;
+    border:1px solid #dfe7ef;
+    background:#f7fbff;
+    border-radius:15px;
+    padding:0 14px;
+    color:#101827;
+    outline:none;
+  }
+
+  .check{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding:13px 14px;
+    border-radius:16px;
+    background:#f7fbff;
+    border:1px solid #dfe7ef;
+    margin-bottom:14px;
+    color:#334155;
+    font-weight:800;
+  }
+
+  .check input{
+    width:18px;
+    height:18px;
+    accent-color:#22c55e;
+  }
+
+  .btnx{
+    border:none;
+    border-radius:15px;
+    padding:13px 16px;
+    font-weight:900;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-decoration:none;
+    cursor:pointer;
+  }
+
+  .btnx.primary{
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#052012;
+  }
+
+  .btnx.soft{
+    background:#eef8f1;
+    color:#11623d;
+    border:1px solid #ccebd8;
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .result-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:16px;
+  }
+
+  .result{
+    border:1px solid #e6eee9;
+    border-radius:20px;
+    padding:16px;
+    background:linear-gradient(180deg,#fff,#fbfdfc);
+  }
+
+  .result span{
+    display:block;
+    color:#64748b;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .result b{
+    display:block;
+    margin-top:8px;
+    color:#101827;
+    font-size:30px;
+    letter-spacing:-.04em;
+  }
+
+  .errors{
+    display:grid;
+    gap:8px;
+  }
+
+  .limit-note{
+    margin-bottom:16px;
+    padding:14px 15px;
+    border-radius:17px;
+    border:1px solid #d8f0df;
+    background:#f0fbf4;
+    color:#14532d;
+    font-weight:800;
+    line-height:1.5;
+  }
+
+  .limit-note.warning{
+    border-color:#fed7aa;
+    background:#fff7ed;
+    color:#9a3412;
+  }
+
+  .error-row{
+    padding:11px 12px;
+    border-radius:14px;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    font-weight:750;
+    font-size:13px;
+  }
+
+  code{
+    color:#14532d;
+    background:#dcfce7;
+    padding:2px 6px;
+    border-radius:8px;
+  }
+
+  .preview-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:760px;
+  }
+
+  .preview-table th,
+  .preview-table td{
+    padding:12px 14px;
+    border-bottom:1px solid #edf2ef;
+    text-align:left;
+    vertical-align:top;
+    font-size:13px;
+  }
+
+  .preview-table th{
+    background:#0f172a;
+    color:#fff;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .status-pill.create{background:#dcfce7;color:#14532d;}
+  .status-pill.update{background:#e0f2fe;color:#075985;}
+  .status-pill.invalid{background:#fff7ed;color:#9a3412;}
+
+  .muted{color:#64748b;font-size:12px;}
+
+  @media (max-width:980px){
+    .import-wrap{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width:640px){
+    .result-grid{ grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="import-wrap">
+  <aside class="panel pad guide">
+    <h2>CSV format</h2>
+    <p>Keep the file simple. A name is required; the other fields help KairosTrack match and organize members.</p>
+
+    <div class="columns">
+      <div class="column"><i class="fa-solid fa-user"></i><div><code>name</code> or <code>first_name,last_name</code><br>Required member name.</div></div>
+      <div class="column"><i class="fa-solid fa-envelope"></i><div><code>email</code>, <code>phone</code><br>Useful for contact and lookup.</div></div>
+      <div class="column"><i class="fa-solid fa-id-card"></i><div><code>external_id</code><br>Used to update existing members safely.</div></div>
+      <div class="column"><i class="fa-solid fa-building"></i><div><code>branch</code><br>Must match an existing branch name.</div></div>
+      <div class="column"><i class="fa-solid fa-file-excel"></i><div><code>.csv</code> or <code>.xlsx</code><br>Download the template if you are unsure.</div></div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <div class="panel-head">
+      <h2>Upload Members</h2>
+      <p>Preview members first, then create new records or update existing matches.</p>
+    </div>
+
+    <div class="panel-body">
+      {% if created_count is not None or skipped_count is not None %}
+        <div class="result-grid">
+          <div class="result"><span>New</span><b>{{ created_count|default:0 }}</b></div>
+          <div class="result"><span>Updates</span><b>{{ updated_count|default:0 }}</b></div>
+          <div class="result"><span>Skipped</span><b>{{ skipped_count|default:0 }}</b></div>
+        </div>
+      {% endif %}
+
+      {% if errors %}
+        <div class="errors" style="margin-bottom:16px;">
+          {% for error in errors %}
+            <div class="error-row">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if member_limit.is_limited %}
+        <div class="limit-note {% if member_limit.remaining == 0 %}warning{% endif %}">
+          This plan has {{ member_limit.remaining }} member slot{{ member_limit.remaining|pluralize }} remaining.
+          {% if member_limit.remaining == 0 %}Upgrade before importing more members.{% endif %}
+        </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="preview">
+        <div class="field">
+          <label>CSV or Excel File</label>
+          <input type="file" name="import_file" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+        </div>
+
+        <div class="field">
+          <label>Default Branch</label>
+          <select name="default_branch">
+            <option value="">No default branch</option>
+            {% for branch in branches %}
+              <option value="{{ branch.id }}" {% if default_branch|stringformat:"s" == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" name="authorize_imported" {% if authorize_imported|default:True %}checked{% endif %}>
+          Authorize imported members immediately
+        </label>
+
+        <div class="actions">
+          <button class="btnx primary" type="submit">
+            <i class="fa-solid fa-magnifying-glass-chart"></i> Preview Import
+          </button>
+          <a class="btnx soft" href="{% url 'member_import_template' %}">
+            <i class="fa-solid fa-file-arrow-down"></i> Download Template
+          </a>
+          <a class="btnx soft" href="{% url 'person_list' %}">
+            <i class="fa-solid fa-users"></i> Back to Members
+          </a>
+        </div>
+      </form>
+
+      {% if preview_rows %}
+        <div style="margin-top:22px;border-top:1px solid #edf2ef;padding-top:20px;">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+            <div>
+              <h2 style="font-size:20px;">Preview</h2>
+              <p>Review the rows below. Invalid rows will be skipped.</p>
+            </div>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="import">
+              <button class="btnx primary" type="submit" {% if created_count|add:updated_count == 0 %}disabled{% endif %}>
+                <i class="fa-solid fa-file-import"></i> Import Valid Rows
+              </button>
+            </form>
+          </div>
+
+          <div class="table-wrap">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>Row</th>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Contact</th>
+                  <th>External ID</th>
+                  <th>Branch</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in preview_rows %}
+                  <tr>
+                    <td>{{ row.row_number }}</td>
+                    <td>
+                      <span class="status-pill {{ row.status }}">
+                        {% if row.status == "create" %}
+                          <i class="fa-solid fa-plus"></i> New
+                        {% elif row.status == "update" %}
+                          <i class="fa-solid fa-rotate"></i> Update
+                        {% else %}
+                          <i class="fa-solid fa-triangle-exclamation"></i> Skip
+                        {% endif %}
+                      </span>
+                    </td>
+                    <td>{{ row.name|default:"-" }}</td>
+                    <td>
+                      {{ row.email|default:"-" }}
+                      {% if row.phone %}<div class="muted">{{ row.phone }}</div>{% endif %}
+                    </td>
+                    <td>{{ row.external_id|default:"-" }}</td>
+                    <td>{{ row.branch_name|default:"-" }}</td>
+                    <td>
+                      {% if row.errors %}
+                        {% for error in row.errors %}
+                          <div>{{ error }}</div>
+                        {% endfor %}
+                      {% elif row.status == "update" %}
+                        Existing member will be updated.
+                      {% else %}
+                        Ready to create.
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

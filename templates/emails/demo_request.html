@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KairosTrack Demo Request</title>
+</head>
+<body style="margin:0;background:#eef5ef;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5ef;padding:28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #dbe8de;box-shadow:0 18px 48px rgba(2,38,22,.12);">
+          <tr>
+            <td style="background:#022417;padding:32px 34px;color:#ffffff;">
+              <div style="font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#80e28d;font-weight:700;">KairosTrack</div>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.15;">New demo request</h1>
+              <p style="margin:0;color:#cfe5d4;font-size:15px;line-height:1.6;">Someone wants to speak with you about KairosTrack.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 34px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:0 0 16px;">
+                    <div style="font-size:13px;color:#6b7280;">Name</div>
+                    <div style="font-size:20px;font-weight:800;color:#111827;">{{ name }}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0 10px;">
+                <tr>
+                  <td style="background:#f6fbf7;border:1px solid #dbe8de;border-radius:16px;padding:16px;">
+                    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;">Email</div>
+                    <div style="font-size:16px;font-weight:700;color:#065f32;">{{ email }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:16px;padding:16px;">
+                    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;">Organisation</div>
+                    <div style="font-size:16px;font-weight:700;">{{ organisation }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:16px;padding:16px;">
+                    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;">Phone</div>
+                    <div style="font-size:16px;font-weight:700;">{{ phone }}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f6fbf7;border:1px solid #dbe8de;border-radius:16px;padding:16px;">
+                    <div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;">Interested plan</div>
+                    <div style="font-size:16px;font-weight:800;color:#087533;">{{ plan }}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="margin-top:18px;padding:20px;border-radius:18px;background:#022417;color:#ffffff;">
+                <div style="font-size:12px;color:#80e28d;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">Message</div>
+                <div style="margin-top:10px;font-size:16px;line-height:1.7;color:#effaf1;">{{ message|linebreaksbr }}</div>
+              </div>
+
+              <p style="margin:22px 0 0;color:#6b7280;font-size:13px;">Submitted {{ submitted_at|date:"d M Y, H:i" }}. Reply to this email to contact {{ name }} directly.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
