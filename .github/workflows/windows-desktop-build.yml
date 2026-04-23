@@ -31,10 +31,13 @@ jobs:
         run: |
           if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
             $version = "${{ github.ref_name }}".Substring(1)
+            $installerVersion = $version
           } else {
             $version = "0.0.0-${{ github.run_number }}"
+            $installerVersion = "0.0.0.${{ github.run_number }}"
           }
           "app_version=$version" >> $env:GITHUB_OUTPUT
+          "installer_version=$installerVersion" >> $env:GITHUB_OUTPUT
 
       - name: Install dependencies
         run: |
@@ -66,7 +69,7 @@ jobs:
       - name: Build Windows installer
         shell: powershell
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=${{ steps.version.outputs.app_version }}" "TimeAndAttendanceInstaller.iss"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=${{ steps.version.outputs.app_version }}" "/DMyAppVersionNumeric=${{ steps.version.outputs.installer_version }}" "TimeAndAttendanceInstaller.iss"
           Copy-Item "installer_output\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe" "release\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe"
           Copy-Item "installer_output\KairosTrackSetup-${{ steps.version.outputs.app_version }}.exe" "release\KairosTrackSetup-latest.exe"
 

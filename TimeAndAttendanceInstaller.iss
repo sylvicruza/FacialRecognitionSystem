@@ -2,6 +2,9 @@
 #ifndef MyAppVersion
 #define MyAppVersion "1.0.0"
 #endif
+#ifndef MyAppVersionNumeric
+#define MyAppVersionNumeric MyAppVersion
+#endif
 #define MyAppPublisher "SlyApps"
 #define MyAppExeName "KairosTrack.exe"
 #define MyAppFolder "KairosTrack"
@@ -28,7 +31,7 @@ CloseApplications=yes
 CloseApplicationsFilter={#MyAppExeName}
 SetupIconFile=static\images\kairostrack-icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
-VersionInfoVersion={#MyAppVersion}
+VersionInfoVersion={#MyAppVersionNumeric}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=KairosTrack desktop attendance client
 VersionInfoProductName={#MyAppName}
