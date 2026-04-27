@@ -2833,6 +2833,13 @@ def success_page(request):
 # =========================================================
 @desktop_login_required
 def person_list(request):
+    def _member_registered_label(person):
+        for attr in ("created_at", "created_on", "created", "registered_on", "date_joined"):
+            value = getattr(person, attr, None)
+            if value:
+                return value
+        return "—"
+
     search = request.GET.get("search", "").strip()
     filter_value = request.GET.get("filter", "all").strip().lower() or "all"
     authorized_filter = None
@@ -2875,6 +2882,8 @@ def person_list(request):
     paginator = Paginator(persons_qs, 10)  # 10 per page
     page_number = request.GET.get("page")
     persons = paginator.get_page(page_number)
+    for person in persons:
+        setattr(person, "registered_label", _member_registered_label(person))
 
     return render(
         request,
