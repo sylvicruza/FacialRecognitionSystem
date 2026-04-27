@@ -1,1086 +1,1904 @@
 {% extends "base.html" %}
 {% block title %}Register Member{% endblock %}
 {% block page_crumb %}Members{% endblock %}
-{% block page_title %}Capture Member Photo{% endblock %}
-{% block page_subtitle %}Start a camera, capture a clear face photo, and save the member.{% endblock %}
+{% block page_title %}Register Member{% endblock %}
+{% block page_subtitle %}Add a new member to your organization. Member records are used for attendance, reporting, and access control.{% endblock %}
 
 {% block content %}
-  <style>
-    :root{
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e2e8f0;
-      --shadow: 0 22px 54px rgba(15, 23, 42, .08);
-      --softShadow: 0 10px 30px rgba(15, 23, 42, .10);
+<style>
+  .member-flow{
+    max-width:1240px;
+    margin:0 auto;
+    display:grid;
+    gap:18px;
+  }
 
-      --brand:#22c55e;
-      --brand2:#16a34a;
-      --danger:#ef4444;
-      --warning:#f59e0b;
-      --info:#38bdf8;
-      --radius:18px;
+  .entry-panel,
+  .wizard-panel,
+  .side-card,
+  .success-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:22px;
+    box-shadow:0 18px 44px rgba(15,23,42,.06);
+  }
 
+  .entry-panel{
+    padding:18px 18px 20px;
+    display:grid;
+    gap:14px;
+  }
+
+  .section-label{
+    color:#172033;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .entry-cards{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+  }
+
+  .entry-card{
+    min-height:108px;
+    display:grid;
+    grid-template-columns:58px minmax(0,1fr) 20px;
+    gap:14px;
+    align-items:center;
+    padding:18px;
+    border:1px solid #dfe9e3;
+    border-radius:18px;
+    background:#fff;
+    text-decoration:none;
+    color:inherit;
+  }
+
+  .entry-card.active{
+    border-color:#74cf97;
+    background:linear-gradient(135deg,#f7fcf8,#ffffff);
+    box-shadow:inset 0 0 0 1px rgba(22,163,74,.08);
+  }
+
+  .entry-card.locked{
+    opacity:.72;
+  }
+
+  .entry-icon{
+    width:58px;
+    height:58px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    color:#fff;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    font-size:22px;
+  }
+
+  .entry-card.blue .entry-icon{ background:linear-gradient(135deg,#3b82f6,#2563eb); }
+  .entry-card.purple .entry-icon{ background:linear-gradient(135deg,#8b5cf6,#7c3aed); }
+
+  .entry-copy strong{
+    display:block;
+    color:#172033;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .entry-copy span{
+    display:block;
+    margin-top:6px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .entry-copy small{
+    display:inline-flex;
+    align-items:center;
+    margin-top:10px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#eaf8ef;
+    color:#15803d;
+    font-size:10px;
+    font-weight:900;
+  }
+
+  .entry-arrow{
+    color:#16a34a;
+    font-size:18px;
+    justify-self:end;
+  }
+
+  .wizard-panel{
+    overflow:hidden;
+  }
+
+  .wizard-top{
+    display:grid;
+    grid-template-columns:220px minmax(0,1fr);
+    gap:18px;
+    align-items:center;
+    padding:18px 20px;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .wizard-title h2{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+    line-height:1.2;
+  }
+
+  .wizard-title p{
+    margin:8px 0 0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .step-track{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+    align-items:start;
+  }
+
+  .step-item{
+    position:relative;
+    display:grid;
+    grid-template-columns:30px minmax(0,1fr);
+    gap:10px;
+    align-items:start;
+  }
+
+  .step-item:not(:last-child)::after{
+    content:"";
+    position:absolute;
+    top:14px;
+    left:44px;
+    width:calc(100% - 44px);
+    border-top:1px dashed #cbd5e1;
+  }
+
+  .step-item.done:not(:last-child)::after,
+  .step-item.active:not(:last-child)::after{
+    border-top-color:#16a34a;
+  }
+
+  .step-dot{
+    position:relative;
+    z-index:1;
+    width:30px;
+    height:30px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#344054;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .step-item.done .step-dot,
+  .step-item.active .step-dot{
+    color:#fff;
+    border-color:#16a34a;
+    background:#16a34a;
+  }
+
+  .step-text strong{
+    display:block;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .step-text span{
+    display:block;
+    margin-top:3px;
+    color:#98a2b3;
+    font-size:11px;
+    line-height:1.4;
+  }
+
+  .wizard-body{
+    padding:18px;
+    display:grid;
+    gap:16px;
+  }
+
+  .wizard-step{
+    display:none;
+  }
+
+  .wizard-step.active{
+    display:grid;
+  }
+
+  .step-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    gap:18px;
+    align-items:start;
+  }
+
+  .card-block{
+    border:1px solid #e5ede8;
+    border-radius:18px;
+    background:#fff;
+    overflow:hidden;
+  }
+
+  .card-head{
+    padding:16px 18px 12px;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .card-head h3{
+    margin:0;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .card-head p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .card-body{
+    padding:16px 18px 18px;
+  }
+
+  .fields-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .field{
+    display:grid;
+    gap:7px;
+  }
+
+  .field.full{
+    grid-column:1 / -1;
+  }
+
+  .field label{
+    color:#344054;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .field label .req{
+    color:#ef4444;
+  }
+
+  .field input{
+    width:100%;
+    min-height:44px;
+    padding:10px 12px;
+    border:1px solid #d9e3dd;
+    border-radius:12px;
+    background:#fff;
+    color:#172033;
+    font:inherit;
+    font-size:13px;
+  }
+
+  .field small{
+    color:#98a2b3;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .helper-strip{
+    margin-top:14px;
+    padding:11px 12px;
+    border:1px solid #dcefe3;
+    border-radius:14px;
+    background:linear-gradient(135deg,#f7fcf8,#ffffff);
+    color:#4b6358;
+    font-size:12px;
+    line-height:1.5;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .lookup-card{
+    border:1px solid #e5ede8;
+    border-radius:18px;
+    background:linear-gradient(135deg,#f7fcfb,#ffffff);
+    padding:16px;
+    display:grid;
+    gap:14px;
+    margin-bottom:14px;
+  }
+
+  .lookup-card h4{
+    margin:0;
+    color:#172033;
+    font-size:14px;
+    font-weight:900;
+  }
+
+  .lookup-card p{
+    margin:5px 0 0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .lookup-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:end;
+  }
+
+  .lookup-results{
+    display:grid;
+    gap:10px;
+  }
+
+  .lookup-result{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border:1px solid #e5ede8;
+    border-radius:16px;
+    background:#fff;
+  }
+
+  .lookup-result strong{
+    display:block;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .lookup-result span{
+    display:block;
+    margin-top:4px;
+    color:#667085;
+    font-size:11px;
+  }
+
+  .lookup-empty{
+    padding:14px;
+    border:1px dashed #d6dee8;
+    border-radius:16px;
+    background:#f8fafc;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .helper-strip i{
+    color:#15803d;
+  }
+
+  .side-card{
+    padding:16px;
+    display:grid;
+    gap:14px;
+  }
+
+  .side-card h4{
+    margin:0;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .progress-box{
+    border:1px solid #e5ede8;
+    border-radius:16px;
+    padding:14px;
+    display:grid;
+    gap:10px;
+  }
+
+  .progress-box span{
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .progress-bar{
+    height:6px;
+    border-radius:999px;
+    background:#edf3ee;
+    overflow:hidden;
+  }
+
+  .progress-bar div{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    width:25%;
+  }
+
+  .why-list{
+    display:grid;
+    gap:14px;
+  }
+
+  .why-item{
+    display:grid;
+    grid-template-columns:40px minmax(0,1fr);
+    gap:10px;
+    align-items:start;
+  }
+
+  .why-item i{
+    width:40px;
+    height:40px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    color:#16a34a;
+    background:#eef8f1;
+    font-size:15px;
+  }
+
+  .why-item strong{
+    display:block;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .why-item span{
+    display:block;
+    margin-top:4px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .art-box{
+    margin-top:6px;
+    border-top:1px solid #edf2ef;
+    padding-top:16px;
+    text-align:right;
+    color:#22c55e;
+    font-size:72px;
+    line-height:1;
+  }
+
+  .camera-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 250px;
+    gap:16px;
+    align-items:start;
+  }
+
+  .stage{
+    position:relative;
+    background:#07101d;
+    border-radius:20px;
+    aspect-ratio:16/11;
+    overflow:hidden;
+  }
+
+  .stage video,
+  .stage img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    filter:brightness(1.08) contrast(1.03);
+  }
+
+  .stage-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.18));
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px;
+    pointer-events:none;
+  }
+
+  .stage-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    font-size:12px;
+    max-width:72%;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#f59e0b;
+    box-shadow:0 0 0 4px rgba(245,158,11,.18);
+  }
+
+  .dot.live{
+    background:#22c55e;
+    box-shadow:0 0 0 4px rgba(34,197,94,.18);
+  }
+
+  .dot.err{
+    background:#ef4444;
+    box-shadow:0 0 0 4px rgba(239,68,68,.18);
+  }
+
+  .stage-actions{
+    pointer-events:auto;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .face-guide{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    display:none;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .face-guide.show{ display:flex; }
+
+  .mask{
+    width:min(56%, 330px);
+    aspect-ratio:3/4;
+    border-radius:999px;
+    border:3px solid rgba(255,255,255,.92);
+    box-shadow:0 0 0 9999px rgba(0,0,0,.10),0 0 24px rgba(34,197,94,.18);
+    position:relative;
+  }
+
+  .mask:after{
+    content:"Align face inside the oval";
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:-42px;
+    font-size:12px;
+    color:rgba(255,255,255,.92);
+    background:rgba(0,0,0,.26);
+    border:1px solid rgba(255,255,255,.18);
+    padding:8px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  .flash{
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,.92);
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .flash.run{ animation:flash 380ms ease-out; }
+  @keyframes flash{ 0%{opacity:0;} 12%{opacity:1;} 100%{opacity:0;} }
+
+  .success-pop{
+    position:absolute;
+    top:16px;
+    left:16px;
+    display:none;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:16px;
+    background:rgba(34,197,94,.15);
+    border:1px solid rgba(34,197,94,.35);
+    color:rgba(255,255,255,.95);
+    backdrop-filter:blur(10px);
+  }
+
+  .success-pop.show{ display:flex; }
+
+  .seg{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .seg button{
+    min-height:40px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#223246;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .seg button.active{
+    border-color:#bfe8ca;
+    background:#f6fcf8;
+    color:#0f7a38;
+  }
+
+  .camera-selects{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .camera-selects select{
+    width:100%;
+    min-height:44px;
+    padding:10px 12px;
+    border:1px solid #d9e3dd;
+    border-radius:12px;
+    background:#fff;
+    color:#172033;
+    font:inherit;
+    font-size:13px;
+  }
+
+  .btnx{
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#223246;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .btnx.primary{
+    border-color:transparent;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#fff;
+    box-shadow:0 14px 28px rgba(22,163,74,.18);
+  }
+
+  .btnx.dark{
+    background:rgba(12,20,32,.82);
+    border-color:rgba(255,255,255,.10);
+    color:#fff;
+  }
+
+  .btnx.disabled{
+    opacity:.55;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+
+  .alertbox{
+    display:none;
+    padding:12px 14px;
+    border-radius:16px;
+    border:1px solid rgba(226,232,240,.9);
+    background:rgba(241,245,249,.9);
+    color:#0f172a;
+    margin-bottom:12px;
+    font-size:13px;
+    line-height:1.45;
+  }
+
+  .alertbox.info{ border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.12); }
+  .alertbox.success{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); }
+  .alertbox.warning{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+  .alertbox.danger{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
+
+  .upload-box{
+    display:grid;
+    gap:12px;
+    margin-top:14px;
+  }
+
+  .upload-label{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:42px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#223246;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .upload-label input{ display:none; }
+
+  .upload-box small{
+    color:#98a2b3;
+    font-size:11px;
+    text-align:center;
+  }
+
+  .preview{
+    border-radius:18px;
+    border:1px dashed rgba(100,116,139,.35);
+    background:rgba(241,245,249,.65);
+    padding:10px;
+    display:grid;
+    place-items:center;
+    min-height:180px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .preview img{
+    width:100%;
+    border-radius:14px;
+    display:none;
+    transition:filter .2s ease;
+  }
+
+  .preview.blur img{ filter:blur(14px); }
+
+  .preview .ph{
+    color:#667085;
+    font-size:12px;
+    text-align:center;
+    line-height:1.55;
+  }
+
+  .preview-tools{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+
+  .pillbtn{
+    border:1px solid #dfe9e3;
+    background:#fff;
+    padding:10px 12px;
+    border-radius:999px;
+    font-weight:800;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    white-space:nowrap;
+  }
+
+  .pillbtn.danger{
+    border-color:rgba(239,68,68,.35);
+    background:rgba(239,68,68,.10);
+    color:#991b1b;
+  }
+
+  .pillbtn.ok{
+    border-color:rgba(34,197,94,.35);
+    background:rgba(34,197,94,.10);
+    color:#065f46;
+  }
+
+  .review-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 260px;
+    gap:16px;
+  }
+
+  .review-card{
+    border:1px solid #e5ede8;
+    border-radius:18px;
+    background:#fff;
+    padding:16px;
+  }
+
+  .review-card h3{
+    margin:0 0 14px;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .review-list{
+    display:grid;
+    gap:10px;
+  }
+
+  .review-item{
+    display:grid;
+    grid-template-columns:130px minmax(0,1fr);
+    gap:12px;
+    color:#344054;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .review-item span:first-child{
+    color:#667085;
+    font-weight:700;
+  }
+
+  .review-photo{
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid #e5ede8;
+    background:#f8fafc;
+  }
+
+  .review-photo img{
+    width:100%;
+    display:block;
+  }
+
+  .review-alert{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid #fed7aa;
+    background:#fff7ed;
+    color:#9a3412;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .wizard-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:2px;
+  }
+
+  .wizard-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .success-card{
+    padding:34px 26px;
+    text-align:center;
+    display:grid;
+    gap:20px;
+    justify-items:center;
+  }
+
+  .success-mark{
+    width:92px;
+    height:92px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#fff;
+    font-size:38px;
+    box-shadow:0 20px 40px rgba(22,163,74,.18);
+  }
+
+  .success-card h2{
+    margin:0;
+    color:#172033;
+    font-size:28px;
+    font-weight:900;
+    letter-spacing:-.04em;
+  }
+
+  .success-card p{
+    margin:0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.6;
+    max-width:520px;
+  }
+
+  .success-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .success-action{
+    padding:16px 12px;
+    border:1px solid #e5ede8;
+    border-radius:18px;
+    background:#fff;
+    display:grid;
+    gap:10px;
+    justify-items:center;
+    text-decoration:none;
+    color:inherit;
+  }
+
+  .success-action i{
+    width:40px;
+    height:40px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    color:#16a34a;
+    background:#eef8f1;
+    font-size:16px;
+  }
+
+  .success-action strong{
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .success-action span{
+    color:#667085;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .success-footer{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  @media (max-width:1120px){
+    .wizard-top,
+    .step-layout,
+    .camera-grid,
+    .review-grid,
+    .member-shell{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:840px){
+    .entry-cards,
+    .step-track,
+    .step-layout,
+    .camera-grid,
+    .review-grid,
+    .success-actions{
+      grid-template-columns:1fr;
     }
 
-    *{ box-sizing:border-box; }
-
-    .register-wrap{
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 0 0 18px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(360px, .85fr);
-      gap: 18px;
-      align-items:start;
-    }
-
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    .panel{
-      background: #fff;
-      border: 1px solid #dfe9e3;
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-
-    .panel-head{
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--border);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 12px;
-      background: linear-gradient(180deg, #ffffff, #fbfdfc);
-      flex-wrap:wrap;
-    }
-
-    .panel-head .title{
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-    }
-
-    .panel-head .title h2{
-      margin:0;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing:-0.02em;
-    }
-
-    .panel-head .title span{
-      color: var(--muted);
-      font-size: 12px;
-      line-height:1.4;
-    }
-
-    .stepper{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .step{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      padding: 7px 11px;
-      border-radius: 999px;
-      border: 1px solid #e8edf5;
-      background:#fff;
-      font-size: 12px;
-      font-weight:700;
-      color: #0f172a;
-      white-space:nowrap;
-    }
-
-    .step .n{
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display:grid;
-      place-items:center;
-      font-weight: 800;
-      background: rgba(34,197,94,.12);
-      color: var(--brand2);
-      font-size:11px;
-    }
-
-    .stage{
-      position:relative;
-      background: #07101d;
-      border-bottom: 1px solid rgba(226,232,240,.75);
-      aspect-ratio: 16/10;
-      width:100%;
-      overflow:hidden;
-    }
-
-    .stage video,
-    .stage img{
-      width:100%;
-      height:100%;
-      object-fit: cover;
-      display:block;
-      filter: brightness(1.12) contrast(1.04);
-    }
-
-    .stage-overlay{
-      position:absolute;
-      inset:0;
-      background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.20));
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      padding: 14px;
-      pointer-events:none;
-    }
-
-    .stage-badge{
-      pointer-events:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.18);
-      color: rgba(255,255,255,.92);
-      backdrop-filter: blur(10px);
-      font-size: 12px;
-      max-width: 70%;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .dot{
-      width: 8px;
-      height:8px;
-      border-radius:50%;
-      background: var(--warning);
-      box-shadow: 0 0 0 4px rgba(245,158,11,.18);
-    }
-
-    .dot.live{
-      background: var(--brand);
-      box-shadow: 0 0 0 4px rgba(34,197,94,.18);
-    }
-
-    .dot.err{
-      background: var(--danger);
-      box-shadow: 0 0 0 4px rgba(239,68,68,.18);
-    }
-
-    .stage-actions{
-      pointer-events:auto;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-    }
-
-    .btnx{
-      border:none;
-      border-radius: 14px;
-      padding: 10px 12px;
-      font-weight: 800;
-      font-size: 13px;
-      display:inline-flex;
-      gap: 8px;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      transition: transform .05s ease, box-shadow .2s ease, opacity .2s ease, background .2s ease;
-      box-shadow: var(--softShadow);
-      user-select:none;
-      white-space:nowrap;
-    }
-
-    .btnx:active{ transform: scale(.98); }
-
-    .btnx.primary{
-      background: linear-gradient(135deg, var(--brand), var(--brand2));
-      color:#052012;
-    }
-
-    .btnx.ghost{
-      background: rgba(255,255,255,.14);
-      color: rgba(255,255,255,.92);
-      border: 1px solid rgba(255,255,255,.20);
-      box-shadow: none;
-    }
-
-    .btnx.soft{
-      background: rgba(255,255,255,.94);
-      color: #0f172a;
-      border: 1px solid rgba(226,232,240,.9);
-      box-shadow: 0 10px 22px rgba(15,23,42,.08);
-    }
-
-    .btnx.disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      filter: grayscale(.15);
-      pointer-events:none;
-    }
-
-    .face-guide{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
+    .step-item:not(:last-child)::after{
       display:none;
-      align-items:center;
-      justify-content:center;
     }
 
-    .face-guide.show{ display:flex; }
-
-    .mask{
-      width:min(58%, 360px);
-      aspect-ratio: 3/4;
-      border-radius: 999px;
-      border: 3px solid rgba(255,255,255,.90);
-      box-shadow:
-        0 0 0 9999px rgba(0,0,0,.10),
-        0 0 24px rgba(34,197,94,.18);
-      position:relative;
+    .fields-grid,
+    .camera-selects{
+      grid-template-columns:1fr;
     }
 
-    .mask:after{
-      content:"Align face inside the oval";
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      bottom:-42px;
-      font-size: 12px;
-      color: rgba(255,255,255,.90);
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 8px 10px;
-      border-radius: 999px;
-      backdrop-filter: blur(10px);
-      white-space:nowrap;
+    .wizard-top{
+      grid-template-columns:1fr;
     }
+  }
+</style>
 
-    .flash{
-      position:absolute;
-      inset:0;
-      background: rgba(255,255,255,.92);
-      opacity:0;
-      pointer-events:none;
-    }
-
-    .flash.run{
-      animation: flash 380ms ease-out;
-    }
-
-    @keyframes flash {
-      0%{ opacity:0; }
-      12%{ opacity:1; }
-      100%{ opacity:0; }
-    }
-
-    .success-pop{
-      position:absolute;
-      top: 16px;
-      left: 16px;
-      display:none;
-      align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      background: rgba(34,197,94,.15);
-      border: 1px solid rgba(34,197,94,.35);
-      color: rgba(255,255,255,.95);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 20px 40px rgba(34,197,94,.18);
-      pointer-events:none;
-    }
-
-    .success-pop.show{
-      display:flex;
-      animation: pop 600ms ease;
-    }
-
-    @keyframes pop{
-      0%{ transform: translateY(-8px); opacity:0; }
-      18%{ transform: translateY(0); opacity:1; }
-      100%{ transform: translateY(0); opacity:1; }
-    }
-
-    .panel-body{
-      padding: 16px 18px 18px;
-    }
-
-    .seg{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-bottom: 12px;
-    }
-
-    .seg button{
-      border:1px solid var(--border);
-      background:#fff;
-      padding: 10px 12px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 13px;
-      cursor:pointer;
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      transition: transform .05s ease, background .2s ease, border-color .2s ease;
-    }
-
-    .seg button:hover{ background: rgba(34,197,94,.06); }
-    .seg button:active{ transform: scale(.98); }
-
-    .seg button.active{
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.10);
-      color: #065f46;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      margin-bottom: 12px;
-    }
-
-    .field label{
-      font-size: 12px;
-      font-weight: 800;
-      color: #0f172a;
-    }
-
-    .field .hint{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-      line-height:1.4;
-    }
-
-    .soft{
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 12px;
-      background:#fff;
-      box-shadow: 0 10px 22px rgba(15,23,42,.06);
-      min-height:46px;
-    }
-
-    .row2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 680px){
-      .row2{ grid-template-columns: 1fr; }
-    }
-
-    .preview{
-      border-radius: 16px;
-      border: 1px dashed rgba(100,116,139,.35);
-      background: rgba(241,245,249,.65);
-      padding: 10px;
-      display:grid;
-      place-items:center;
-      min-height: 180px;
-      overflow:hidden;
-      position:relative;
-    }
-
-    .preview img{
-      width:100%;
-      border-radius: 14px;
-      display:none;
-      transition: filter .2s ease;
-    }
-
-    .preview.blur img{
-      filter: blur(14px);
-    }
-
-    .preview .ph{
-      color: var(--muted);
-      font-size: 12px;
-      text-align:center;
-      padding: 12px;
-      line-height:1.45;
-    }
-
-    .preview-tools{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top: 10px;
-    }
-
-    .pillbtn{
-      border:1px solid var(--border);
-      background:#fff;
-      padding: 10px 12px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-      cursor:pointer;
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      transition: transform .05s ease, background .2s ease;
-      white-space:nowrap;
-    }
-
-    .pillbtn:active{ transform: scale(.98); }
-
-    .pillbtn.danger{
-      border-color: rgba(239,68,68,.35);
-      background: rgba(239,68,68,.10);
-      color: #991b1b;
-    }
-
-    .pillbtn.ok{
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.10);
-      color: #065f46;
-    }
-
-    .alertbox{
-      display:none;
-      padding: 12px 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(226,232,240,.9);
-      background: rgba(241,245,249,.9);
-      color:#0f172a;
-      box-shadow: 0 10px 22px rgba(15,23,42,.06);
-      margin-bottom: 12px;
-      font-size:13px;
-      line-height:1.45;
-    }
-
-    .alertbox.info{ border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.12); }
-    .alertbox.success{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); }
-    .alertbox.warning{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
-    .alertbox.danger{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
-
-    details.tips{
-      border: 1px solid rgba(226,232,240,.9);
-      background: rgba(255,255,255,.92);
-      border-radius: 16px;
-      padding: 12px 12px;
-      box-shadow: 0 10px 22px rgba(15,23,42,.06);
-      margin-top: 12px;
-    }
-
-    details.tips summary{
-      cursor:pointer;
-      list-style:none;
-      font-weight: 800;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    details.tips summary::-webkit-details-marker{ display:none; }
-
-    .tips ul{
-      margin: 10px 0 0;
-      padding-left: 18px;
-      color: #0f172a;
-      font-size: 13px;
-    }
-
-    .tips li{
-      margin: 6px 0;
-      color: #0f172a;
-    }
-
-    .tips .sub{
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
-      line-height:1.45;
-    }
-
-    .legacy-selects{ display:none; }
-  </style>
-
-  <div class="register-wrap">
-    <div class="grid">
-      <!-- LEFT -->
-      <div class="panel">
-        <div class="panel-head">
-          <div class="title">
-            <h2>Capture</h2>
-            <span>Start camera and capture a clear face photo.</span>
-          </div>
-          <div class="stepper">
-            <div class="step"><span class="n">1</span> Start</div>
-            <div class="step"><span class="n">2</span> Align</div>
-            <div class="step"><span class="n">3</span> Capture</div>
-          </div>
+<div class="member-flow">
+  <section class="entry-panel">
+    <div class="section-label">Choose how you want to add members</div>
+    <div class="entry-cards">
+      <a class="entry-card {% if registration_mode != 'external' %}active{% endif %}" href="{% url 'register_user' %}">
+        <div class="entry-icon"><i class="fa-solid fa-user"></i></div>
+        <div class="entry-copy">
+          <strong>Single Member</strong>
+          <span>Add one member at a time with photo capture.</span>
+          <small>Recommended</small>
         </div>
+        <div class="entry-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
 
-        <div class="stage">
-          <video id="video" autoplay playsinline muted></video>
-          <img id="rtspPreview" alt="Configured camera preview" style="display:none;" />
-
-          <div class="face-guide" id="faceGuide">
-            <div class="mask"></div>
-          </div>
-
-          <div class="flash" id="flash"></div>
-          <div class="success-pop" id="successPop">
-            <i class="fa-solid fa-circle-check"></i>
-            <div style="font-weight:800;">Captured</div>
-          </div>
-
-          <div class="stage-overlay">
-            <div class="stage-badge" id="stageBadge">
-              <span class="dot" id="stageDot"></span>
-              <span id="stageText">Ready. Choose a mode and press Start.</span>
-            </div>
-
-            <div class="stage-actions">
-              <button type="button" class="btnx ghost" id="startBtn">
-                <i class="fa-solid fa-video"></i> Start
-              </button>
-              <button type="button" class="btnx primary disabled" id="captureBtn">
-                <i class="fa-solid fa-camera"></i> Capture
-              </button>
-            </div>
-          </div>
+      <a class="entry-card blue" href="{% url 'member_import' %}">
+        <div class="entry-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+        <div class="entry-copy">
+          <strong>Bulk Import</strong>
+          <span>Import multiple members from CSV or Excel file.</span>
         </div>
+        <div class="entry-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
 
-        <div class="panel-body">
-          <div id="cameraAlert" class="alertbox warning"></div>
-
-          <div class="seg">
-            <button type="button" id="modeLocalBtn" class="active">
-              <i class="fa-solid fa-laptop"></i> This Device
-            </button>
-            <button type="button" id="modeConfigBtn">
-              <i class="fa-solid fa-network-wired"></i> Configured Camera
-            </button>
-          </div>
-
-          <div class="legacy-selects">
-            <select id="sourceMode">
-              <option value="local" selected>Local Device Camera</option>
-              <option value="config">Configured Camera</option>
-            </select>
-          </div>
-
-          <div class="row2">
-            <div class="field">
-              <label>Device Camera</label>
-              <select id="localCameraSelect" class="form-select soft"></select>
-              <div class="hint">If empty, press Start once to grant permission.</div>
-            </div>
-
-            <div class="field" id="configSelectWrap" style="display:none;">
-              <label>Configured Camera</label>
-              <select id="configCameraSelect" class="form-select soft">
-                {% for c in camera_configs %}
-                  <option value="{{ c.id }}">{{ c.name }} ({{ c.camera_source }})</option>
-                {% endfor %}
-              </select>
-              <div class="hint">Uses your saved server camera source.</div>
-            </div>
-          </div>
-
-          <details class="tips">
-            <summary>
-              <span><i class="fa-solid fa-lightbulb"></i> Photo Tips</span>
-              <span style="color:var(--muted);font-size:12px;">Open</span>
-            </summary>
-            <ul>
-              <li><b>Good light:</b> avoid shadows on the face.</li>
-              <li><b>Center face:</b> keep the face inside the oval.</li>
-              <li><b>No hat or hood:</b> reduce obstruction.</li>
-              <li><b>Look at camera:</b> keep eyes open and face steady.</li>
-            </ul>
-            <div class="sub">If the room is dark, move closer to a light source.</div>
-          </details>
+      <a class="entry-card purple {% if registration_mode == 'external' %}active{% endif %} {% if not integration_enabled %}locked{% endif %}" href="{% url 'register_user' %}?mode=external">
+        <div class="entry-icon"><i class="fa-solid fa-link"></i></div>
+        <div class="entry-copy">
+          <strong>External Lookup</strong>
+          <span>{% if integration_enabled %}Search a connected member system first, then continue in this same wizard.{% else %}Connect an external source first, then search from inside this wizard.{% endif %}</span>
         </div>
-      </div>
-
-      <!-- RIGHT -->
-      <div class="panel">
-        <div class="panel-head">
-          <div class="title">
-            <h2>Preview</h2>
-            <span>Review the captured image before saving.</span>
-          </div>
-          <div class="stepper">
-            <div class="step"><span class="n">OK</span> Ready</div>
-          </div>
-        </div>
-
-        <div class="panel-body">
-          <form id="registrationForm" method="POST">
-            {% csrf_token %}
-
-            <div class="field">
-              <label>Name</label>
-              <input type="text" id="name" name="name" value="{{ name }}" class="form-control soft" placeholder="Member full name" required>
-            </div>
-
-            <div class="row2">
-              <div class="field">
-                <label>Email</label>
-                <input type="email" id="email" name="email" value="{{ email }}" class="form-control soft" placeholder="member@example.com">
-              </div>
-
-              <div class="field">
-                <label>Phone</label>
-                <input type="text" id="phone" name="phone" value="{{ phone }}" class="form-control soft" placeholder="Phone number">
-              </div>
-            </div>
-
-            {% if integration_enabled %}
-              <div class="field">
-                <label>External ID</label>
-                <input type="text" id="portal_id" name="portal_id" value="{{ portal_id }}" class="form-control soft" placeholder="Optional existing system ID">
-                <div class="hint">Use this only for the connected member integration owned by this organization.</div>
-              </div>
-            {% else %}
-              <input type="hidden" id="portal_id" name="portal_id" value="">
-            {% endif %}
-
-            {% if request.session.attendance_desktop_plan.allow_nfc %}
-              <div class="field">
-                <label>NFC Tag UID</label>
-                <input type="text" id="nfc_uid" name="nfc_uid" value="{{ nfc_uid }}" class="form-control soft" placeholder="Optional card/tag UID">
-                <div class="hint">Optional. You can also add this later from the member profile.</div>
-              </div>
-            {% endif %}
-
-            <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-            <input type="hidden" id="image_data" name="image_data">
-
-            <div class="field">
-              <label>Captured Image</label>
-              <div class="preview" id="previewBox">
-                <div class="ph" id="previewHint">
-                  No photo captured yet.<br>Press <b>Start</b>, align the face, then capture.
-                </div>
-                <img id="imagePreview" src="" alt="Captured Image Preview" />
-              </div>
-
-              <div class="preview-tools">
-                <button type="button" class="pillbtn danger" id="retakeBtn" disabled>
-                  <i class="fa-solid fa-rotate-left"></i> Retake
-                </button>
-
-                <button type="button" class="pillbtn" id="privacyBtn" disabled>
-                  <i class="fa-solid fa-eye-slash"></i> Privacy: Off
-                </button>
-
-                <button type="button" class="pillbtn ok" id="resumeAfterRetakeBtn" style="display:none;">
-                  <i class="fa-solid fa-video"></i> Restart Camera
-                </button>
-              </div>
-
-              <div class="hint" style="margin-top:6px;">
-                Privacy mode blurs the preview on screen only.
-              </div>
-            </div>
-
-            <button type="submit" id="registerBtn" class="btnx primary disabled" style="width:100%; justify-content:center;">
-              <i class="fa-solid fa-user-check"></i> Register Member
-            </button>
-
-            {% if error %}
-              <div class="mt-3 alert alert-danger text-start">{{ error }}</div>
-            {% endif %}
-          </form>
-        </div>
-      </div>
+        <div class="entry-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
     </div>
+  </section>
 
-  </div>
+  {% if success_mode %}
+    <section class="success-card">
+      <div class="success-mark"><i class="fa-solid fa-check"></i></div>
+      <div>
+        <h2>Member Registered Successfully!</h2>
+        <p>{{ created_member_name|default:"The member" }} has been added to your organization.</p>
+      </div>
+
+      <div class="success-actions">
+        {% if created_member_id %}
+          <a class="success-action" href="{% url 'person_detail' created_member_id %}">
+            <i class="fa-solid fa-user"></i>
+            <strong>View Member</strong>
+            <span>See member profile and details</span>
+          </a>
+        {% endif %}
+        <a class="success-action" href="{% url 'register_user' %}">
+          <i class="fa-solid fa-user-plus"></i>
+          <strong>Register Another</strong>
+          <span>Add another member to your organization</span>
+        </a>
+        <a class="success-action" href="{% url 'person_list' %}">
+          <i class="fa-solid fa-users"></i>
+          <strong>Go to Members</strong>
+          <span>View all members in your organization</span>
+        </a>
+        <a class="success-action" href="{% url 'attendance_sessions' %}">
+          <i class="fa-solid fa-calendar-check"></i>
+          <strong>Start Attendance</strong>
+          <span>Use members in events and sessions</span>
+        </a>
+      </div>
+
+      <div class="success-footer">
+        {% if created_member_id %}
+          <a class="btnx" href="{% url 'person_detail' created_member_id %}">View Member</a>
+        {% endif %}
+        <a class="btnx primary" href="{% url 'register_user' %}">Register Another Member</a>
+      </div>
+    </section>
+  {% else %}
+    <section class="wizard-panel">
+      <div class="wizard-top">
+        <div class="wizard-title">
+          <h2>Single Member Registration</h2>
+          <p>Add one member at a time with a guided registration flow.</p>
+        </div>
+
+        <div class="step-track">
+          <div class="step-item active" data-hero-step="1">
+            <div class="step-dot">1</div>
+            <div class="step-text">
+              <strong>Details</strong>
+              <span>Basic information</span>
+            </div>
+          </div>
+          <div class="step-item" data-hero-step="2">
+            <div class="step-dot">2</div>
+            <div class="step-text">
+              <strong>Photo</strong>
+              <span>Capture or upload</span>
+            </div>
+          </div>
+          <div class="step-item" data-hero-step="3">
+            <div class="step-dot">3</div>
+            <div class="step-text">
+              <strong>Review</strong>
+              <span>Confirm details</span>
+            </div>
+          </div>
+          <div class="step-item" data-hero-step="4">
+            <div class="step-dot">4</div>
+            <div class="step-text">
+              <strong>Success</strong>
+              <span>Member created</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-body">
+        {% if error %}
+          <div class="alertbox danger" style="display:block;">{{ error }}</div>
+        {% endif %}
+
+        <form id="registrationForm" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="registration_mode" value="{{ registration_mode|default:'single' }}">
+          <input type="hidden" id="name" name="name" value="{{ name }}">
+
+          <div class="wizard-step active" data-step-panel="1">
+            <div class="step-layout">
+              <div class="card-block">
+                <div class="card-head">
+                  <h3>Member Details</h3>
+                  <p>Enter the basic information of the member.</p>
+                </div>
+                <div class="card-body">
+                  {% if registration_mode == 'external' %}
+                    <div class="lookup-card">
+                      <div>
+                        <h4>External member lookup</h4>
+                        <p>Search the connected directory here, then continue the same registration steps with the selected member details.</p>
+                      </div>
+
+                      {% if integration_enabled %}
+                        <div class="lookup-grid">
+                          <div class="field" style="margin:0;">
+                            <label for="searched_last_name">Search by last name</label>
+                            <input id="searched_last_name" name="searched_last_name" value="{{ searched_last_name }}" placeholder="e.g. Johnson" form="externalLookupForm">
+                          </div>
+                          <button type="submit" class="btnx" form="externalLookupForm">
+                            <i class="fa-solid fa-magnifying-glass"></i> Search
+                          </button>
+                        </div>
+
+                        {% if lookup_error %}
+                          <div class="alertbox danger" style="display:block;margin:0;">{{ lookup_error }}</div>
+                        {% endif %}
+
+                        <div class="lookup-results">
+                          {% if user_data %}
+                            {% for user in user_data %}
+                              <div class="lookup-result">
+                                <div>
+                                  <strong>{{ user.text }}</strong>
+                                  <span>External ID: {{ user.objid }}</span>
+                                </div>
+                                <a class="btnx" href="{% url 'register_user' %}?mode=external&portal_id={{ user.objid }}&name={{ user.text|urlencode }}">
+                                  <i class="fa-solid fa-arrow-down"></i> Use this member
+                                </a>
+                              </div>
+                            {% endfor %}
+                          {% elif search_performed %}
+                            <div class="lookup-empty">No match was found. You can still continue by filling the member details manually below.</div>
+                          {% else %}
+                            <div class="lookup-empty">Search results will appear here. Once you select one, the rest of the registration continues below.</div>
+                          {% endif %}
+                        </div>
+                      {% else %}
+                        <div class="lookup-empty">No external member integration is connected for this workspace yet. You can continue with direct member registration instead.</div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+
+                  <div class="fields-grid">
+                    <div class="field">
+                      <label for="first_name">First Name <span class="req">*</span></label>
+                      <input id="first_name" name="first_name" value="{{ first_name }}" placeholder="e.g. John" required>
+                    </div>
+
+                    <div class="field">
+                      <label for="last_name">Last Name <span class="req">*</span></label>
+                      <input id="last_name" name="last_name" value="{{ last_name }}" placeholder="e.g. Johnson" required>
+                    </div>
+
+                    <div class="field">
+                      <label for="phone">Phone Number</label>
+                      <input id="phone" name="phone" value="{{ phone }}" placeholder="+1 (555) 000-0000">
+                    </div>
+
+                    <div class="field">
+                      <label for="email">Email Address</label>
+                      <input id="email" name="email" value="{{ email }}" placeholder="e.g. john@example.com">
+                    </div>
+
+                    {% if integration_enabled %}
+                      <div class="field">
+                        <label for="portal_id">External ID</label>
+                        <input id="portal_id" name="portal_id" value="{{ portal_id }}" placeholder="Optional existing system ID">
+                      </div>
+                    {% else %}
+                      <input type="hidden" id="portal_id" name="portal_id" value="">
+                    {% endif %}
+
+                    {% if request.session.attendance_desktop_plan.allow_nfc %}
+                      <div class="field">
+                        <label for="nfc_uid">NFC Tag UID</label>
+                        <input id="nfc_uid" name="nfc_uid" value="{{ nfc_uid }}" placeholder="Optional card/tag UID">
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="helper-strip">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>This information is used only within your organization and kept secure.</span>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="side-card">
+                <div class="progress-box">
+                  <h4>Progress</h4>
+                  <span id="progressText">Step 1 of 4</span>
+                  <div class="progress-bar"><div id="progressFill" style="width:25%;"></div></div>
+                </div>
+
+                <div>
+                  <h4>{% if registration_mode == 'external' %}How this flow works{% else %}Why register members?{% endif %}</h4>
+                </div>
+                <div class="why-list">
+                  <div class="why-item">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <div><strong>{% if registration_mode == 'external' %}Search first{% else %}Track Attendance{% endif %}</strong><span>{% if registration_mode == 'external' %}Pick a member from the connected source without leaving this page.{% else %}Monitor attendance in events and sessions.{% endif %}</span></div>
+                  </div>
+                  <div class="why-item">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <div><strong>{% if registration_mode == 'external' %}Review details{% else %}Generate Reports{% endif %}</strong><span>{% if registration_mode == 'external' %}Adjust phone, email, or IDs before moving to photo capture.{% else %}Get accurate insights and custom reports.{% endif %}</span></div>
+                  </div>
+                  <div class="why-item">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <div><strong>{% if registration_mode == 'external' %}Capture photo{% else %}Enable Check-in Methods{% endif %}</strong><span>{% if registration_mode == 'external' %}Photo capture and review still happen in the same guided wizard.{% else %}Allow members to use QR, NFC, Face ID and more.{% endif %}</span></div>
+                  </div>
+                  <div class="why-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <div><strong>{% if registration_mode == 'external' %}Save once{% else %}Secure Access{% endif %}</strong><span>{% if registration_mode == 'external' %}The member is created in KairosTrack after the same review and photo steps.{% else %}Control who can attend and access your events.{% endif %}</span></div>
+                  </div>
+                </div>
+                <div class="art-box"><i class="fa-solid fa-user-check"></i></div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="wizard-step" data-step-panel="2">
+            <div class="step-layout">
+              <div class="card-block">
+                <div class="card-head">
+                  <h3>Capture Member Photo</h3>
+                  <p>Capture a clear face photo or upload from device.</p>
+                </div>
+                <div class="card-body">
+                  <div id="cameraAlert" class="alertbox warning"></div>
+
+                  <div class="seg">
+                    <button type="button" id="modeLocalBtn" class="active">
+                      <i class="fa-solid fa-laptop"></i> This Device
+                    </button>
+                    <button type="button" id="modeConfigBtn">
+                      <i class="fa-solid fa-network-wired"></i> Configured Camera
+                    </button>
+                  </div>
+
+                  <div class="camera-selects">
+                    <div class="field">
+                      <label>Device Camera</label>
+                      <select id="localCameraSelect"></select>
+                    </div>
+                    <div class="field" id="configSelectWrap" style="display:none;">
+                      <label>Configured Camera</label>
+                      <select id="configCameraSelect">
+                        {% for c in camera_configs %}
+                          <option value="{{ c.id }}">{{ c.name }} ({{ c.camera_source }})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="camera-grid">
+                    <div>
+                      <div class="stage">
+                        <video id="video" autoplay playsinline muted></video>
+                        <img id="rtspPreview" alt="Configured camera preview" style="display:none;">
+
+                        <div class="face-guide" id="faceGuide">
+                          <div class="mask"></div>
+                        </div>
+
+                        <div class="flash" id="flash"></div>
+                        <div class="success-pop" id="successPop">
+                          <i class="fa-solid fa-circle-check"></i>
+                          <div style="font-weight:800;">Captured</div>
+                        </div>
+
+                        <div class="stage-overlay">
+                          <div class="stage-badge">
+                            <span class="dot" id="stageDot"></span>
+                            <span id="stageText">Ready. Choose a mode and press Start.</span>
+                          </div>
+
+                          <div class="stage-actions">
+                            <button type="button" class="btnx dark" id="startBtn">
+                              <i class="fa-solid fa-video"></i> Start Camera
+                            </button>
+                            <button type="button" class="btnx primary disabled" id="captureBtn">
+                              <i class="fa-solid fa-camera"></i> Capture Photo
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="upload-box">
+                        <div style="text-align:center;color:#98a2b3;font-size:12px;font-weight:700;">OR</div>
+                        <label class="upload-label">
+                          <i class="fa-solid fa-upload"></i> Upload Photo
+                          <input type="file" id="uploadPhotoInput" accept="image/png,image/jpeg,image/webp">
+                        </label>
+                        <small>JPG, PNG or WEBP. Max size 5MB.</small>
+                      </div>
+                    </div>
+
+                    <aside class="side-card" style="padding:0;border:none;box-shadow:none;background:transparent;">
+                      <div class="side-card">
+                        <h4>Photo Tips</h4>
+                        <div class="why-list" style="gap:10px;">
+                          <div><span style="color:#667085;font-size:12px;line-height:1.5;">Use good lighting.</span></div>
+                          <div><span style="color:#667085;font-size:12px;line-height:1.5;">Face should be clearly visible.</span></div>
+                          <div><span style="color:#667085;font-size:12px;line-height:1.5;">Avoid group photo.</span></div>
+                          <div><span style="color:#667085;font-size:12px;line-height:1.5;">Remove hats and sunglasses.</span></div>
+                          <div><span style="color:#667085;font-size:12px;line-height:1.5;">Look at the camera.</span></div>
+                        </div>
+                      </div>
+
+                      <div class="side-card">
+                        <h4>Looks good!</h4>
+                        <p>Photo quality is great.</p>
+                        <a class="btnx" id="skipPhotoBtn">Skip for Now</a>
+                      </div>
+                    </aside>
+                  </div>
+
+                  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+                  <input type="hidden" id="image_data" name="image_data">
+
+                  <div class="field full" style="margin-top:14px;">
+                    <label>Photo Preview</label>
+                    <div class="preview" id="previewBox">
+                      <div class="ph" id="previewHint">
+                        No photo captured yet.<br>Press <b>Start Camera</b>, align the face, then capture.
+                      </div>
+                      <img id="imagePreview" src="" alt="Captured Image Preview">
+                    </div>
+
+                    <div class="preview-tools">
+                      <button type="button" class="pillbtn danger" id="retakeBtn" disabled>
+                        <i class="fa-solid fa-rotate-left"></i> Retake
+                      </button>
+                      <button type="button" class="pillbtn" id="privacyBtn" disabled>
+                        <i class="fa-solid fa-eye-slash"></i> Privacy: Off
+                      </button>
+                      <button type="button" class="pillbtn ok" id="resumeAfterRetakeBtn" style="display:none;">
+                        <i class="fa-solid fa-video"></i> Restart Camera
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wizard-step" data-step-panel="3">
+            <div class="review-grid">
+              <div class="review-card">
+                <h3>Review Member Details</h3>
+                <div class="review-list">
+                  <div class="review-item"><span>Full Name</span><span id="reviewName">-</span></div>
+                  <div class="review-item"><span>Email Address</span><span id="reviewEmail">-</span></div>
+                  <div class="review-item"><span>Phone Number</span><span id="reviewPhone">-</span></div>
+                  {% if integration_enabled %}
+                    <div class="review-item"><span>External ID</span><span id="reviewPortalId">-</span></div>
+                  {% endif %}
+                  {% if request.session.attendance_desktop_plan.allow_nfc %}
+                    <div class="review-item"><span>NFC Tag UID</span><span id="reviewNfcUid">-</span></div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="review-card">
+                <h3>Photo Preview</h3>
+                <div class="review-photo">
+                  <img id="reviewPhoto" src="" alt="Member photo preview">
+                </div>
+              </div>
+            </div>
+
+            <div class="review-alert">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span>Please confirm that all information is correct. You can go back to edit if needed.</span>
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <div class="wizard-actions">
+              <button type="button" class="btnx" id="backBtn" hidden>
+                <i class="fa-solid fa-arrow-left"></i> Back
+              </button>
+            </div>
+            <div class="wizard-actions">
+              <button type="button" class="btnx primary" id="nextBtn">
+                Continue to Photo <i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button type="submit" class="btnx primary" id="registerBtn" hidden>
+                <i class="fa-solid fa-user-check"></i> Create Member
+              </button>
+            </div>
+          </div>
+        </form>
+        <form id="externalLookupForm" method="POST" style="display:none;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="external_search">
+          <input type="hidden" name="registration_mode" value="external">
+          <input type="hidden" id="lookupFirstName" name="first_name" value="{{ first_name }}">
+          <input type="hidden" id="lookupLastName" name="last_name" value="{{ last_name }}">
+          <input type="hidden" id="lookupPortalId" name="portal_id" value="{{ portal_id }}">
+          <input type="hidden" id="lookupEmail" name="email" value="{{ email }}">
+          <input type="hidden" id="lookupPhone" name="phone" value="{{ phone }}">
+          <input type="hidden" id="lookupNfcUid" name="nfc_uid" value="{{ nfc_uid }}">
+        </form>
+      </div>
+    </section>
+  {% endif %}
+</div>
 
 <script>
-  const sourceMode = document.getElementById('sourceMode');
-  const modeLocalBtn = document.getElementById('modeLocalBtn');
-  const modeConfigBtn = document.getElementById('modeConfigBtn');
+  const successMode = {{ success_mode|yesno:"true,false" }};
 
-  const configSelectWrap = document.getElementById('configSelectWrap');
-  const configCameraSelect = document.getElementById('configCameraSelect');
+  if (!successMode) {
+    const panels = Array.from(document.querySelectorAll('[data-step-panel]'));
+    const heroSteps = Array.from(document.querySelectorAll('[data-hero-step]'));
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const skipPhotoBtn = document.getElementById('skipPhotoBtn');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const externalLookupForm = document.getElementById('externalLookupForm');
+    let currentStep = 1;
 
-  const localCameraSelect = document.getElementById('localCameraSelect');
-
-  const video = document.getElementById('video');
-  const rtspPreview = document.getElementById('rtspPreview');
-
-  const canvas = document.getElementById('canvas');
-  const imageDataInput = document.getElementById('image_data');
-  const imagePreview = document.getElementById('imagePreview');
-  const previewHint = document.getElementById('previewHint');
-  const previewBox = document.getElementById('previewBox');
-
-  const cameraAlert = document.getElementById('cameraAlert');
-  const startBtn = document.getElementById('startBtn');
-  const captureBtn = document.getElementById('captureBtn');
-  const registerBtn = document.getElementById('registerBtn');
-
-  const stageText = document.getElementById('stageText');
-  const stageDot = document.getElementById('stageDot');
-  const faceGuide = document.getElementById('faceGuide');
-
-  const flash = document.getElementById('flash');
-  const successPop = document.getElementById('successPop');
-
-  const retakeBtn = document.getElementById('retakeBtn');
-  const privacyBtn = document.getElementById('privacyBtn');
-  const resumeAfterRetakeBtn = document.getElementById('resumeAfterRetakeBtn');
-
-  const registrationForm = document.getElementById('registrationForm');
-
-  let stream = null;
-  let privacyOn = false;
-
-  function setStage(state, msg){
-    stageText.textContent = msg;
-    stageDot.classList.remove('live','err');
-    if(state === 'live') stageDot.classList.add('live');
-    if(state === 'err') stageDot.classList.add('err');
-  }
-
-  function showGuide(show){
-    faceGuide.classList.toggle('show', !!show);
-  }
-
-  function setAlert(msg, type='warning') {
-    cameraAlert.textContent = msg;
-    cameraAlert.className = `alertbox ${type}`;
-    cameraAlert.style.display = 'block';
-  }
-
-  function clearAlert() {
-    cameraAlert.style.display = 'none';
-    cameraAlert.textContent = '';
-  }
-
-  function setCaptureEnabled(enabled){
-    captureBtn.classList.toggle('disabled', !enabled);
-  }
-
-  function setRegisterEnabled(enabled){
-    registerBtn.classList.toggle('disabled', !enabled);
-  }
-
-  function stopLocalCamera() {
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
+    function syncCombinedName() {
+      const first = document.getElementById('first_name').value.trim();
+      const last = document.getElementById('last_name').value.trim();
+      document.getElementById('name').value = `${first} ${last}`.trim();
     }
-  }
 
-  async function loadLocalCameras() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams = devices.filter(d => d.kind === 'videoinput');
+    function updateHeroSteps() {
+      heroSteps.forEach((step) => {
+        const idx = Number(step.dataset.heroStep);
+        step.classList.toggle('active', idx === currentStep);
+        step.classList.toggle('done', idx < currentStep);
+      });
+    }
 
-    localCameraSelect.innerHTML = '';
-    cams.forEach((cam, idx) => {
-      const opt = document.createElement('option');
-      opt.value = cam.deviceId;
-      opt.textContent = cam.label || `Camera ${idx + 1}`;
-      localCameraSelect.appendChild(opt);
+    function updatePanels() {
+      panels.forEach((panel) => {
+        panel.classList.toggle('active', Number(panel.dataset.stepPanel) === currentStep);
+      });
+      backBtn.hidden = currentStep === 1;
+      nextBtn.hidden = currentStep === 3;
+      registerBtn.hidden = currentStep !== 3;
+      progressText.textContent = `Step ${currentStep} of 4`;
+      progressFill.style.width = `${currentStep * 25}%`;
+      if (currentStep === 1) {
+        nextBtn.innerHTML = 'Continue to Photo <i class="fa-solid fa-arrow-right"></i>';
+      } else if (currentStep === 2) {
+        nextBtn.innerHTML = 'Continue to Review <i class="fa-solid fa-arrow-right"></i>';
+      }
+      if (currentStep === 3) {
+        syncReview();
+      }
+      updateHeroSteps();
+    }
+
+    function validateStep(step) {
+      if (step === 1) {
+        const first = document.getElementById('first_name');
+        const last = document.getElementById('last_name');
+        if (!first.value.trim()) {
+          first.focus();
+          return false;
+        }
+        if (!last.value.trim()) {
+          last.focus();
+          return false;
+        }
+        syncCombinedName();
+      }
+      return true;
+    }
+
+    backBtn.addEventListener('click', () => {
+      currentStep = Math.max(1, currentStep - 1);
+      updatePanels();
     });
-  }
 
-  function runCaptureFX(){
-    flash.classList.remove('run');
-    successPop.classList.remove('show');
-    void flash.offsetWidth;
-    flash.classList.add('run');
-    successPop.classList.add('show');
-    setTimeout(()=> successPop.classList.remove('show'), 900);
-  }
+    nextBtn.addEventListener('click', () => {
+      if (!validateStep(currentStep)) return;
+      currentStep = Math.min(3, currentStep + 1);
+      updatePanels();
+    });
 
-  function enablePreviewTools(enable){
-    retakeBtn.disabled = !enable;
-    privacyBtn.disabled = !enable;
-    resumeAfterRetakeBtn.style.display = enable ? 'none' : 'none';
-  }
+    skipPhotoBtn.addEventListener('click', () => {
+      currentStep = 3;
+      updatePanels();
+    });
 
-  function setCapturedPreview(dataURL){
-    imageDataInput.value = dataURL;
-    imagePreview.src = dataURL;
-    imagePreview.style.display = 'block';
-    previewHint.style.display = 'none';
+    function setReviewText(id, value, fallback='Not provided') {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value && value.trim() ? value.trim() : fallback;
+    }
 
-    enablePreviewTools(true);
-    setRegisterEnabled(true);
-  }
+    function syncReview() {
+      syncCombinedName();
+      setReviewText('reviewName', document.getElementById('name').value, 'Not provided');
+      setReviewText('reviewEmail', document.getElementById('email').value, 'Not provided');
+      setReviewText('reviewPhone', document.getElementById('phone').value, 'Not provided');
+      const portalInput = document.getElementById('portal_id');
+      if (portalInput) setReviewText('reviewPortalId', portalInput.value, 'Not provided');
+      const nfcInput = document.getElementById('nfc_uid');
+      if (nfcInput) setReviewText('reviewNfcUid', nfcInput.value, 'Not provided');
 
-  async function startLocalCamera(deviceId = null) {
-    clearAlert();
-    stopLocalCamera();
-
-    try {
-      const constraints = {
-        video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
-        audio: false
-      };
-
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = stream;
-      await video.play();
-
-      await loadLocalCameras();
-
-      rtspPreview.style.display = 'none';
-      rtspPreview.src = '';
-      video.style.display = 'block';
-
-      setCaptureEnabled(true);
-      showGuide(true);
-      setStage('live', 'Camera live. Align face and capture.');
-      setAlert("Camera started. Keep face centered and well lit.", "info");
-
-    } catch (err) {
-      console.error(err);
-      setCaptureEnabled(false);
-      showGuide(false);
-      setStage('err', 'Camera access blocked.');
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        setAlert("Camera needs HTTPS or localhost access.", "warning");
-      } else {
-        setAlert("Unable to access camera. Allow permission and try again.", "warning");
+      const reviewPhoto = document.getElementById('reviewPhoto');
+      const imagePreview = document.getElementById('imagePreview');
+      if (reviewPhoto && imagePreview && imagePreview.src) {
+        reviewPhoto.src = imagePreview.src;
       }
     }
-  }
 
-  function startConfiguredCamera(camId) {
-    clearAlert();
-    stopLocalCamera();
+    externalLookupForm?.addEventListener('submit', () => {
+      const bind = (sourceId, targetId) => {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        if (source && target) target.value = source.value;
+      };
+      bind('first_name', 'lookupFirstName');
+      bind('last_name', 'lookupLastName');
+      bind('portal_id', 'lookupPortalId');
+      bind('email', 'lookupEmail');
+      bind('phone', 'lookupPhone');
+      bind('nfc_uid', 'lookupNfcUid');
+    });
 
-    video.style.display = 'none';
-    rtspPreview.style.display = 'block';
-    rtspPreview.src = `/camera_preview/${camId}/?_ts=${Date.now()}`;
+    const modeLocalBtn = document.getElementById('modeLocalBtn');
+    const modeConfigBtn = document.getElementById('modeConfigBtn');
+    const configSelectWrap = document.getElementById('configSelectWrap');
+    const configCameraSelect = document.getElementById('configCameraSelect');
+    const localCameraSelect = document.getElementById('localCameraSelect');
+    const video = document.getElementById('video');
+    const rtspPreview = document.getElementById('rtspPreview');
+    const canvas = document.getElementById('canvas');
+    const imageDataInput = document.getElementById('image_data');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewHint = document.getElementById('previewHint');
+    const previewBox = document.getElementById('previewBox');
+    const cameraAlert = document.getElementById('cameraAlert');
+    const startBtn = document.getElementById('startBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const stageText = document.getElementById('stageText');
+    const stageDot = document.getElementById('stageDot');
+    const faceGuide = document.getElementById('faceGuide');
+    const flash = document.getElementById('flash');
+    const successPop = document.getElementById('successPop');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const privacyBtn = document.getElementById('privacyBtn');
+    const resumeAfterRetakeBtn = document.getElementById('resumeAfterRetakeBtn');
+    const uploadPhotoInput = document.getElementById('uploadPhotoInput');
+    const registrationForm = document.getElementById('registrationForm');
 
-    setCaptureEnabled(true);
-    showGuide(true);
-    setStage('live', 'Configured camera loading... align face and capture.');
-    setAlert("Configured camera started. Wait for preview, then capture.", "info");
+    let stream = null;
+    let privacyOn = false;
+    let sourceMode = 'local';
 
-    rtspPreview.onerror = () => {
-      setStage('err', 'Configured stream failed.');
-      setAlert("Configured camera preview failed to load.", "danger");
+    function setStage(state, msg) {
+      stageText.textContent = msg;
+      stageDot.classList.remove('live', 'err');
+      if (state === 'live') stageDot.classList.add('live');
+      if (state === 'err') stageDot.classList.add('err');
+    }
+
+    function showGuide(show) {
+      faceGuide.classList.toggle('show', !!show);
+    }
+
+    function setAlert(msg, type='warning') {
+      cameraAlert.textContent = msg;
+      cameraAlert.className = `alertbox ${type}`;
+      cameraAlert.style.display = 'block';
+    }
+
+    function clearAlert() {
+      cameraAlert.style.display = 'none';
+      cameraAlert.textContent = '';
+    }
+
+    function setCaptureEnabled(enabled) {
+      captureBtn.classList.toggle('disabled', !enabled);
+    }
+
+    function stopLocalCamera() {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        stream = null;
+      }
+    }
+
+    async function loadLocalCameras() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter((d) => d.kind === 'videoinput');
+      localCameraSelect.innerHTML = '';
+      cams.forEach((cam, idx) => {
+        const opt = document.createElement('option');
+        opt.value = cam.deviceId;
+        opt.textContent = cam.label || `Camera ${idx + 1}`;
+        localCameraSelect.appendChild(opt);
+      });
+    }
+
+    function runCaptureFX() {
+      flash.classList.remove('run');
+      successPop.classList.remove('show');
+      void flash.offsetWidth;
+      flash.classList.add('run');
+      successPop.classList.add('show');
+      setTimeout(() => successPop.classList.remove('show'), 900);
+    }
+
+    function enablePreviewTools(enable) {
+      retakeBtn.disabled = !enable;
+      privacyBtn.disabled = !enable;
+    }
+
+    function setCapturedPreview(dataURL) {
+      imageDataInput.value = dataURL;
+      imagePreview.src = dataURL;
+      imagePreview.style.display = 'block';
+      previewHint.style.display = 'none';
+      enablePreviewTools(true);
+    }
+
+    async function startLocalCamera(deviceId = null) {
+      clearAlert();
+      stopLocalCamera();
+      try {
+        const constraints = {
+          video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' },
+          audio: false
+        };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        await video.play();
+        await loadLocalCameras();
+        rtspPreview.style.display = 'none';
+        rtspPreview.src = '';
+        video.style.display = 'block';
+        setCaptureEnabled(true);
+        showGuide(true);
+        setStage('live', 'Camera live. Align face and capture.');
+        setAlert('Camera started. Keep face centered and well lit.', 'info');
+      } catch (err) {
+        console.error(err);
+        setCaptureEnabled(false);
+        showGuide(false);
+        setStage('err', 'Camera access blocked.');
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+          setAlert('Camera needs HTTPS or localhost access.', 'warning');
+        } else {
+          setAlert('Unable to access camera. Allow permission and try again.', 'warning');
+        }
+      }
+    }
+
+    function startConfiguredCamera(camId) {
+      clearAlert();
+      stopLocalCamera();
+      video.style.display = 'none';
+      rtspPreview.style.display = 'block';
+      rtspPreview.src = `/camera_preview/${camId}/?_ts=${Date.now()}`;
+      setCaptureEnabled(true);
+      showGuide(true);
+      setStage('live', 'Configured camera loading... align face and capture.');
+      setAlert('Configured camera started. Wait for preview, then capture.', 'info');
+      rtspPreview.onerror = () => {
+        setStage('err', 'Configured stream failed.');
+        setAlert('Configured camera preview failed to load.', 'danger');
+        setCaptureEnabled(false);
+        showGuide(false);
+      };
+    }
+
+    function setMode(mode) {
+      sourceMode = mode;
+      modeLocalBtn.classList.toggle('active', mode === 'local');
+      modeConfigBtn.classList.toggle('active', mode === 'config');
+      configSelectWrap.style.display = mode === 'config' ? 'block' : 'none';
       setCaptureEnabled(false);
       showGuide(false);
-    };
-  }
+      if (mode === 'local') {
+        setStage('ready', 'Ready. Press Start to enable local camera.');
+        setAlert('Local mode uses this device camera.', 'info');
+        rtspPreview.src = '';
+        rtspPreview.style.display = 'none';
+        video.style.display = 'block';
+      } else {
+        setStage('ready', 'Ready. Select a saved camera and press Start.');
+        setAlert('Configured mode uses a saved server camera.', 'info');
+        rtspPreview.style.display = 'block';
+        video.style.display = 'none';
+      }
+    }
 
-  function setMode(mode) {
-    imageDataInput.value = '';
-    imagePreview.style.display = 'none';
-    previewHint.style.display = 'block';
-    enablePreviewTools(false);
-    setRegisterEnabled(false);
+    function captureFromLocal() {
+      if (!stream) {
+        setAlert('Start the local camera first.', 'warning');
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.filter = 'brightness(1.12) contrast(1.04)';
+      ctx.drawImage(video, 0, 0, w, h);
+      ctx.filter = 'none';
+      const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+      setCapturedPreview(dataURL);
+      runCaptureFX();
+      setAlert('Captured successfully. Review and continue.', 'success');
+      setStage('live', 'Captured. Review the image and continue.');
+      showGuide(false);
+      stopLocalCamera();
+      resumeAfterRetakeBtn.style.display = 'inline-flex';
+      resumeAfterRetakeBtn.textContent = 'Restart Camera';
+    }
 
-    privacyOn = false;
-    previewBox.classList.remove('blur');
-    privacyBtn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Privacy: Off`;
+    function captureFromConfigured() {
+      if (!rtspPreview.src) {
+        setAlert('Start the configured camera first.', 'warning');
+        return;
+      }
+      const w = rtspPreview.naturalWidth || 960;
+      const h = rtspPreview.naturalHeight || 540;
+      if (!w || !h) {
+        setAlert('Preview not ready yet. Try again in a moment.', 'warning');
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      canvas.width = w;
+      canvas.height = h;
+      try {
+        ctx.filter = 'brightness(1.12) contrast(1.04)';
+        ctx.drawImage(rtspPreview, 0, 0, w, h);
+        ctx.filter = 'none';
+      } catch (e) {
+        console.error(e);
+        setAlert('Unable to capture from configured camera.', 'danger');
+        return;
+      }
+      const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+      setCapturedPreview(dataURL);
+      runCaptureFX();
+      setAlert('Captured successfully. Review and continue.', 'success');
+      setStage('live', 'Captured. Review the image and continue.');
+      showGuide(false);
+      resumeAfterRetakeBtn.style.display = 'none';
+    }
 
-    modeLocalBtn.classList.toggle('active', mode === 'local');
-    modeConfigBtn.classList.toggle('active', mode === 'config');
-    sourceMode.value = mode;
+    function retake() {
+      imageDataInput.value = '';
+      imagePreview.style.display = 'none';
+      previewHint.style.display = 'block';
+      enablePreviewTools(false);
+      setAlert('Retake mode. Press Start and capture again.', 'info');
+      setStage('ready', 'Retake mode. Press Start to continue.');
+      setCaptureEnabled(false);
+      showGuide(false);
+      if (sourceMode === 'config') rtspPreview.src = '';
+      resumeAfterRetakeBtn.style.display = 'none';
+    }
 
-    setCaptureEnabled(false);
-    showGuide(false);
+    function togglePrivacy() {
+      privacyOn = !privacyOn;
+      previewBox.classList.toggle('blur', privacyOn);
+      privacyBtn.innerHTML = privacyOn
+        ? '<i class="fa-solid fa-eye"></i> Privacy: On'
+        : '<i class="fa-solid fa-eye-slash"></i> Privacy: Off';
+    }
 
-    if (mode === 'local') {
-      configSelectWrap.style.display = 'none';
-      setStage('ready', 'Ready. Press Start to enable local camera.');
-      setAlert("Local mode uses this device camera.", "info");
+    function loadUploadedPhoto(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCapturedPreview(event.target.result);
+        setAlert('Uploaded successfully. Review and continue.', 'success');
+        setStage('live', 'Photo uploaded. Review the image and continue.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    modeLocalBtn.addEventListener('click', () => setMode('local'));
+    modeConfigBtn.addEventListener('click', () => setMode('config'));
+
+    startBtn.addEventListener('click', async () => {
+      if (sourceMode === 'local') {
+        const selected = localCameraSelect.value || null;
+        await startLocalCamera(selected);
+      } else {
+        const camId = configCameraSelect.value;
+        startConfiguredCamera(camId);
+      }
+    });
+
+    localCameraSelect.addEventListener('change', async () => {
+      if (sourceMode !== 'local' || !localCameraSelect.value) return;
+      await startLocalCamera(localCameraSelect.value);
+    });
+
+    configCameraSelect?.addEventListener('change', () => {
+      if (sourceMode !== 'config') return;
       rtspPreview.src = '';
-      rtspPreview.style.display = 'none';
-      video.style.display = 'block';
-    } else {
-      configSelectWrap.style.display = 'block';
-      setStage('ready', 'Ready. Select a saved camera and press Start.');
-      setAlert("Configured mode uses a saved server camera.", "info");
-      rtspPreview.style.display = 'block';
-      video.style.display = 'none';
-    }
+      setCaptureEnabled(false);
+      showGuide(false);
+      setStage('ready', 'Camera changed. Press Start to load preview.');
+      setAlert('Camera changed. Click Start to load preview.', 'info');
+    });
+
+    captureBtn.addEventListener('click', () => {
+      if (captureBtn.classList.contains('disabled')) return;
+      if (sourceMode === 'local') captureFromLocal();
+      else captureFromConfigured();
+    });
+
+    retakeBtn.addEventListener('click', retake);
+    privacyBtn.addEventListener('click', togglePrivacy);
+    uploadPhotoInput.addEventListener('change', (event) => loadUploadedPhoto(event.target.files[0]));
+
+    resumeAfterRetakeBtn.addEventListener('click', async () => {
+      if (sourceMode === 'local') {
+        const selected = localCameraSelect.value || null;
+        await startLocalCamera(selected);
+      }
+      resumeAfterRetakeBtn.style.display = 'none';
+    });
+
+    registrationForm.addEventListener('submit', (event) => {
+      syncCombinedName();
+      if (!imageDataInput.value) {
+        event.preventDefault();
+        setAlert('Please capture or upload a photo before creating the member.', 'warning');
+        currentStep = 2;
+        updatePanels();
+      }
+    });
+
+    (async function init() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setAlert('Your browser does not support camera access.', 'danger');
+        setStage('err', 'Browser not supported.');
+        return;
+      }
+      try { await loadLocalCameras(); } catch {}
+      setMode('local');
+      setStage('ready', 'Ready. Choose a mode and press Start.');
+      updatePanels();
+      document.getElementById('first_name').addEventListener('input', syncCombinedName);
+      document.getElementById('last_name').addEventListener('input', syncCombinedName);
+      syncCombinedName();
+    })();
   }
-
-  function captureFromLocal() {
-    if (!stream) {
-      setAlert("Start the local camera first.", "warning");
-      return;
-    }
-
-    const ctx = canvas.getContext('2d');
-    const w = video.videoWidth || 640;
-    const h = video.videoHeight || 480;
-
-    canvas.width = w;
-    canvas.height = h;
-
-    ctx.filter = "brightness(1.12) contrast(1.04)";
-    ctx.drawImage(video, 0, 0, w, h);
-    ctx.filter = "none";
-
-    const dataURL = canvas.toDataURL('image/jpeg', 0.92);
-    setCapturedPreview(dataURL);
-
-    runCaptureFX();
-    setAlert("Captured successfully. Review and register.", "success");
-    setStage('live', 'Captured. Review the image and register.');
-
-    showGuide(false);
-    stopLocalCamera();
-    resumeAfterRetakeBtn.style.display = 'inline-flex';
-    resumeAfterRetakeBtn.textContent = 'Restart Camera';
-  }
-
-  function captureFromConfigured() {
-    if (!rtspPreview.src) {
-      setAlert("Start the configured camera first.", "warning");
-      return;
-    }
-
-    const w = rtspPreview.naturalWidth || 960;
-    const h = rtspPreview.naturalHeight || 540;
-
-    if (!w || !h) {
-      setAlert("Preview not ready yet. Try again in a moment.", "warning");
-      return;
-    }
-
-    const ctx = canvas.getContext('2d');
-    canvas.width = w;
-    canvas.height = h;
-
-    try {
-      ctx.filter = "brightness(1.12) contrast(1.04)";
-      ctx.drawImage(rtspPreview, 0, 0, w, h);
-      ctx.filter = "none";
-    } catch (e) {
-      console.error(e);
-      setAlert("Unable to capture from configured camera.", "danger");
-      return;
-    }
-
-    const dataURL = canvas.toDataURL('image/jpeg', 0.92);
-    setCapturedPreview(dataURL);
-
-    runCaptureFX();
-    setAlert("Captured successfully. Review and register.", "success");
-    setStage('live', 'Captured. Review the image and register.');
-    showGuide(false);
-
-    resumeAfterRetakeBtn.style.display = 'none';
-  }
-
-  function retake(){
-    imageDataInput.value = '';
-    imagePreview.style.display = 'none';
-    previewHint.style.display = 'block';
-    enablePreviewTools(false);
-    setRegisterEnabled(false);
-
-    setAlert("Retake mode. Press Start and capture again.", "info");
-    setStage('ready', 'Retake mode. Press Start to continue.');
-    setCaptureEnabled(false);
-    showGuide(false);
-
-    if (sourceMode.value === 'config') {
-      rtspPreview.src = '';
-    }
-    resumeAfterRetakeBtn.style.display = 'none';
-  }
-
-  function togglePrivacy(){
-    privacyOn = !privacyOn;
-    previewBox.classList.toggle('blur', privacyOn);
-    privacyBtn.innerHTML = privacyOn
-      ? `<i class="fa-solid fa-eye"></i> Privacy: On`
-      : `<i class="fa-solid fa-eye-slash"></i> Privacy: Off`;
-  }
-
-  modeLocalBtn.addEventListener('click', () => setMode('local'));
-  modeConfigBtn.addEventListener('click', () => setMode('config'));
-
-  startBtn.addEventListener('click', async () => {
-    if (sourceMode.value === 'local') {
-      const selected = localCameraSelect.value || null;
-      await startLocalCamera(selected);
-    } else {
-      const camId = configCameraSelect.value;
-      startConfiguredCamera(camId);
-    }
-  });
-
-  localCameraSelect.addEventListener('change', async () => {
-    if (sourceMode.value !== 'local') return;
-    if (!localCameraSelect.value) return;
-    await startLocalCamera(localCameraSelect.value);
-  });
-
-  configCameraSelect.addEventListener('change', () => {
-    if (sourceMode.value !== 'config') return;
-    rtspPreview.src = '';
-    setCaptureEnabled(false);
-    showGuide(false);
-    setStage('ready', 'Camera changed. Press Start to load preview.');
-    setAlert("Camera changed. Click Start to load preview.", "info");
-  });
-
-  captureBtn.addEventListener('click', () => {
-    if (captureBtn.classList.contains('disabled')) return;
-    if (sourceMode.value === 'local') captureFromLocal();
-    else captureFromConfigured();
-  });
-
-  retakeBtn.addEventListener('click', () => retake());
-  privacyBtn.addEventListener('click', () => togglePrivacy());
-
-  resumeAfterRetakeBtn.addEventListener('click', async () => {
-    if (sourceMode.value === 'local') {
-      const selected = localCameraSelect.value || null;
-      await startLocalCamera(selected);
-    }
-    resumeAfterRetakeBtn.style.display = 'none';
-  });
-
-  registrationForm.addEventListener('submit', (event) => {
-    if (!imageDataInput.value) {
-      event.preventDefault();
-      setAlert("Please capture a photo before registering.", "warning");
-      setStage('err', 'Capture required before registration.');
-    }
-  });
-
-  (async function init() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setAlert("Your browser does not support camera access.", "danger");
-      setStage('err', 'Browser not supported.');
-      return;
-    }
-    try { await loadLocalCameras(); } catch {}
-    setMode('local');
-    setStage('ready', 'Ready. Choose a mode and press Start.');
-  })();
 </script>
-
 {% endblock %}

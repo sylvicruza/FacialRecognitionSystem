@@ -1,234 +1,236 @@
 {% extends "base.html" %}
 
-{% block page_crumb %}Event Sessions{% endblock %}
-{% block page_title %}Event sessions{% endblock %}
-{% block page_subtitle %}Create a session, choose an existing event, and keep attendance tied to the right activity.{% endblock %}
+{% block page_crumb %}Attendance{% endblock %}
+{% block page_title %}Event Sessions{% endblock %}
+{% block page_subtitle %}View, create, edit, activate, and delete attendance sessions from one list.{% endblock %}
 
 {% block content %}
 <style>
-  .sessions-page{max-width:1180px;margin:0 auto;display:grid;gap:18px}
-  .session-panel,.action-card,.flow-card,.trust-card{background:var(--paper);border:1px solid var(--line);border-radius:26px;box-shadow:0 20px 50px rgba(15,23,42,.06)}
-  .quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-  .action-card{display:grid;gap:12px;min-height:122px;padding:20px;color:#172033;text-decoration:none;transition:.2s ease}
-  .action-card:hover{transform:translateY(-2px);border-color:#bfe8ce;box-shadow:0 24px 58px rgba(15,143,42,.11);color:#172033}
-  .action-icon{display:grid;place-items:center;width:45px;height:45px;border-radius:15px;color:#0b7e38;background:#eaf8ef}
-  .action-card.blue .action-icon{color:#1570ef;background:#eef6ff}
-  .action-card.purple .action-icon{color:#7a3ff2;background:#f4efff}
-  .action-card b{display:block;margin-bottom:3px;font-size:15px}.action-card span{color:var(--muted);font-size:13px}.action-arrow{margin-left:auto;color:var(--green)}
-  .session-panel{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-  .panel-head h3,.flow-copy h3{margin:0;color:#172033;font-size:22px;font-weight:950;letter-spacing:-.035em}
-  .panel-head p,.flow-copy p{margin:5px 0 0;color:var(--muted)}
-  .soft-btn,.session-btn{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#243247;font-weight:900;font-size:13px;text-decoration:none;cursor:pointer}
-  .session-btn.primary{color:#fff;border-color:transparent;background:linear-gradient(135deg,#18aa4b,#0f8f3d);box-shadow:0 15px 32px rgba(15,143,61,.2)}
-  .session-btn.danger{color:#b42318;background:#fff7f7;border-color:#ffd6d6}
-  .session-table{display:grid;gap:10px}.session-row{display:grid;grid-template-columns:minmax(0,1.5fr) 105px 95px 130px;gap:12px;align-items:center;padding:14px;border:1px solid #eef2f0;border-radius:18px;background:#fff}
-  .session-title{display:flex;align-items:center;gap:12px;min-width:0}.session-icon{flex:0 0 auto;display:grid;place-items:center;width:38px;height:38px;border-radius:13px;color:#0c8338;background:#eaf8ef}
-  .session-title b{display:block;overflow:hidden;color:#172033;text-overflow:ellipsis;white-space:nowrap}.session-title span,.session-meta{color:var(--muted);font-size:13px}
-  .live-pill{display:inline-flex;align-items:center;gap:7px;width:max-content;padding:7px 11px;border-radius:999px;color:#0d7838;background:#eaf8ef;font-size:11px;font-weight:950;text-transform:uppercase}
-  .live-pill:before{content:"";width:7px;height:7px;border-radius:50%;background:#18aa4b}.row-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-  .empty{padding:22px;border:1px dashed #cfded5;border-radius:18px;color:var(--muted);background:#fbfdfc}
-  .flow-card{display:grid;grid-template-columns:240px minmax(0,1fr);overflow:hidden}.flow-copy{padding:24px;background:linear-gradient(135deg,#effaf3,#fafffc);border-right:1px solid var(--line)}.flow-copy .action-icon{margin-bottom:14px}.flow-body{padding:22px}
-  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}.mode-card{position:relative;display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid #e3ebe6;border-radius:18px;background:#fff;cursor:pointer}
-  .mode-card input{width:auto;min-height:auto;margin-top:4px}.mode-card b{display:block;color:#172033}.mode-card span{display:block;margin-top:4px;color:var(--muted);font-size:13px}.mode-card:has(input:checked){border-color:#93d8aa;background:#f2fbf5;box-shadow:0 14px 32px rgba(15,143,61,.08)}
-  .form-grid{display:grid;gap:14px}.form-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;margin-bottom:7px;color:#344054;font-size:13px;font-weight:900}
-  input,select{width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--line);border-radius:15px;background:#fbfdfc;color:#172033;font:inherit}
-  .check-panel{display:grid;gap:12px;padding:15px;border:1px solid #d9eadf;border-radius:18px;background:#f2fbf5}.toggle-line{display:flex;align-items:flex-start;gap:10px;color:#344054;font-weight:800}.toggle-line input{width:auto;min-height:auto;margin-top:3px}
-  .helper-note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:15px;border:1px solid #d8f0df;background:#ffffff;color:#4b6358;font-size:13px;line-height:1.5}
-  .helper-note i{color:#16a34a;margin-top:2px}
-  .trust-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.trust-card{padding:17px;display:flex;gap:12px;align-items:flex-start}.trust-card i{color:var(--green);margin-top:2px}.trust-card b{display:block;color:#172033;font-size:14px}.trust-card span{display:block;margin-top:4px;color:var(--muted);font-size:12px}
-  [hidden]{display:none!important}
-  @media (max-width:1050px){.flow-card{grid-template-columns:1fr}.flow-copy{border-right:0;border-bottom:1px solid var(--line)}}
-  @media (max-width:850px){.quick-actions,.trust-grid,.mode-grid{grid-template-columns:1fr}.session-row{grid-template-columns:1fr}.row-actions{justify-content:flex-start}.form-two{grid-template-columns:1fr}}
+  .sessions-page{max-width:1160px;margin:0 auto;display:grid;gap:18px}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
+  .hero{padding:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .hero-copy{display:grid;gap:5px}
+  .hero-copy h2,.section-head h3,.active-card h3{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
+  .hero-copy p,.section-head p,.active-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+  .primary-btn,.light-btn,.danger-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+  .primary-btn{color:#fff;border-color:transparent;background:linear-gradient(135deg,#16a34a,#12853d);box-shadow:0 14px 28px rgba(15,143,61,.16)}
+  .danger-btn{color:#b42318;background:#fff5f5;border-color:#f4cccc}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+  .main-stack,.side-stack{display:grid;gap:18px}
+  .list-card,.active-card{padding:18px;display:grid;gap:14px}
+  .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .session-list{display:grid;gap:12px}
+  .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:14px 16px;border:1px solid #e5ede8;border-radius:18px;background:#fff}
+  .session-row-main{display:grid;gap:5px}
+  .session-row-main b{display:block;color:#172033;font-size:14px;font-weight:700}
+  .session-row-main span{display:block;color:var(--muted);font-size:12px;line-height:1.45}
+  .session-row-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .row-active-pill{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 14px;border-radius:12px;background:#eaf8ef;color:#0f7a38;border:1px solid #d6efdd;font-size:13px;font-weight:700}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eaf8ef;color:#0f7a38;font-size:10px;font-weight:800;text-transform:uppercase}
+  .status-pill.scheduled{background:#fff7e8;color:#b45309}
+  .status-pill.closed,.status-pill.cancelled{background:#f2f4f7;color:#667085}
+  .empty{padding:16px;border:1px dashed #cfded5;border-radius:16px;background:#fbfdfc;color:var(--muted);font-size:13px}
+  .active-meta{display:grid;gap:10px}
+  .active-meta span{display:inline-flex;align-items:center;gap:9px;color:#344054;font-size:12px}
+  .active-meta i{color:#667085}
+  .tip-list{display:grid;gap:12px}
+  .tip-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px}
+  .tip-item i{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:13px}
+  .tip-item span{color:#344054;font-size:11px;line-height:1.5}
+  .confirm-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.36);backdrop-filter:blur(6px);z-index:1200}
+  .confirm-overlay.show{display:flex}
+  .confirm-dialog{width:min(100%,420px);padding:20px;border:1px solid #dce8e0;border-radius:20px;background:#fff;box-shadow:0 28px 60px rgba(15,23,42,.18);display:grid;gap:14px}
+  .confirm-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff4f3;color:#dc2626;font-size:18px}
+  .confirm-dialog h3{margin:0;color:#172033;font-size:18px;font-weight:800}
+  .confirm-dialog p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+  form{margin:0}
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr}
+  }
+  @media (max-width:760px){
+    .session-row{grid-template-columns:1fr}
+    .session-row-actions{justify-content:flex-start}
+  }
 </style>
 
 <div class="sessions-page">
-  <section class="quick-actions" aria-label="Session actions">
-    <a class="action-card" href="#session-form">
-      <span class="action-icon"><i class="fa-solid fa-calendar-plus"></i></span>
-      <span><b>Create Session</b>Start a new session or use a saved event.</span>
-      <i class="fa-solid fa-arrow-right action-arrow"></i>
-    </a>
-    <a class="action-card blue" href="#active-sessions">
-      <span class="action-icon"><i class="fa-solid fa-list"></i></span>
-      <span><b>Manage Sessions</b>Select, manage, or clear the active session.</span>
-      <i class="fa-solid fa-arrow-right action-arrow"></i>
-    </a>
-    <a class="action-card purple" href="{% url 'person_attendance_list' %}">
-      <span class="action-icon"><i class="fa-solid fa-chart-simple"></i></span>
-      <span><b>Attendance Logs</b>Review attendance records after sessions.</span>
-      <i class="fa-solid fa-arrow-right action-arrow"></i>
+  <section class="surface hero">
+    <div class="hero-copy">
+      <h2>Session List</h2>
+      <p>Start from the list, then open a dedicated screen to create or edit a session.</p>
+    </div>
+    <a class="primary-btn" href="{% url 'attendance_session_create' %}">
+      <i class="fa-solid fa-plus"></i> Create New Session
     </a>
   </section>
 
-  <section class="session-panel" id="active-sessions">
-    <div class="panel-head">
-      <div>
-        <h3>Active Sessions</h3>
-        <p>Sessions currently open and collecting attendance.</p>
-      </div>
-      {% if active_session %}
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="clear">
-          <button class="soft-btn" type="submit"><i class="fa-solid fa-xmark"></i> Clear active</button>
-        </form>
-      {% endif %}
+  <div class="layout">
+    <div class="main-stack">
+      <section class="surface list-card">
+        <div class="section-head">
+          <div>
+            <h3>Existing Sessions</h3>
+            <p>Edit opens the full session management screen. Make Active switches attendance to that session.</p>
+          </div>
+        </div>
+
+        {% if sessions %}
+          <div class="session-list">
+            {% for session in sessions %}
+              <div class="session-row">
+                <div class="session-row-main">
+                  <b>{{ session.session_name|default:session.event_name }}</b>
+                  <span>
+                    {{ session.event_name }}
+                    {% if session.starts_at %} | {{ session.starts_at }}{% endif %}
+                    {% if active_session and active_session.id == session.id %} | Currently active{% endif %}
+                  </span>
+                </div>
+
+                <span class="status-pill {{ session.status|default:'open'|lower }}">
+                  {{ session.status|default:"Open"|title }}
+                </span>
+
+                <div class="session-row-actions">
+                  <a class="light-btn" href="{% url 'attendance_session_detail' session.id %}">Edit</a>
+                  {% if active_session and active_session.id == session.id %}
+                    <span class="row-active-pill">Active Now</span>
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="clear">
+                      <button class="light-btn" type="submit">Clear Active</button>
+                    </form>
+                  {% else %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="select">
+                      <input type="hidden" name="session_id" value="{{ session.id }}">
+                      <button class="light-btn" type="submit">
+                        {% if session.status == "scheduled" %}Start Session{% else %}Make Active{% endif %}
+                      </button>
+                    </form>
+                  {% endif %}
+                  <form method="post" data-delete-session-form data-session-label="{{ session.session_name|default:session.event_name }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                    <button class="danger-btn" type="submit">Delete</button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty">No sessions yet. Create a session to begin taking attendance.</div>
+        {% endif %}
+      </section>
     </div>
 
-    <div class="session-table">
-      {% for session in sessions %}
-        <div class="session-row">
-          <div class="session-title">
-            <span class="session-icon"><i class="fa-solid fa-calendar-check"></i></span>
-            <div>
-              <b>{{ session.session_name|default:session.event_name }}</b>
-              <span>{{ session.event_name }}{% if session.branch_name %} · {{ session.branch_name }}{% endif %}</span>
-            </div>
+    <aside class="side-stack">
+      <section class="surface active-card">
+        <h3>Active Session</h3>
+        {% if active_session %}
+          <p>{{ active_session.session_name|default:active_session.event_name }}</p>
+          <div class="active-meta">
+            <span><i class="fa-regular fa-calendar"></i> {{ active_session.event_name }}</span>
+            <span><i class="fa-regular fa-clock"></i> {{ active_session.starts_at|default:"Not started" }}</span>
+            <span><i class="fa-solid fa-circle-play"></i> {{ active_session.status|default:"Open"|title }}</span>
           </div>
-          <span class="live-pill">{{ session.status|default:"Open" }}</span>
-          <span class="session-meta">{% if session.starts_at %}{{ session.starts_at }}{% else %}Not scheduled{% endif %}</span>
-          <div class="row-actions">
-            <a class="soft-btn" href="{% url 'attendance_session_detail' session.id %}">Manage</a>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a class="light-btn" href="{% url 'attendance_session_detail' active_session.id %}">Open</a>
             <form method="post">
               {% csrf_token %}
-              <input type="hidden" name="action" value="select">
-              <input type="hidden" name="session_id" value="{{ session.id }}">
-              <button class="session-btn primary" type="submit">{% if active_session and active_session.id == session.id %}Active{% else %}Use{% endif %}</button>
+              <input type="hidden" name="action" value="clear">
+              <button class="light-btn" type="submit">Clear Active</button>
             </form>
           </div>
+        {% else %}
+          <p>No active session selected.</p>
+        {% endif %}
+      </section>
+
+      <section class="surface active-card">
+        <h3>How it works</h3>
+        <div class="tip-list">
+          <div class="tip-item">
+            <i class="fa-solid fa-list"></i>
+            <span>Use this page to manage the full list of saved sessions.</span>
+          </div>
+          <div class="tip-item">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create opens a dedicated session setup screen and returns you here when finished.</span>
+          </div>
+          <div class="tip-item">
+            <i class="fa-solid fa-pen"></i>
+            <span>Edit opens the session management page where you can update settings and methods.</span>
+          </div>
         </div>
-      {% empty %}
-        <div class="empty">No active sessions yet. Create a session below and KairosTrack will route attendance to it.</div>
-      {% endfor %}
+      </section>
+    </aside>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="deleteConfirmOverlay" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <div class="confirm-icon"><i class="fa-solid fa-trash"></i></div>
+    <div style="display:grid;gap:6px;">
+      <h3 id="deleteConfirmTitle">Delete session?</h3>
+      <p id="deleteConfirmText">This session will be removed from the list.</p>
     </div>
-  </section>
-
-  <section class="flow-card" id="session-form">
-    <div class="flow-copy">
-      <span class="action-icon"><i class="fa-solid fa-calendar-plus"></i></span>
-      <h3>Create Session</h3>
-      <p>Use one workflow for both new events and repeat events.</p>
+    <div class="confirm-actions">
+      <button class="light-btn" type="button" id="deleteConfirmCancel">Cancel</button>
+      <button class="danger-btn" type="button" id="deleteConfirmSubmit">Delete Session</button>
     </div>
-    <div class="flow-body">
-      <form method="post" class="form-grid" id="sessionCreateForm">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="save_session">
-
-        <div class="mode-grid">
-          <label class="mode-card">
-            <input type="radio" name="event_mode" value="new" checked>
-            <span><b>New event</b>Create an event and its first attendance session.</span>
-          </label>
-          <label class="mode-card">
-            <input type="radio" name="event_mode" value="existing" {% if not events %}disabled{% endif %}>
-            <span><b>Existing event</b>{% if events %}Create another session from a saved event.{% else %}No saved events yet.{% endif %}</span>
-          </label>
-        </div>
-
-        <div class="form-two">
-          <div data-new-event>
-            <label for="event_name">Event name</label>
-            <input id="event_name" name="event_name" placeholder="Sunday Service">
-          </div>
-          <div data-existing-event hidden>
-            <label for="event_id">Existing event</label>
-            <select id="event_id" name="event_id">
-              <option value="">Choose event</option>
-              {% for event in events %}
-                <option value="{{ event.id }}">{{ event.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div>
-            <label for="session_name">Session label</label>
-            <input id="session_name" name="session_name" placeholder="Sunday Service - 10:00 AM">
-          </div>
-        </div>
-
-        <div class="form-two">
-          <div>
-            <label for="starts_at">Starts at</label>
-            <input id="starts_at" name="starts_at" type="datetime-local" value="{{ now_local }}" required>
-          </div>
-          <div>
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="open" selected>Open</option>
-              <option value="scheduled">Scheduled</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="check-panel">
-          <label class="toggle-line">
-            <input type="checkbox" name="allow_member_self_check_in">
-            Allow mobile self check-in with a word of the day
-          </label>
-          <label class="toggle-line">
-            <input type="checkbox" name="allow_member_geo_check_in">
-            Allow member GeoTracking check-in for this session
-          </label>
-          <div class="form-two">
-            <div>
-              <label for="self_check_in_code">Self check-in word</label>
-              <input id="self_check_in_code" name="self_check_in_code" placeholder="e.g. Heaven, Peace, Gate">
-            </div>
-            <div>
-              <label>How it works</label>
-              <div class="helper-note">
-                <i class="fa-solid fa-circle-info"></i>
-                <span>Share the word only with people physically present. Members enter it in the mobile app before KairosTrack marks them present.</span>
-              </div>
-            </div>
-          </div>
-          <div class="form-two">
-            <div>
-              <label for="check_in_opens_at">Check-in opens</label>
-              <input id="check_in_opens_at" name="check_in_opens_at" type="datetime-local">
-            </div>
-            <div>
-              <label for="check_in_closes_at">Check-in closes</label>
-              <input id="check_in_closes_at" name="check_in_closes_at" type="datetime-local">
-            </div>
-          </div>
-        </div>
-
-        <button class="session-btn primary" type="submit">
-          <i class="fa-solid fa-plus"></i> Create and Select Session
-        </button>
-      </form>
-    </div>
-  </section>
-
-  <section class="trust-grid">
-    <div class="trust-card"><i class="fa-solid fa-shield-halved"></i><span><b>Secure & reliable</b>Attendance data stays safe and organized.</span></div>
-    <div class="trust-card"><i class="fa-regular fa-clock"></i><span><b>Real-time tracking</b>All attendance methods sync into the selected session.</span></div>
-    <div class="trust-card"><i class="fa-solid fa-camera"></i><span><b>Multi-check-in</b>Use manual, QR, NFC, mobile, or face recognition.</span></div>
-    <div class="trust-card"><i class="fa-solid fa-cloud"></i><span><b>Always available</b>Reports read from the hosted backend.</span></div>
-  </section>
+  </div>
 </div>
 
 <script>
   (function(){
-    const form = document.getElementById('sessionCreateForm');
-    if (!form) return;
-    const newWrap = form.querySelector('[data-new-event]');
-    const existingWrap = form.querySelector('[data-existing-event]');
-    const eventName = form.querySelector('#event_name');
-    const eventSelect = form.querySelector('#event_id');
-    const radios = form.querySelectorAll('input[name="event_mode"]');
+    const overlay = document.getElementById('deleteConfirmOverlay');
+    const text = document.getElementById('deleteConfirmText');
+    const cancelButton = document.getElementById('deleteConfirmCancel');
+    const submitButton = document.getElementById('deleteConfirmSubmit');
+    let activeForm = null;
 
-    function syncMode(){
-      const mode = form.querySelector('input[name="event_mode"]:checked')?.value || 'new';
-      const existing = mode === 'existing';
-      newWrap.hidden = existing;
-      existingWrap.hidden = !existing;
-      eventName.required = !existing;
-      eventSelect.required = existing;
+    function closeDialog(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+      activeForm = null;
     }
 
-    radios.forEach((radio) => radio.addEventListener('change', syncMode));
-    syncMode();
+    function openDialog(form){
+      activeForm = form;
+      const label = form.dataset.sessionLabel || 'this session';
+      text.textContent = `Delete "${label}"? This action cannot be undone.`;
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    document.querySelectorAll('[data-delete-session-form]').forEach((form) => {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        openDialog(form);
+      });
+    });
+
+    cancelButton?.addEventListener('click', closeDialog);
+    submitButton?.addEventListener('click', () => {
+      if (!activeForm) return;
+      const form = activeForm;
+      closeDialog();
+      form.submit();
+    });
+
+    overlay?.addEventListener('click', (event) => {
+      if (event.target === overlay) closeDialog();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.classList.contains('show')) {
+        closeDialog();
+      }
+    });
   })();
 </script>
 {% endblock %}

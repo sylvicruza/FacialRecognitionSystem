@@ -34,6 +34,7 @@ urlpatterns = [
     path('persons/attendance/', views.person_attendance_list, name='person_attendance_list'),
     path('reports/', views.attendance_reports, name='attendance_reports'),
     path('attendance/sessions/', views.attendance_sessions, name='attendance_sessions'),
+    path('attendance/sessions/new/', views.attendance_session_create, name='attendance_session_create'),
     path('attendance/sessions/<int:pk>/', views.attendance_session_detail, name='attendance_session_detail'),
     path('attendance/qr/', views.qr_attendance, name='qr_attendance'),
     path('attendance/nfc/', views.nfc_attendance, name='nfc_attendance'),

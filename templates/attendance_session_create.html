@@ -1,0 +1,902 @@
+{% extends "base.html" %}
+
+{% block page_crumb %}Event Sessions{% endblock %}
+{% block page_title %}Create Event Session{% endblock %}
+{% block page_subtitle %}Create and start a new attendance session.{% endblock %}
+
+{% block content %}
+<style>
+  .wizard-page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:18px}
+  .wizard-main,.wizard-side{display:grid;gap:18px;align-content:start}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
+
+  .wizard-shell{padding:18px;display:grid;gap:16px}
+  .wizard-header{display:grid;gap:4px}
+  .wizard-header h2,.section-title h3,.side-card h3,.session-list-card h3{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
+  .wizard-header p,.section-title p,.side-card p,.session-list-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+
+  .stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:4px;border:1px solid #dfe8e3;border-radius:16px;background:#fff}
+  .step-tab{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:10px;padding:12px 14px;border-radius:12px;color:#344054;cursor:pointer;transition:.18s ease}
+  .step-tab:not(:last-child)::after{content:"";position:absolute;right:-1px;top:16px;width:2px;height:22px;background:#eef2ef}
+  .step-tab.active{background:#f6fcf8}
+  .step-tab.done .step-dot{background:#16a34a;color:#fff}
+  .step-tab.active .step-dot{background:#16a34a;color:#fff;box-shadow:0 8px 18px rgba(22,163,74,.18)}
+  .step-dot{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:#eef2ef;color:#475467;font-size:12px;font-weight:800}
+  .step-copy{display:grid;gap:1px}
+  .step-copy strong{color:#172033;font-size:12px;font-weight:700;line-height:1.3}
+  .step-copy span{color:var(--muted);font-size:10px;line-height:1.35}
+
+  .wizard-form{display:grid;gap:16px}
+  .step-panel{display:none;gap:16px}
+  .step-panel.active{display:grid}
+
+  .panel-card{padding:18px;border:1px solid #e1ebe5;border-radius:18px;background:#fff;display:grid;gap:14px}
+  .section-title{display:grid;gap:4px}
+  .section-title h3{font-size:16px}
+
+  .option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .option-card{position:relative;display:grid;gap:6px;padding:14px 16px;border:1px solid #dfe8e3;border-radius:16px;background:#fff;cursor:pointer}
+  .option-card input{position:absolute;opacity:0;pointer-events:none}
+  .option-card.active{border-color:#82d09f;background:#f6fcf8;box-shadow:0 8px 18px rgba(22,163,74,.08)}
+  .option-top{display:flex;align-items:center;gap:10px}
+  .option-check{width:16px;height:16px;border:1.5px solid #c5d0da;border-radius:999px;position:relative;flex:0 0 auto}
+  .option-card.active .option-check{border-color:#16a34a}
+  .option-card.active .option-check:after{content:"";position:absolute;inset:3px;border-radius:999px;background:#16a34a}
+  .option-icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:16px}
+  .option-card strong{color:#172033;font-size:13px;font-weight:700}
+  .option-card span{color:var(--muted);font-size:11px;line-height:1.45}
+
+  .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .field-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .field{display:grid;gap:7px}
+  .field label{color:#344054;font-size:12px;font-weight:700}
+  .field input,.field select{width:100%;min-height:44px;padding:10px 12px;border:1px solid #d9e3dd;border-radius:12px;background:#fff;color:#172033;font:inherit;font-size:13px}
+  .field.optional label span{color:#98a2b3;font-weight:600}
+  .field-note{color:var(--muted);font-size:11px;line-height:1.4}
+
+  .info-strip{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #dcecdf;border-radius:13px;background:#fbfdfc;color:var(--muted);font-size:12px;line-height:1.45}
+  .info-strip i{color:#16a34a;margin-top:2px}
+  .info-strip strong{display:block;color:#172033;font-size:12px;margin-bottom:2px}
+
+  .window-card,.method-card,.rules-card{padding:14px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
+  .window-head,.method-head,.rules-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .window-head strong,.method-head strong,.rules-head strong{display:block;color:#172033;font-size:13px;font-weight:700}
+  .window-head span,.method-head span,.rules-head span{display:block;color:var(--muted);font-size:11px;line-height:1.4}
+
+  .switch-line{display:flex;align-items:center;gap:10px;color:#172033;font-size:12px;font-weight:700}
+  .switch-line input{position:absolute;opacity:0;pointer-events:none}
+  .switch-track{position:relative;width:38px;height:22px;border-radius:999px;background:#d0d5dd;transition:.2s ease;flex:0 0 auto}
+  .switch-track:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:.2s ease}
+  .switch-line:has(input:checked) .switch-track{background:#16a34a}
+  .switch-line:has(input:checked) .switch-track:after{left:19px}
+
+  .window-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+
+  .method-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  .method-tile{position:relative;display:grid;gap:8px;justify-items:center;padding:12px 8px;border:1px solid #dce7df;border-radius:14px;background:#fff;min-height:94px;text-align:center}
+  .method-tile input{position:absolute;opacity:0;pointer-events:none}
+  .method-tile.active{border-color:#82d09f;background:#f6fcf8}
+  .method-tile.locked{background:#f8faf9;border-style:dashed;cursor:not-allowed;opacity:.72}
+  .method-tile .check-badge{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:4px;border:1px solid #d7dde5;background:#fff}
+  .method-tile.active .check-badge{border-color:#16a34a;background:#16a34a}
+  .method-tile.active .check-badge:after{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;color:#fff;font-size:9px;position:absolute;inset:0;display:grid;place-items:center}
+  .method-tile i{font-size:18px;color:#16a34a}
+  .method-tile.purple i{color:#7c3aed}
+  .method-tile.blue i{color:#2563eb}
+  .method-tile.gold i{color:#f59e0b}
+  .method-tile strong{color:#172033;font-size:11px;font-weight:700;line-height:1.35}
+  .method-tile small{color:#98a2b3;font-size:10px;font-weight:600;line-height:1.35}
+
+  .optional-panel{display:grid;gap:10px;padding:12px;border:1px solid #d8f0df;border-radius:14px;background:#fbfefc}
+  .helper-note{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border:1px solid #d8f0df;border-radius:13px;background:#effbf3;color:#315946;font-size:11px;line-height:1.45}
+  .helper-note i{color:#16a34a;margin-top:2px}
+
+  .rules-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+
+  .tip-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #dcecdf;border-radius:13px;background:#f8fcf9;color:#2f6f46;font-size:11px}
+  .tip-bar i{color:#16a34a}
+
+  .review-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;align-items:start}
+  .summary-panel{padding:16px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
+  .summary-panel h4,.start-panel h4{margin:0;color:#172033;font-size:14px;font-weight:800}
+  .summary-list{display:grid;gap:10px}
+  .summary-item{display:grid;grid-template-columns:18px 120px minmax(0,1fr);gap:10px;align-items:start;color:#344054;font-size:12px}
+  .summary-item i{color:#667085;margin-top:2px}
+  .summary-item label{color:#667085}
+  .summary-item strong{color:#172033;font-size:12px;font-weight:700;line-height:1.4}
+
+  .ready-card{display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid #dcecdf;border-radius:14px;background:#f6fcf8;color:#2f6f46}
+  .ready-card i{width:30px;height:30px;border-radius:999px;display:grid;place-items:center;background:#16a34a;color:#fff;font-size:14px;flex:0 0 auto}
+  .ready-card strong{display:block;color:#0f7a38;font-size:13px}
+  .ready-card span{display:block;color:#2f6f46;font-size:11px;line-height:1.45;margin-top:2px}
+
+  .next-steps{padding:16px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
+  .next-steps-list{display:grid;gap:10px}
+  .next-step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px}
+  .next-step .num{width:22px;height:22px;border-radius:999px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:11px;font-weight:800}
+  .next-step strong{display:block;color:#172033;font-size:12px;font-weight:700}
+  .next-step span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
+
+  .start-panel{padding:16px;border:1px solid #dcecdf;border-radius:16px;background:linear-gradient(135deg,#f5fbf7,#f9fefb);display:grid;gap:12px}
+  .start-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .ghost-btn,.light-btn,.primary-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer}
+  .primary-btn{color:#fff;border-color:transparent;background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 14px 28px rgba(37,99,235,.18)}
+  .light-btn{background:#fbfdfc}
+
+  .wizard-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .wizard-nav{display:flex;gap:10px;flex-wrap:wrap}
+
+  .side-card,.session-list-card{padding:18px;display:grid;gap:14px}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#eaf8ef;color:#0f7a38;font-size:10px;font-weight:800;text-transform:uppercase}
+  .side-meta{display:grid;gap:8px;color:#667085;font-size:12px}
+  .side-meta span{display:inline-flex;align-items:center;gap:8px}
+  .side-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:12px;border-top:1px solid #edf2ef}
+  .side-stat span{display:block;color:#667085;font-size:11px}
+  .side-stat strong{display:block;margin-top:2px;color:#172033;font-size:20px;font-weight:800}
+  .tip-list{display:grid;gap:12px}
+  .tip-item{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}
+  .tip-item i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:14px}
+  .tip-item span{color:#344054;font-size:11px;line-height:1.5}
+
+  .session-list{display:grid;gap:10px}
+  .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #edf2ef;border-radius:16px;background:#fff}
+  .session-row b{display:block;color:#172033;font-size:13px;font-weight:700}
+  .session-row span{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+  .session-row .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  [hidden]{display:none!important}
+  @media (max-width:1080px){
+    .wizard-page,.review-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:860px){
+    .stepper,.field-grid,.field-row,.window-grid,.rules-grid,.review-grid,.session-row{grid-template-columns:1fr}
+    .method-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .wizard-footer{align-items:stretch}
+  }
+</style>
+
+<div class="wizard-page">
+  <div class="wizard-main">
+    <form method="post" id="sessionWizardForm" class="wizard-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_session">
+      <input id="starts_at" name="starts_at" type="hidden" value="{{ now_local }}">
+      <input id="ends_at" name="ends_at" type="hidden">
+      <input id="check_in_opens_at" name="check_in_opens_at" type="hidden">
+      <input id="check_in_closes_at" name="check_in_closes_at" type="hidden">
+
+      <section class="surface wizard-shell">
+        <div class="wizard-header">
+          <h2>Create Event Session</h2>
+          <p>Create and start a new attendance session.</p>
+        </div>
+
+        <div class="stepper">
+          <button class="step-tab active" type="button" data-step-tab="1">
+            <span class="step-dot">1</span>
+            <span class="step-copy">
+              <strong>Basic Info</strong>
+              <span>Event and session details</span>
+            </span>
+          </button>
+          <button class="step-tab" type="button" data-step-tab="2">
+            <span class="step-dot">2</span>
+            <span class="step-copy">
+              <strong>Settings</strong>
+              <span>Optional configuration</span>
+            </span>
+          </button>
+          <button class="step-tab" type="button" data-step-tab="3">
+            <span class="step-dot">3</span>
+            <span class="step-copy">
+              <strong>Review & Start</strong>
+              <span>Confirm and begin</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="step-panel active" data-step-panel="1">
+          <div class="panel-card">
+            <div class="section-title">
+              <h3>1. Choose Event</h3>
+              <p>Select an event or create a new one for this session.</p>
+            </div>
+
+            <div class="option-grid">
+              <label class="option-card active" data-mode-card="new">
+                <input id="mode_new" type="radio" name="event_mode" value="new" checked>
+                <div class="option-top">
+                  <span class="option-check"></span>
+                  <span class="option-icon"><i class="fa-solid fa-plus"></i></span>
+                  <strong>Create New Event</strong>
+                </div>
+                <span>Create a brand new event for this session.</span>
+              </label>
+              <label class="option-card" data-mode-card="existing">
+                <input id="mode_existing" type="radio" name="event_mode" value="existing" {% if not events %}disabled{% endif %}>
+                <div class="option-top">
+                  <span class="option-check"></span>
+                  <span class="option-icon"><i class="fa-solid fa-folder-open"></i></span>
+                  <strong>Use Saved Event</strong>
+                </div>
+                <span>Choose from your existing events.</span>
+              </label>
+            </div>
+
+            <div class="field" data-new-event>
+              <label for="event_name">Event Name</label>
+              <input id="event_name" name="event_name" placeholder="Sunday Service">
+              <div class="field-note">Give your event a name.</div>
+            </div>
+
+            <div class="field" data-existing-event hidden>
+              <label for="event_id">Saved Event</label>
+              <select id="event_id" name="event_id">
+                <option value="">Choose a saved event</option>
+                {% for event in events %}
+                  <option value="{{ event.id }}">{{ event.name }}</option>
+                {% endfor %}
+              </select>
+              <div class="field-note">This creates a new session under the selected event.</div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="section-title">
+              <h3>2. Session Details</h3>
+              <p>Set when this attendance session should happen.</p>
+            </div>
+
+            <div class="field">
+              <label for="session_name">Session Label <span style="color:#98a2b3;font-weight:600;">(Optional)</span></label>
+              <input id="session_name" name="session_name" placeholder="Sunday Service - 10:00 AM">
+              <div class="field-note">Helps you identify this session later.</div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="session_date">Session Date</label>
+                <input id="session_date" type="date">
+              </div>
+              <div class="field">
+                <label for="session_start_time">Start Time</label>
+                <input id="session_start_time" type="time">
+              </div>
+              <div class="field optional">
+                <label for="session_end_time">End Time <span>(Optional)</span></label>
+                <input id="session_end_time" type="time">
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="section-title">
+              <h3>3. When do you want to start?</h3>
+            </div>
+
+            <div class="option-grid">
+              <label class="option-card active" data-status-card="open">
+                <input id="status_open" type="radio" name="status" value="open" checked>
+                <div class="option-top">
+                  <span class="option-check"></span>
+                  <span class="option-icon"><i class="fa-solid fa-bolt"></i></span>
+                  <strong>Start Now</strong>
+                </div>
+                <span>Open attendance immediately.</span>
+              </label>
+              <label class="option-card" data-status-card="scheduled">
+                <input id="status_scheduled" type="radio" name="status" value="scheduled">
+                <div class="option-top">
+                  <span class="option-check"></span>
+                  <span class="option-icon"><i class="fa-regular fa-calendar-check"></i></span>
+                  <strong>Schedule for Later</strong>
+                </div>
+                <span>Save and start attendance later.</span>
+              </label>
+            </div>
+
+            <div class="tip-bar">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>You can change these details any time before starting the session.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" data-step-panel="2">
+          <div class="panel-card">
+            <p style="margin:0;color:var(--muted);font-size:12px;">Configure how this session will run.</p>
+
+            <div class="window-card">
+              <div class="window-head">
+                <div>
+                  <strong>Attendance Window</strong>
+                  <span>Set the time range when check-in is allowed.</span>
+                </div>
+                <span style="color:#667085;font-size:11px;">Default: Session time</span>
+              </div>
+              <label class="switch-line" for="custom_attendance_window">
+                <input id="custom_attendance_window" type="checkbox">
+                <span class="switch-track"></span>
+                <span>Use custom window</span>
+              </label>
+              <div class="window-grid" data-custom-window-fields hidden>
+                <div class="field">
+                  <label for="check_in_opens_time">Start Check-in</label>
+                  <input id="check_in_opens_time" type="time">
+                </div>
+                <div class="field">
+                  <label for="check_in_closes_time">End Check-in</label>
+                  <input id="check_in_closes_time" type="time">
+                </div>
+              </div>
+            </div>
+
+            <div class="method-card">
+              <div class="method-head">
+                <div>
+                  <strong>Check-in Methods</strong>
+                  <span>Choose how members can check in.</span>
+                </div>
+                <span id="method_count" style="color:#667085;font-size:11px;">0 methods selected</span>
+              </div>
+              <div class="method-grid">
+                <label class="method-tile {% if method_defaults.self %}active{% else %}locked{% endif %}" data-method-tile="self">
+                  <input id="allow_member_self_check_in" type="checkbox" name="allow_member_self_check_in" data-method-checkbox="Mobile Self Check-in" {% if method_defaults.self %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-mobile-screen-button"></i>
+                  <strong>Mobile Self<br>Check-in</strong>
+                  <small>{% if method_defaults.self %}Enabled by plan{% else %}Standard plan required{% endif %}</small>
+                </label>
+                <label class="method-tile purple {% if method_defaults.qr %}active{% else %}locked{% endif %}" data-method-tile="qr">
+                  <input id="allow_qr_check_in" type="checkbox" name="allow_qr_check_in" data-method-checkbox="QR Code Check-in" {% if method_defaults.qr %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-qrcode"></i>
+                  <strong>QR Code<br>Check-in</strong>
+                  <small>{% if method_defaults.qr %}Enabled by plan{% else %}Standard plan required{% endif %}</small>
+                </label>
+                <label class="method-tile {% if method_defaults.swipe %}active{% else %}locked{% endif %}" data-method-tile="swipe">
+                  <input id="allow_swipe_check_in" type="checkbox" name="allow_swipe_check_in" data-method-checkbox="Swipe Check-in" {% if method_defaults.swipe %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-hand-pointer"></i>
+                  <strong>Swipe<br>Check-in</strong>
+                  <small>{% if method_defaults.swipe %}Enabled by plan{% else %}Starter plan required{% endif %}</small>
+                </label>
+                <label class="method-tile blue {% if method_defaults.nfc %}active{% else %}locked{% endif %}" data-method-tile="nfc">
+                  <input id="allow_nfc_check_in" type="checkbox" name="allow_nfc_check_in" data-method-checkbox="NFC Check-in" {% if method_defaults.nfc %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-wifi"></i>
+                  <strong>NFC<br>Check-in</strong>
+                  <small>{% if method_defaults.nfc %}Enabled by plan{% else %}Professional plan required{% endif %}</small>
+                </label>
+                <label class="method-tile gold {% if method_defaults.face %}active{% else %}locked{% endif %}" data-method-tile="face">
+                  <input id="allow_face_check_in" type="checkbox" name="allow_face_check_in" data-method-checkbox="Face Recognition" {% if method_defaults.face %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-face-smile"></i>
+                  <strong>Face<br>Recognition</strong>
+                  <small>{% if method_defaults.face %}Enabled by plan{% else %}Professional plan required{% endif %}</small>
+                </label>
+                <label class="method-tile {% if method_defaults.geo %}active{% else %}locked{% endif %}" data-method-tile="geo">
+                  <input id="allow_member_geo_check_in" type="checkbox" name="allow_member_geo_check_in" data-method-checkbox="GeoTracking Check-in" {% if method_defaults.geo %}checked{% else %}disabled{% endif %}>
+                  <span class="check-badge"></span>
+                  <i class="fa-solid fa-location-dot"></i>
+                  <strong>GeoTracking<br>Check-in</strong>
+                  <small>{% if method_defaults.geo %}Enabled by plan{% else %}Enterprise plan required{% endif %}</small>
+                </label>
+              </div>
+              <div class="optional-panel" data-self-check-settings hidden>
+                <div class="field">
+                  <label for="self_check_in_code">Word of the day</label>
+                  <input id="self_check_in_code" name="self_check_in_code" placeholder="e.g. Heaven, Peace, Gate">
+                </div>
+                <div class="helper-note">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <span>Share this only with people physically present before they check in.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="window-card">
+              <div class="window-head">
+                <div>
+                  <strong>Session Behavior</strong>
+                  <span>Configure additional session behavior.</span>
+                </div>
+              </div>
+              <label class="switch-line" for="auto_end_session">
+                <input id="auto_end_session" type="checkbox">
+                <span class="switch-track"></span>
+                <span>Auto-end session when time ends</span>
+              </label>
+            </div>
+
+            <div class="rules-card">
+              <div class="rules-head">
+                <div>
+                  <strong>Rules & Limits</strong>
+                  <span>Set limits and restrictions for this session.</span>
+                </div>
+              </div>
+              <div class="rules-grid">
+                <div class="field">
+                  <label for="late_check_in_grace_minutes">Late Check-in Allowed</label>
+                  <input id="late_check_in_grace_minutes" name="late_check_in_grace_minutes" type="number" min="0" step="1" placeholder="0 mins">
+                  <div class="field-note">Amount of time allowed after the session starts.</div>
+                </div>
+                <div class="field optional">
+                  <label for="max_capacity">Max Capacity <span>(Optional)</span></label>
+                  <input id="max_capacity" name="max_capacity" type="number" min="1" step="1" placeholder="None">
+                  <div class="field-note">Set a maximum allowed attendance.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tip-bar">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>You can skip this step and use the default settings.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-panel" data-step-panel="3">
+          <div class="panel-card">
+            <div class="section-title">
+              <h3>Review your session details</h3>
+              <p>Review your session details before starting.</p>
+            </div>
+
+            <div class="review-grid">
+              <div style="display:grid;gap:14px;">
+                <div class="summary-panel">
+                  <h4>Session Summary</h4>
+                  <div class="summary-list">
+                    <div class="summary-item">
+                      <i class="fa-solid fa-tag"></i>
+                      <label>Event Name</label>
+                      <strong id="review_event_name">-</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                      <label>Session Label</label>
+                      <strong id="review_session_label">-</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-regular fa-calendar"></i>
+                      <label>Date</label>
+                      <strong id="review_date">-</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-regular fa-clock"></i>
+                      <label>Time</label>
+                      <strong id="review_time">-</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-solid fa-mobile-screen-button"></i>
+                      <label>Check-in Methods</label>
+                      <strong id="review_methods">Default</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-regular fa-clock"></i>
+                      <label>Attendance Window</label>
+                      <strong id="review_window">Session time</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-solid fa-user-clock"></i>
+                      <label>Late Check-in Allowed</label>
+                      <strong id="review_late">0 mins</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-solid fa-users"></i>
+                      <label>Max Capacity</label>
+                      <strong id="review_capacity">None</strong>
+                    </div>
+                    <div class="summary-item">
+                      <i class="fa-solid fa-circle-play"></i>
+                      <label>Status</label>
+                      <strong id="review_status">Draft</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ready-card">
+                  <i class="fa-solid fa-check"></i>
+                  <div>
+                    <strong>You’re all set!</strong>
+                    <span>Once you start, members will be able to check in based on the configured settings.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid;gap:14px;">
+                <div class="next-steps">
+                  <h4>Next Steps</h4>
+                  <div class="next-steps-list">
+                    <div class="next-step">
+                      <span class="num">1</span>
+                      <div>
+                        <strong>Session will go live</strong>
+                        <span>Your session will be active and ready for check-in.</span>
+                      </div>
+                    </div>
+                    <div class="next-step">
+                      <span class="num">2</span>
+                      <div>
+                        <strong>Members can check in</strong>
+                        <span>Members can check in using the enabled methods.</span>
+                      </div>
+                    </div>
+                    <div class="next-step">
+                      <span class="num">3</span>
+                      <div>
+                        <strong>Monitor attendance</strong>
+                        <span>Track attendance in real time from the dashboard.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="start-panel">
+                  <h4>Start Attendance</h4>
+                  <p id="submit_primary_hint">Save this session and open attendance now.</p>
+                  <div class="start-actions">
+                    <button class="light-btn" type="button" data-go-step="1"><i class="fa-solid fa-arrow-left"></i> Back to Edit</button>
+                    <button class="ghost-btn" type="submit" id="draft_submit">Save as Draft</button>
+                    <button class="primary-btn" type="submit" id="start_submit">Start Attendance Now <i class="fa-solid fa-play"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="light-btn" type="button" id="wizardBack" hidden><i class="fa-solid fa-arrow-left"></i> Back</button>
+          <div class="wizard-nav">
+            <button class="ghost-btn" type="button" id="wizardSkip" hidden>Skip for Now</button>
+            <button class="primary-btn" type="button" id="wizardNext">Continue <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </div>
+      </section>
+    </form>
+  </div>
+
+  <aside class="wizard-side">
+    <section class="surface side-card">
+      <div class="section-title">
+        <h3>Active Session</h3>
+      </div>
+      {% if active_session %}
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <strong style="color:#172033;font-size:14px;font-weight:700;">{{ active_session.session_name|default:active_session.event_name }}</strong>
+          <span class="status-pill">Live</span>
+        </div>
+        <div class="side-meta">
+          <span><i class="fa-regular fa-clock"></i> Started at {{ active_session.starts_at|default:"Now" }}</span>
+          {% if active_session.branch_name %}
+            <span><i class="fa-solid fa-location-dot"></i> {{ active_session.branch_name }}</span>
+          {% endif %}
+        </div>
+        <div class="side-stats">
+          <div class="side-stat">
+            <span>Checked in</span>
+            <strong>--</strong>
+          </div>
+          <div class="side-stat">
+            <span>Expected</span>
+            <strong>--</strong>
+          </div>
+        </div>
+        <a class="primary-btn" href="{% url 'attendance_session_detail' active_session.id %}">Go to Live Session <i class="fa-solid fa-arrow-right"></i></a>
+      {% else %}
+        <p>No active attendance session yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="surface side-card">
+      <div class="section-title">
+        <h3>Quick Tips</h3>
+      </div>
+      <div class="tip-list">
+        <div class="tip-item">
+          <i class="fa-regular fa-calendar-check"></i>
+          <span>Use saved events as templates. Every time you take attendance, a new session is created.</span>
+        </div>
+        <div class="tip-item">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>An event is the reusable activity. A session is one attendance occurrence inside that event.</span>
+        </div>
+        <div class="tip-item">
+          <i class="fa-regular fa-pen-to-square"></i>
+          <span>You can save for later in step 3 and make the session active whenever you are ready.</span>
+        </div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script>
+  (function(){
+    const form = document.getElementById('sessionWizardForm');
+    if (!form) return;
+
+    let currentStep = 1;
+
+    const stepTabs = Array.from(form.querySelectorAll('[data-step-tab]'));
+    const stepPanels = Array.from(form.querySelectorAll('[data-step-panel]'));
+    const nextButton = form.querySelector('#wizardNext');
+    const backButton = form.querySelector('#wizardBack');
+    const skipButton = form.querySelector('#wizardSkip');
+    const draftSubmit = form.querySelector('#draft_submit');
+    const startSubmit = form.querySelector('#start_submit');
+
+    const newWrap = form.querySelector('[data-new-event]');
+    const existingWrap = form.querySelector('[data-existing-event]');
+    const eventName = form.querySelector('#event_name');
+    const eventSelect = form.querySelector('#event_id');
+    const modeNew = form.querySelector('#mode_new');
+    const modeExisting = form.querySelector('#mode_existing');
+    const modeCards = {
+      new: form.querySelector('[data-mode-card="new"]'),
+      existing: form.querySelector('[data-mode-card="existing"]')
+    };
+
+    const sessionName = form.querySelector('#session_name');
+    const sessionDate = form.querySelector('#session_date');
+    const sessionStartTime = form.querySelector('#session_start_time');
+    const sessionEndTime = form.querySelector('#session_end_time');
+    const startsAt = form.querySelector('#starts_at');
+    const endsAt = form.querySelector('#ends_at');
+
+    const statusOpen = form.querySelector('#status_open');
+    const statusScheduled = form.querySelector('#status_scheduled');
+    const statusCards = {
+      open: form.querySelector('[data-status-card="open"]'),
+      scheduled: form.querySelector('[data-status-card="scheduled"]')
+    };
+
+    const customWindowToggle = form.querySelector('#custom_attendance_window');
+    const customWindowFields = form.querySelector('[data-custom-window-fields]');
+    const opensAt = form.querySelector('#check_in_opens_at');
+    const closesAt = form.querySelector('#check_in_closes_at');
+    const opensTime = form.querySelector('#check_in_opens_time');
+    const closesTime = form.querySelector('#check_in_closes_time');
+
+    const selfCheckToggle = form.querySelector('#allow_member_self_check_in');
+    const geoToggle = form.querySelector('#allow_member_geo_check_in');
+    const selfCheckSettings = form.querySelector('[data-self-check-settings]');
+    const selfCheckCode = form.querySelector('#self_check_in_code');
+    const methodCount = form.querySelector('#method_count');
+    const methodCheckboxes = Array.from(form.querySelectorAll('[data-method-checkbox]'));
+
+    const lateField = form.querySelector('#late_check_in_grace_minutes');
+    const capacityField = form.querySelector('#max_capacity');
+
+    const summaryEventName = form.querySelector('#review_event_name');
+    const summarySessionLabel = form.querySelector('#review_session_label');
+    const summaryDate = form.querySelector('#review_date');
+    const summaryTime = form.querySelector('#review_time');
+    const summaryMethods = form.querySelector('#review_methods');
+    const summaryWindow = form.querySelector('#review_window');
+    const summaryLate = form.querySelector('#review_late');
+    const summaryCapacity = form.querySelector('#review_capacity');
+    const summaryStatus = form.querySelector('#review_status');
+    const submitPrimaryHint = form.querySelector('#submit_primary_hint');
+
+    function pad(value){
+      return String(value).padStart(2, '0');
+    }
+
+    function localDateString(date){
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function localTimeString(date){
+      return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function prettyDate(value){
+      if (!value) return 'Not set';
+      const parsed = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+    function prettyTimeRange(){
+      if (sessionStartTime.value && sessionEndTime.value) return `${sessionStartTime.value} - ${sessionEndTime.value}`;
+      if (sessionStartTime.value) return `${sessionStartTime.value}`;
+      return 'Not set';
+    }
+
+    function updateWizard(){
+      stepTabs.forEach((tab) => {
+        const step = Number(tab.dataset.stepTab);
+        tab.classList.toggle('active', step === currentStep);
+        tab.classList.toggle('done', step < currentStep);
+      });
+      stepPanels.forEach((panel) => {
+        panel.classList.toggle('active', Number(panel.dataset.stepPanel) === currentStep);
+      });
+      backButton.hidden = currentStep === 1;
+      skipButton.hidden = currentStep !== 2;
+      nextButton.hidden = currentStep === 3;
+      if (currentStep === 3) updateReview();
+    }
+
+    function seedDateTime(){
+      if (startsAt?.value) {
+        const parsed = new Date(startsAt.value);
+        if (!Number.isNaN(parsed.getTime())) {
+          sessionDate.value = localDateString(parsed);
+          sessionStartTime.value = localTimeString(parsed);
+        }
+      }
+    }
+
+    function syncMode(){
+      const useExisting = modeExisting.checked;
+      newWrap.hidden = useExisting;
+      existingWrap.hidden = !useExisting;
+      eventName.required = !useExisting;
+      eventSelect.required = useExisting;
+      modeCards.new.classList.toggle('active', !useExisting);
+      modeCards.existing.classList.toggle('active', useExisting);
+    }
+
+    function syncStatusCards(){
+      const startsNow = statusOpen.checked;
+      statusCards.open.classList.toggle('active', startsNow);
+      statusCards.scheduled.classList.toggle('active', !startsNow);
+      submitPrimaryHint.textContent = startsNow
+        ? 'Once you start, members will be able to check in based on the configured settings.'
+        : 'This session will be saved as a draft and can be made active later.';
+      startSubmit.innerHTML = startsNow
+        ? 'Start Attendance Now <i class="fa-solid fa-play"></i>'
+        : 'Save Session as Draft <i class="fa-regular fa-calendar-check"></i>';
+    }
+
+    function syncDateTimes(){
+      startsAt.value = (sessionDate.value && sessionStartTime.value) ? `${sessionDate.value}T${sessionStartTime.value}` : '';
+      endsAt.value = (sessionDate.value && sessionEndTime.value) ? `${sessionDate.value}T${sessionEndTime.value}` : '';
+      syncWindowDateTimes();
+    }
+
+    function syncCustomWindow(){
+      const enabled = customWindowToggle.checked;
+      customWindowFields.hidden = !enabled;
+      [opensTime, closesTime].forEach((field) => {
+        field.disabled = !enabled;
+        if (!enabled) field.value = '';
+      });
+      syncWindowDateTimes();
+    }
+
+    function syncWindowDateTimes(){
+      if (!customWindowToggle.checked || !sessionDate.value) {
+        opensAt.value = '';
+        closesAt.value = '';
+        return;
+      }
+      opensAt.value = opensTime.value ? `${sessionDate.value}T${opensTime.value}` : '';
+      closesAt.value = closesTime.value ? `${sessionDate.value}T${closesTime.value}` : '';
+    }
+
+    function syncMethods(){
+      const selfEnabled = !!selfCheckToggle.checked;
+      methodCheckboxes.forEach((input) => {
+        const tile = input.closest('.method-tile');
+        if (!tile || input.disabled) return;
+        tile.classList.toggle('active', input.checked);
+      });
+      selfCheckSettings.hidden = !selfEnabled;
+      selfCheckCode.required = selfEnabled;
+      const count = methodCheckboxes.filter((input) => !input.disabled && input.checked).length;
+      methodCount.textContent = `${count} method${count === 1 ? '' : 's'} selected`;
+    }
+
+    function updateReview(){
+      const eventValue = modeExisting.checked
+        ? (eventSelect.selectedOptions[0]?.value ? eventSelect.selectedOptions[0].textContent.trim() : 'No event selected')
+        : (eventName.value.trim() || 'New event');
+      const methods = methodCheckboxes
+        .filter((input) => !input.disabled && input.checked)
+        .map((input) => input.dataset.methodCheckbox);
+
+      summaryEventName.textContent = eventValue;
+      summarySessionLabel.textContent = sessionName.value.trim() || `${eventValue}${sessionStartTime.value ? ` - ${sessionStartTime.value}` : ''}`;
+      summaryDate.textContent = prettyDate(sessionDate.value);
+      summaryTime.textContent = prettyTimeRange();
+      summaryMethods.textContent = methods.length ? methods.join(', ') : 'None enabled';
+      summaryWindow.textContent = customWindowToggle.checked
+        ? `${opensTime.value || '--:--'} - ${closesTime.value || '--:--'}`
+        : 'Session time';
+      summaryLate.textContent = lateField.value ? `${lateField.value} mins` : '0 mins';
+      summaryCapacity.textContent = capacityField.value || 'None';
+      summaryStatus.textContent = statusOpen.checked ? 'Open' : 'Draft';
+    }
+
+    function validateStep(step){
+      if (step !== 1) return true;
+      if (modeNew.checked && !eventName.value.trim()) {
+        eventName.focus();
+        return false;
+      }
+      if (modeExisting.checked && !eventSelect.value) {
+        eventSelect.focus();
+        return false;
+      }
+      if (!sessionDate.value) {
+        sessionDate.focus();
+        return false;
+      }
+      if (!sessionStartTime.value) {
+        sessionStartTime.focus();
+        return false;
+      }
+      return true;
+    }
+
+    stepTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = Number(tab.dataset.stepTab);
+        if (target <= currentStep || validateStep(currentStep)) {
+          currentStep = target;
+          updateWizard();
+        }
+      });
+    });
+
+    nextButton.addEventListener('click', () => {
+      if (!validateStep(currentStep)) return;
+      currentStep = Math.min(3, currentStep + 1);
+      updateWizard();
+    });
+
+    backButton.addEventListener('click', () => {
+      currentStep = Math.max(1, currentStep - 1);
+      updateWizard();
+    });
+
+    skipButton.addEventListener('click', () => {
+      currentStep = 3;
+      updateWizard();
+    });
+
+    form.querySelectorAll('[data-go-step]').forEach((button) => {
+      button.addEventListener('click', () => {
+        currentStep = Number(button.dataset.goStep);
+        updateWizard();
+      });
+    });
+
+    draftSubmit.addEventListener('click', () => {
+      statusScheduled.checked = true;
+      syncStatusCards();
+    });
+
+    modeCards.new.addEventListener('click', () => { modeNew.checked = true; syncMode(); });
+    modeCards.existing.addEventListener('click', () => { if (!modeExisting.disabled) modeExisting.checked = true; syncMode(); });
+    eventSelect.addEventListener('change', syncMode);
+
+    [modeNew, modeExisting].forEach((radio) => radio.addEventListener('change', syncMode));
+    [statusOpen, statusScheduled].forEach((radio) => radio.addEventListener('change', syncStatusCards));
+    [sessionDate, sessionStartTime, sessionEndTime].forEach((field) => {
+      field.addEventListener('input', syncDateTimes);
+      field.addEventListener('change', syncDateTimes);
+    });
+    customWindowToggle.addEventListener('change', syncCustomWindow);
+    [opensTime, closesTime].forEach((field) => {
+      field.addEventListener('input', syncWindowDateTimes);
+      field.addEventListener('change', syncWindowDateTimes);
+    });
+    methodCheckboxes.forEach((input) => input.addEventListener('change', syncMethods));
+
+    seedDateTime();
+    syncMode();
+    syncStatusCards();
+    syncDateTimes();
+    syncCustomWindow();
+    syncMethods();
+    updateWizard();
+  })();
+</script>
+{% endblock %}
+

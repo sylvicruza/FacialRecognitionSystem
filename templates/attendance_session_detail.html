@@ -1,595 +1,844 @@
 {% extends "base.html" %}
 
 {% block page_crumb %}Attendance{% endblock %}
-{% block page_title %}Session Report{% endblock %}
-{% block page_subtitle %}Review attendance for one event occurrence.{% endblock %}
+{% block page_title %}Session Management{% endblock %}
+{% block page_subtitle %}Monitor attendance, update session settings, and manage check-in from one place.{% endblock %}
 
 {% block content %}
 <style>
-  .session-report{
-    max-width:1240px;
-    margin:0 auto;
-    display:grid;
-    gap:18px;
+  .session-mgmt{max-width:1240px;margin:0 auto;display:grid;gap:18px}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
+  .hero{padding:20px;display:grid;gap:16px}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .hero-copy{display:grid;gap:6px}
+  .hero-copy h2{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
+  .hero-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#eaf8ef;color:#0f7a38;font-size:11px;font-weight:800}
+  .status-pill.closed{background:#f2f4f7;color:#475467}
+  .hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn,.tiny-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+  .btn{min-height:40px;padding:10px 14px}
+  .btn.primary{color:#fff;border-color:transparent;background:linear-gradient(135deg,#16a34a,#12853d);box-shadow:0 14px 28px rgba(15,143,61,.16)}
+  .btn.danger{color:#fff;border-color:transparent;background:linear-gradient(135deg,#ef4444,#dc2626)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;padding:4px;border:1px solid #dfe8e3;border-radius:16px;background:#fff}
+  .tab-btn{min-height:38px;padding:9px 14px;border:0;border-radius:12px;background:transparent;color:#667085;font-size:12px;font-weight:700;cursor:pointer}
+  .tab-btn.active{background:#f3fbf6;color:#16a34a;box-shadow:inset 0 -2px 0 #16a34a}
+
+  .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+  .main-stack,.side-stack{display:grid;gap:18px}
+  .stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+  .stat-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:10px}
+  .stat-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:16px}
+  .stat-card:nth-child(3) .stat-icon{background:#fff2f2;color:#ef4444}
+  .stat-card:nth-child(4) .stat-icon{background:#fff8eb;color:#f59e0b}
+  .stat-label{color:#475467;font-size:12px;font-weight:700}
+  .stat-value{color:#172033;font-size:30px;font-weight:800;line-height:1}
+  .stat-meta{color:var(--muted);font-size:11px;line-height:1.4}
+  .rate-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:12px}
+  .rate-card h4,.summary-card h4,.quick-card h4,.activity-card h4,.methods-card h4,.section-card h3{margin:0;color:#172033;font-size:15px;font-weight:800}
+  .progress-ring{width:88px;height:88px;border-radius:999px;border:8px solid #eef2ef;display:grid;place-items:center;color:#172033;font-size:18px;font-weight:800;margin:4px auto}
+  .rate-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;text-align:center;color:#667085;font-size:11px}
+  .rate-meta strong{display:block;color:#172033;font-size:18px;font-weight:800}
+
+  .overview-grid{display:grid;grid-template-columns:1.4fr .95fr .85fr;gap:14px}
+  .panel-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:12px}
+  .panel-card h4{margin:0;color:#172033;font-size:15px;font-weight:800}
+  .big-progress{min-height:180px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .big-ring-wrap{display:grid;place-items:center;border-right:1px solid #edf2ef}
+  .big-ring{width:150px;height:150px;border-radius:999px;border:10px solid #eef2ef;display:grid;place-items:center;text-align:center}
+  .big-ring strong{display:block;color:#172033;font-size:34px;font-weight:800;line-height:1}
+  .big-ring span{display:block;color:#667085;font-size:12px;margin-top:4px}
+  .method-list{display:grid;gap:10px}
+  .method-line{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#344054;font-size:12px}
+  .method-line span:first-child{display:inline-flex;align-items:center;gap:8px}
+  .live-note{padding:14px;border:1px solid #dcecdf;border-radius:16px;background:linear-gradient(135deg,#f5fbf7,#fbfefc);display:grid;gap:12px;align-content:start}
+  .live-note strong{color:#16a34a;font-size:13px;font-weight:800}
+  .live-note p{margin:0;color:#315946;font-size:12px;line-height:1.45}
+  .duration{display:grid;gap:4px}
+  .duration label{color:#667085;font-size:11px}
+  .duration strong{color:#172033;font-size:18px;font-weight:800}
+
+  .summary-card,.quick-card,.activity-card,.methods-card{padding:16px;display:grid;gap:12px}
+  .summary-list,.quick-list,.activity-list,.method-status-list{display:grid;gap:10px}
+  .summary-item,.quick-item,.activity-item,.method-status-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;color:#344054;font-size:12px}
+  .summary-item i,.quick-item i,.activity-item i,.method-status-item i{color:#667085;margin-top:2px}
+  .summary-item strong,.quick-item strong,.activity-item strong,.method-status-item strong{display:block;color:#172033;font-size:12px;font-weight:700}
+  .summary-item span,.quick-item span,.activity-item span,.method-status-item span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
+  .quick-action-btn{width:100%;justify-content:flex-start}
+  .method-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .method-status-tag{padding:4px 9px;border-radius:999px;background:#eef8f1;color:#16a34a;font-size:10px;font-weight:800}
+  .method-status-tag.off{background:#f3f4f6;color:#667085}
+
+  .section-card{padding:18px;display:grid;gap:14px}
+  .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .section-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+
+  .session-inline-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;padding:12px 14px;border:1px solid #e2ebe5;border-radius:16px;background:#fff}
+  .session-inline-cell{display:grid;gap:3px}
+  .session-inline-cell label{color:#667085;font-size:11px}
+  .session-inline-cell strong{color:#172033;font-size:12px;font-weight:700}
+
+  .edit-form{display:grid;gap:14px}
+  .edit-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .span-2{grid-column:1/-1}
+  .edit-section{display:grid;gap:12px;padding:14px;border:1px solid #e2ebe5;border-radius:16px;background:#fbfdfc}
+  .edit-section h4{margin:0;color:#172033;font-size:14px;font-weight:800}
+  .edit-section p{margin:0;color:var(--muted);font-size:11px;line-height:1.4}
+  .field{display:grid;gap:7px}
+  .field label{color:#344054;font-size:12px;font-weight:700}
+  .field input,.field select{width:100%;min-height:42px;padding:10px 12px;border:1px solid #d9e3dd;border-radius:12px;background:#fff;color:#172033;font:inherit;font-size:13px}
+  .basics-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.9fr);gap:12px}
+  .inline-toggle{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #d9eadf;border-radius:13px;background:#fff;color:#172033;font-size:12px;font-weight:700}
+  .inline-toggle input{width:auto;min-height:auto;margin-top:3px}
+  .inline-toggle span{display:grid;gap:2px}
+  .inline-toggle small{color:var(--muted);font-size:11px;font-weight:500;line-height:1.4}
+  .timing-grid,.feature-grid,.rules-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .timing-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .timing-window-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 240px;gap:12px;align-items:end}
+  .timing-note{padding:11px 12px;border:1px solid #dcecdf;border-radius:13px;background:#f7fcf8;color:#315946;font-size:11px;line-height:1.45}
+  .timing-note strong{display:block;color:#172033;font-size:12px;font-weight:700;margin-bottom:3px}
+  .methods-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .method-card{display:grid;gap:10px;padding:12px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;align-content:start}
+  .method-card.active{border-color:#d5eedc;background:#f7fcf8}
+  .method-card.locked{background:#fafbfb;border-style:dashed;opacity:.82}
+  .method-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .method-card-title{display:inline-flex;align-items:center;gap:9px;color:#172033;font-size:12px;font-weight:700}
+  .method-card-title i{font-size:15px;color:#16a34a}
+  .method-card.qr .method-card-title i{color:#2563eb}
+  .method-card.nfc .method-card-title i{color:#667085}
+  .method-card.face .method-card-title i{color:#f59e0b}
+  .method-card.geo .method-card-title i{color:#16a34a}
+  .method-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+  .method-card-status{padding:4px 8px;border-radius:999px;background:#eef8f1;color:#16a34a;font-size:10px;font-weight:800}
+  .method-card-status.off{background:#f3f4f6;color:#667085}
+  .method-card-status.locked{background:#fff4e5;color:#b45309}
+  .method-card-toggle{display:flex;gap:8px;align-items:flex-start}
+  .method-card-toggle input{width:auto;min-height:auto;margin-top:2px}
+  .method-card-actions{display:flex;justify-content:flex-end}
+  .method-card-note{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid #ece5cf;border-radius:12px;background:#fffaf0;color:#8a5a00;font-size:11px;line-height:1.4}
+  .method-card-note i{margin-top:1px}
+  .feature-card{display:grid;gap:10px;padding:14px;border:1px solid #d9eadf;border-radius:16px;background:#f2fbf5}
+  .toggle-line{display:flex;gap:10px;align-items:flex-start;color:#172033;font-size:12px;font-weight:700}
+  .toggle-line input{width:auto;min-height:auto;margin-top:4px}
+  .toggle-copy{display:grid;gap:3px}
+  .toggle-copy b{font-size:13px}
+  .toggle-copy span{color:var(--muted);font-size:11px;font-weight:500;line-height:1.4}
+  .optional-panel{display:grid;gap:10px;padding:12px;border:1px solid #d8f0df;border-radius:14px;background:#fff}
+  .optional-panel-head{display:grid;gap:3px}
+  .optional-panel-head strong{color:#172033;font-size:12px}
+  .optional-panel-head span{color:var(--muted);font-size:11px;line-height:1.4}
+  .self-check-panel{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px;align-items:end}
+  .helper-note{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border:1px solid #d8f0df;border-radius:13px;background:#effbf3;color:#315946;font-size:11px;line-height:1.45}
+  .helper-note i{color:#16a34a;margin-top:2px}
+  .info-strip{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px solid #dcecdf;border-radius:14px;background:#f7fcf8;color:#315946;font-size:12px;line-height:1.5}
+  .info-strip strong{display:block;color:#172033;font-size:12px;font-weight:700}
+  .info-strip span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+  .info-strip i{color:#16a34a;margin-top:2px}
+
+  .tools-row{display:flex;gap:8px;flex-wrap:wrap}
+  .table-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .search-row{display:flex;gap:8px;flex-wrap:wrap}
+  .search-input{min-width:260px}
+  .table-tabs{display:flex;gap:10px;flex-wrap:wrap}
+  .table-tab{padding:8px 10px;border:0;border-radius:10px;background:#fff;color:#667085;font-size:12px;font-weight:700}
+  .table-tab.active{color:#16a34a;box-shadow:inset 0 -2px 0 #16a34a}
+  .table-shell{overflow:auto;border:1px solid #e2ebe5;border-radius:16px;background:#fff}
+  table{width:100%;border-collapse:collapse;min-width:900px}
+  th,td{padding:13px 14px;text-align:left;border-bottom:1px solid #edf2ef;vertical-align:middle}
+  th{color:#667085;font-size:11px;text-transform:uppercase;letter-spacing:.08em;background:#fbfdfc}
+  td{color:#202939;font-size:13px}
+  tr:last-child td{border-bottom:0}
+  .member-cell{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:center}
+  .member-avatar{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:#f1e4ff;color:#7c3aed;font-size:12px;font-weight:800}
+  .member-name{font-weight:700}
+  .member-meta{margin-top:2px;color:#667085;font-size:11px}
+  .state{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800}
+  .state.present{color:#0f6b3a;background:#eaf8ef}
+  .state.absent{color:#b42318;background:#fff1f1}
+  .state.pending{color:#b45309;background:#fff7e6}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .tiny-btn{min-height:30px;padding:7px 10px;border-radius:10px;border:1px solid #d9e3dd;background:#fff;color:#344054;font-size:11px;font-weight:700}
+  .tiny-btn.present{color:#0f6b3a;background:#effbf3;border-color:#d6efdd}
+  .tiny-btn.absent{color:#ef4444;background:#fff4f3;border-color:#f3d0cc}
+  .table-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#667085;font-size:11px}
+  .pager{display:flex;gap:6px}
+  .pager-btn{width:32px;height:32px;border:1px solid #d9e3dd;border-radius:10px;background:#fff;color:#667085;display:grid;place-items:center}
+
+  [data-tab-panel]{display:none}
+  [data-tab-panel].active{display:grid}
+
+  @media (max-width:1100px){
+    .content-grid,.overview-grid,.edit-form-grid,.session-inline-summary{grid-template-columns:1fr}
+    .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .timing-window-grid,.self-check-panel,.methods-grid,.basics-grid{grid-template-columns:1fr}
   }
-
-  .report-card,
-  .report-hero{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:26px;
-    box-shadow:0 22px 54px rgba(15,23,42,.075);
-  }
-
-  .report-hero{
-    padding:26px;
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:20px;
-    align-items:center;
-    background:
-      radial-gradient(560px 230px at 90% 0%, rgba(34,197,94,.16), transparent 58%),
-      linear-gradient(135deg,#ffffff,#fbfffc);
-  }
-
-  .eyebrow{
-    color:var(--green2);
-    font-size:13px;
-    font-weight:900;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-  }
-
-  .report-hero h2,
-  .report-card h3{
-    margin:6px 0 0;
-    color:#172033;
-    font-weight:900;
-    letter-spacing:-.045em;
-  }
-
-  .report-hero p,
-  .report-card p{
-    margin:7px 0 0;
-    color:var(--muted);
-  }
-
-  .action-row{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:flex-end;
-    gap:10px;
-  }
-
-  .report-btn{
-    min-height:44px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:11px 15px;
-    border-radius:14px;
-    border:1px solid var(--line);
-    background:#fff;
-    color:#263244;
-    font-weight:900;
-    font-size:13px;
-    cursor:pointer;
-  }
-
-  .report-btn.primary{
-    color:#fff;
-    border-color:transparent;
-    background:linear-gradient(135deg,#22c55e,#16a34a);
-    box-shadow:0 16px 32px rgba(22,163,74,.18);
-  }
-
-  .report-btn.danger{
-    color:#b42318;
-    background:#fff7f7;
-    border-color:#ffd6d6;
-  }
-
-  .status-pill{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:9px 12px;
-    border-radius:999px;
-    color:#0f6b3a;
-    background:#eaf8ef;
-    border:1px solid #d6efdd;
-    font-weight:900;
-    font-size:13px;
-  }
-
-  .status-pill.closed{
-    color:#475467;
-    background:#f2f4f7;
-    border-color:#e4e7ec;
-  }
-
-  .metric-grid{
-    display:grid;
-    grid-template-columns:repeat(4, minmax(0,1fr));
-    gap:14px;
-  }
-
-  .metric{
-    position:relative;
-    overflow:hidden;
-    padding:19px;
-    min-height:132px;
-    border:1px solid var(--line);
-    border-radius:24px;
-    background:#fff;
-  }
-
-  .metric::after{
-    content:"";
-    position:absolute;
-    right:-34px;
-    bottom:-44px;
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    background:#eaf8ef;
-  }
-
-  .metric i{
-    width:42px;
-    height:42px;
-    display:grid;
-    place-items:center;
-    border-radius:14px;
-    color:#fff;
-    background:linear-gradient(135deg,#22c55e,#0f7a38);
-    box-shadow:0 16px 32px rgba(22,163,74,.18);
-  }
-
-  .metric span{
-    display:block;
-    margin-top:15px;
-    color:#344054;
-    font-weight:900;
-    font-size:13px;
-  }
-
-  .metric strong{
-    display:block;
-    margin-top:5px;
-    color:#111827;
-    font-size:30px;
-    line-height:1;
-    font-weight:900;
-    letter-spacing:-.05em;
-  }
-
-  .report-grid{
-    display:grid;
-    grid-template-columns:1.35fr .85fr;
-    gap:18px;
-    align-items:start;
-  }
-
-  .report-card{
-    padding:22px;
-  }
-
-  .method-grid{
-    display:grid;
-    gap:10px;
-    margin-top:18px;
-  }
-
-  .method-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    padding:14px;
-    border-radius:16px;
-    background:#fbfdfc;
-    border:1px solid var(--line);
-    color:#344054;
-    font-weight:900;
-  }
-
-  .method-row span:last-child{
-    min-width:44px;
-    text-align:center;
-    padding:7px 10px;
-    border-radius:999px;
-    color:#0f6b3a;
-    background:#eaf8ef;
-  }
-
-  .table-shell{
-    overflow:auto;
-    margin-top:18px;
-    border:1px solid var(--line);
-    border-radius:20px;
-  }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    min-width:820px;
-  }
-
-  th,
-  td{
-    padding:15px 16px;
-    text-align:left;
-    border-bottom:1px solid #edf2ef;
-    vertical-align:middle;
-  }
-
-  th{
-    color:#667085;
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:.09em;
-    background:#fbfdfc;
-  }
-
-  td{
-    color:#202939;
-    font-size:14px;
-  }
-
-  tr:last-child td{ border-bottom:0; }
-
-  .member-name{
-    font-weight:900;
-  }
-
-  .member-meta{
-    margin-top:3px;
-    color:#667085;
-    font-size:12px;
-  }
-
-  .row-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .tiny-btn{
-    min-height:34px;
-    padding:8px 11px;
-    border-radius:11px;
-    border:1px solid var(--line);
-    background:#fff;
-    color:#344054;
-    font-size:12px;
-    font-weight:900;
-  }
-
-  .tiny-btn.present{
-    color:#0f6b3a;
-    background:#eaf8ef;
-    border-color:#d6efdd;
-  }
-
-  .tiny-btn.absent{
-    color:#b42318;
-    background:#fff7f7;
-    border-color:#ffd6d6;
-  }
-
-  .state{
-    display:inline-flex;
-    align-items:center;
-    gap:7px;
-    padding:7px 10px;
-    border-radius:999px;
-    font-weight:900;
-    font-size:12px;
-  }
-
-  .state.present{ color:#0f6b3a; background:#eaf8ef; }
-  .state.absent{ color:#b42318; background:#fff1f1; }
-  .state.pending{ color:#475467; background:#f2f4f7; }
-
-  .empty{
-    margin-top:18px;
-    padding:18px;
-    border:1px dashed #cfded5;
-    border-radius:18px;
-    color:var(--muted);
-    background:#fbfdfc;
-  }
-
-  @media (max-width: 1000px){
-    .report-hero,
-    .report-grid{
-      grid-template-columns:1fr;
-    }
-    .action-row{
-      justify-content:flex-start;
-    }
-    .metric-grid{
-      grid-template-columns:repeat(2, minmax(0,1fr));
-    }
-  }
-
-  @media (max-width: 640px){
-    .metric-grid{
-      grid-template-columns:1fr;
-    }
+  @media (max-width:760px){
+    .hero-top,.table-tools{align-items:stretch}
+    .hero-actions,.tools-row,.search-row,.table-tabs,.session-row .actions,.row-actions{justify-content:flex-start}
+    .stats-grid,.timing-grid,.feature-grid,.rules-grid,.session-row{grid-template-columns:1fr}
+    .timing-head{align-items:stretch}
+    .overview-grid{grid-template-columns:1fr}
+    .big-progress{grid-template-columns:1fr}
+    .big-ring-wrap{border-right:0;border-bottom:1px solid #edf2ef;padding-bottom:12px}
   }
 </style>
 
-<div class="session-report">
-  <section class="report-hero">
-    <div>
-      <div class="eyebrow">Event session</div>
-      <h2>{{ session.session_name|default:session.event_name }}</h2>
-      <p>
-        {{ session.event_name|default:"Attendance event" }}
-        {% if session.starts_at %} - {{ session.starts_at }}{% endif %}
-      </p>
-    </div>
+{% widthratio present_count total_members 100 as present_percent %}
 
-    <div class="action-row">
-      <span class="status-pill {% if session.status == 'closed' %}closed{% endif %}">
-        <i class="fa-solid fa-circle-check"></i>
-        {% if is_active_session %}Active{% else %}{{ session.status|default:"Open"|title }}{% endif %}
-      </span>
-      {% if not is_active_session %}
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="select">
-          <button class="report-btn primary" type="submit">
-            <i class="fa-solid fa-bolt"></i> Make Active
-          </button>
-        </form>
-      {% endif %}
-      <a class="report-btn" href="#session-edit">
-        <i class="fa-solid fa-pen-to-square"></i> Edit
-      </a>
-      <a class="report-btn" href="{% url 'manual_attendance' %}">
-        <i class="fa-solid fa-list-check"></i> Manual
-      </a>
-      {% if can_use_qr %}
-        <a class="report-btn" href="{% url 'qr_attendance' %}">
-          <i class="fa-solid fa-qrcode"></i> QR
-        </a>
-      {% endif %}
-      {% if can_use_nfc %}
-        <a class="report-btn" href="{% url 'nfc_attendance' %}">
-          <i class="fa-solid fa-id-card-clip"></i> NFC
-        </a>
-      {% endif %}
-      {% if can_use_face %}
-        <a class="report-btn" href="{% url 'stream_all_cameras' %}">
-          <i class="fa-solid fa-face-smile"></i> Face
-        </a>
-      {% endif %}
-    </div>
-  </section>
-
-  <section class="metric-grid">
-    <div class="metric">
-      <i class="fa-solid fa-users"></i>
-      <span>Members</span>
-      <strong>{{ total_members }}</strong>
-    </div>
-    <div class="metric">
-      <i class="fa-solid fa-user-check"></i>
-      <span>Present</span>
-      <strong>{{ present_count }}</strong>
-    </div>
-    <div class="metric">
-      <i class="fa-solid fa-user-xmark"></i>
-      <span>Absent</span>
-      <strong>{{ absent_count }}</strong>
-    </div>
-    <div class="metric">
-      <i class="fa-solid fa-hourglass-half"></i>
-      <span>Pending</span>
-      <strong>{{ pending_count }}</strong>
-    </div>
-  </section>
-
-  {% if session.allow_member_self_check_in %}
-    <section class="report-card" style="margin-bottom:18px;">
-      <div class="action-row" style="justify-content:space-between;">
-        <div>
-          <h3>Mobile Self Check-In</h3>
-          <p>Share this word only with people physically present. Members enter it in the mobile app to check in.</p>
+<div class="session-mgmt">
+  <section class="surface hero">
+    <div class="hero-top">
+      <div class="hero-copy">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <h2>{{ session.session_name|default:session.event_name }}</h2>
+          <span class="status-pill {% if session.status == 'closed' %}closed{% endif %}">
+            <i class="fa-solid fa-circle"></i>
+            {% if is_active_session %}Active{% else %}{{ session.status|default:"Open"|title }}{% endif %}
+          </span>
         </div>
-        <span class="status-pill">
-          <i class="fa-solid fa-key"></i>
-          {{ session.self_check_in_code|default:"No word set" }}
-        </span>
+        <p>{{ session.event_name|default:"Attendance event" }} | {% if session.starts_at %}{{ session.starts_at }}{% else %}Not started{% endif %}</p>
       </div>
-    </section>
-  {% endif %}
-
-  <section class="report-card" id="session-edit" style="margin-bottom:18px;">
-    <div class="action-row" style="justify-content:space-between;align-items:flex-start;">
-      <div>
-        <h3>Edit Session</h3>
-        <p>Update timing, status, and member check-in controls for this event session.</p>
-      </div>
-    </div>
-    <form method="post" style="padding:0 22px 22px;display:grid;gap:14px;">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="edit">
-      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
-        <div>
-          <label for="session_name" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Session label</label>
-          <input id="session_name" name="session_name" value="{{ session_edit.session_name }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-        <div>
-          <label for="status" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Status</label>
-          <select id="status" name="status" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-            <option value="open" {% if session_edit.status == "open" %}selected{% endif %}>Open</option>
-            <option value="scheduled" {% if session_edit.status == "scheduled" %}selected{% endif %}>Scheduled</option>
-            <option value="closed" {% if session_edit.status == "closed" %}selected{% endif %}>Closed</option>
-            <option value="cancelled" {% if session_edit.status == "cancelled" %}selected{% endif %}>Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
-        <div>
-          <label for="starts_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Starts at</label>
-          <input id="starts_at" name="starts_at" type="datetime-local" value="{{ session_edit.starts_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-        <div>
-          <label for="ends_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Ends at</label>
-          <input id="ends_at" name="ends_at" type="datetime-local" value="{{ session_edit.ends_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-      </div>
-      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
-        <label style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;font-weight:800;color:#344054;">
-          <input type="checkbox" name="allow_member_self_check_in" {% if session_edit.allow_member_self_check_in %}checked{% endif %} style="width:auto;min-height:auto;margin-top:4px;">
-          <span>Allow mobile self check-in with a word of the day</span>
-        </label>
-        <label style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;font-weight:800;color:#344054;">
-          <input type="checkbox" name="allow_member_geo_check_in" {% if session_edit.allow_member_geo_check_in %}checked{% endif %} style="width:auto;min-height:auto;margin-top:4px;">
-          <span>Allow member GeoTracking check-in for this session</span>
-        </label>
-      </div>
-      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
-        <div>
-          <label for="self_check_in_code" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Self check-in word</label>
-          <input id="self_check_in_code" name="self_check_in_code" value="{{ session_edit.self_check_in_code }}" placeholder="e.g. Heaven, Peace, Gate" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;padding:13px 14px;border:1px solid #d8f0df;border-radius:14px;background:#effbf3;color:#315946;font-size:13px;line-height:1.5;">
-          <i class="fa-solid fa-circle-info" style="color:#16a34a;margin-top:2px;"></i>
-          <span>Share the word only with people physically present. Members enter it in the mobile app before KairosTrack marks them present.</span>
-        </div>
-      </div>
-      <div class="action-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;">
-        <div>
-          <label for="check_in_opens_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Check-in opens</label>
-          <input id="check_in_opens_at" name="check_in_opens_at" type="datetime-local" value="{{ session_edit.check_in_opens_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-        <div>
-          <label for="check_in_closes_at" style="display:block;margin-bottom:8px;font-weight:900;color:#344054;">Check-in closes</label>
-          <input id="check_in_closes_at" name="check_in_closes_at" type="datetime-local" value="{{ session_edit.check_in_closes_at }}" style="width:100%;min-height:46px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfdfc;">
-        </div>
-      </div>
-      <div class="action-row">
-        <button class="report-btn primary" type="submit">
-          <i class="fa-solid fa-floppy-disk"></i> Save Session Changes
-        </button>
-      </div>
-    </form>
-  </section>
-
-  <section class="report-grid">
-    <div class="report-card">
-      <div class="action-row" style="justify-content:space-between;">
-        <div>
-          <h3>Member Attendance</h3>
-          <p>Mark or review each member for this session.</p>
-        </div>
-        <div class="action-row">
-          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=csv">CSV</a>
-          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=xlsx">Excel</a>
-          <a class="report-btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=pdf">PDF</a>
-        </div>
-      </div>
-
-      <div class="table-shell">
-        <table>
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Status</th>
-              <th>Method</th>
-              <th>Check-in</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in rows %}
-              <tr>
-                <td>
-                  <div class="member-name">{{ row.person.name }}</div>
-                  <div class="member-meta">{{ row.person.member_code|default:row.person.portal_id|default:"No member code" }}</div>
-                </td>
-                <td>
-                  <span class="state {{ row.status }}">{{ row.status_label }}</span>
-                </td>
-                <td>{{ row.method_label }}</td>
-                <td>{% if row.record %}{{ row.record.check_in_time|default:"-" }}{% else %}-{% endif %}</td>
-                <td>
-                  <div class="row-actions">
-                    <form method="post">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="mark">
-                      <input type="hidden" name="person_id" value="{{ row.person.id }}">
-                      <input type="hidden" name="status" value="present">
-                      <button class="tiny-btn present" type="submit">Present</button>
-                    </form>
-                    <form method="post">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="mark">
-                      <input type="hidden" name="person_id" value="{{ row.person.id }}">
-                      <input type="hidden" name="status" value="absent">
-                      <button class="tiny-btn absent" type="submit">Absent</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5">No authorized members are available yet.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <aside class="report-card">
-      <h3>Check-in Methods</h3>
-      <p>How attendance was captured for this session.</p>
-
-      {% if method_cards %}
-        <div class="method-grid">
-          {% for method in method_cards %}
-            <div class="method-row">
-              <span>{{ method.label }}</span>
-              <span>{{ method.count }}</span>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty">No attendance has been marked yet.</div>
-      {% endif %}
-
-      <div class="method-grid" style="margin-top:18px;">
+      <div class="hero-actions">
+        {% if not is_active_session %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="select">
+            <button class="btn" type="submit">
+              <i class="fa-solid fa-bolt"></i>
+              {% if session.status == "scheduled" %}Start Session{% else %}Make Active{% endif %}
+            </button>
+          </form>
+        {% endif %}
+        <button class="btn" type="button" data-open-tab="settings"><i class="fa-solid fa-gear"></i> More</button>
         {% if session.status != "closed" %}
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="status">
             <input type="hidden" name="status" value="closed">
-            <button class="report-btn danger" type="submit">
-              <i class="fa-solid fa-lock"></i> Close Session
-            </button>
+            <button class="btn danger" type="submit"><i class="fa-solid fa-stop"></i> End Session</button>
           </form>
         {% else %}
           <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="status">
             <input type="hidden" name="status" value="open">
-            <button class="report-btn primary" type="submit">
-              <i class="fa-solid fa-unlock"></i> Reopen Session
-            </button>
+            <button class="btn primary" type="submit"><i class="fa-solid fa-play"></i> Reopen Session</button>
           </form>
         {% endif %}
-        <a class="report-btn" href="{% url 'person_attendance_list' %}?attendance_session_id={{ session.id }}">
-          <i class="fa-solid fa-table-list"></i> Full Log
-        </a>
       </div>
-    </aside>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" type="button" data-tab="overview"><i class="fa-solid fa-table-cells-large"></i> Overview</button>
+      <button class="tab-btn" type="button" data-tab="attendance"><i class="fa-solid fa-users"></i> Attendance</button>
+      <button class="tab-btn" type="button" data-tab="settings"><i class="fa-solid fa-gear"></i> Session Settings</button>
+      <button class="tab-btn" type="button" data-tab="reports"><i class="fa-regular fa-file-lines"></i> Reports</button>
+    </div>
   </section>
+
+  <div class="content-grid">
+    <div class="main-stack">
+      <section class="stats-grid">
+        <div class="stat-card surface">
+          <span class="stat-icon"><i class="fa-solid fa-users"></i></span>
+          <span class="stat-label">Members</span>
+          <strong class="stat-value">{{ total_members }}</strong>
+          <span class="stat-meta">Total expected</span>
+        </div>
+        <div class="stat-card surface">
+          <span class="stat-icon"><i class="fa-solid fa-user-check"></i></span>
+          <span class="stat-label">Present</span>
+          <strong class="stat-value">{{ present_count }}</strong>
+          <span class="stat-meta">{{ present_percent|default:"0" }}% of expected</span>
+        </div>
+        <div class="stat-card surface">
+          <span class="stat-icon"><i class="fa-solid fa-user-xmark"></i></span>
+          <span class="stat-label">Absent</span>
+          <strong class="stat-value">{{ absent_count }}</strong>
+          <span class="stat-meta">Marked absent</span>
+        </div>
+        <div class="stat-card surface">
+          <span class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></span>
+          <span class="stat-label">Pending</span>
+          <strong class="stat-value">{{ pending_count }}</strong>
+          <span class="stat-meta">Not checked in</span>
+        </div>
+        <div class="rate-card surface">
+          <h4>Check-in Rate</h4>
+          <div class="progress-ring">{{ present_percent|default:"0" }}%</div>
+          <div class="rate-meta">
+            <div><strong>{{ present_percent|default:"0" }}%</strong><span>Current</span></div>
+            <div><strong>100%</strong><span>Goal</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="main-stack" data-tab-panel="overview">
+        <section class="overview-grid">
+          <div class="panel-card surface" style="grid-column:span 2;">
+            <div class="big-progress">
+              <div class="big-ring-wrap">
+                <div class="big-ring">
+                  <div>
+                    <strong>{{ present_percent|default:"0" }}%</strong>
+                    <span>Checked in</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:14px;">
+                <div>
+                  <h4>Check-in Methods</h4>
+                  <div class="method-list">
+                    {% if method_cards %}
+                      {% for method in method_cards %}
+                        <div class="method-line">
+                          <span><i class="fa-solid fa-check"></i> {{ method.label }}</span>
+                          <strong>{{ method.count }}</strong>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="method-line"><span><i class="fa-solid fa-circle-info"></i> No attendance yet</span><strong>0</strong></div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="live-note">
+                  <strong>Session is live</strong>
+                  <p>Members can now check in using the enabled methods.</p>
+                  <div class="duration">
+                    <label>Session Duration</label>
+                    <strong>{% if session.starts_at %}In progress{% else %}Not started{% endif %}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="summary-card surface">
+            <h4>Session Summary</h4>
+            <div class="summary-list">
+              <div class="summary-item"><i class="fa-solid fa-tag"></i><div><strong>Event</strong><span>{{ session.event_name|default:"-" }}</span></div></div>
+              <div class="summary-item"><i class="fa-regular fa-calendar"></i><div><strong>Session</strong><span>{{ session.session_name|default:session.event_name }}</span></div></div>
+              <div class="summary-item"><i class="fa-regular fa-clock"></i><div><strong>Time</strong><span>{{ session.starts_at|default:"-" }}{% if session.ends_at %} - {{ session.ends_at }}{% endif %}</span></div></div>
+              <div class="summary-item"><i class="fa-solid fa-circle-play"></i><div><strong>Status</strong><span>{{ session.status|default:"Open"|title }}</span></div></div>
+              <div class="summary-item"><i class="fa-regular fa-clock"></i><div><strong>Check-in Window</strong><span>{% if session.check_in_opens_at or session.check_in_closes_at %}{{ session.check_in_opens_at|default:"-" }} - {{ session.check_in_closes_at|default:"-" }}{% else %}Session time{% endif %}</span></div></div>
+              <div class="summary-item"><i class="fa-solid fa-user-clock"></i><div><strong>Late Check-in</strong><span>{{ session_edit.late_check_in_grace_minutes|default:"0" }} mins</span></div></div>
+              <div class="summary-item"><i class="fa-solid fa-users"></i><div><strong>Max Capacity</strong><span>{{ session_edit.max_capacity|default:"Unlimited" }}</span></div></div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="section-card surface">
+          <div class="section-head">
+            <div>
+              <h3>Edit Session</h3>
+              <p>Update session details and settings without leaving this page.</p>
+            </div>
+            <button class="btn" type="button" data-open-tab="settings">Edit Details</button>
+          </div>
+          <div class="session-inline-summary">
+            <div class="session-inline-cell"><label>Session Name</label><strong>{{ session.session_name|default:session.event_name }}</strong></div>
+            <div class="session-inline-cell"><label>Status</label><strong>{{ session.status|default:"Open"|title }}</strong></div>
+            <div class="session-inline-cell"><label>Check-in Window</label><strong>{% if session.check_in_opens_at or session.check_in_closes_at %}Custom{% else %}Session time{% endif %}</strong></div>
+            <div class="session-inline-cell"><label>Late Check-in</label><strong>{{ session_edit.late_check_in_grace_minutes|default:"0" }} mins</strong></div>
+            <button class="btn" type="button" data-open-tab="settings">Advanced Settings <i class="fa-solid fa-arrow-right"></i></button>
+          </div>
+        </section>
+      </div>
+
+      <section class="section-card surface active" data-tab-panel="attendance">
+        <div class="section-head">
+          <div>
+            <h3>Member Attendance</h3>
+            <p>Search, filter, and mark attendance for members in this session.</p>
+          </div>
+          <div class="tools-row">
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=csv">CSV</a>
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=xlsx">Excel</a>
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=pdf">PDF</a>
+          </div>
+        </div>
+
+        <div class="table-tools">
+          <div class="search-row">
+            <input class="field search-input" style="min-height:40px;padding:10px 12px;border:1px solid #d9e3dd;border-radius:12px;background:#fff;color:#172033;font:inherit;font-size:13px;" placeholder="Search member...">
+            <button class="btn" type="button"><i class="fa-solid fa-filter"></i> Filter</button>
+          </div>
+          <div class="table-tabs">
+            <button class="table-tab active" type="button">All ({{ total_members }})</button>
+            <button class="table-tab" type="button">Present ({{ present_count }})</button>
+            <button class="table-tab" type="button">Absent ({{ absent_count }})</button>
+            <button class="table-tab" type="button">Pending ({{ pending_count }})</button>
+          </div>
+        </div>
+
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Member</th>
+                <th>Status</th>
+                <th>Method</th>
+                <th>Check-in Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in rows %}
+                <tr>
+                  <td><input type="checkbox"></td>
+                  <td>
+                    <div class="member-cell">
+                      <div class="member-avatar">{{ row.person.name|slice:":1"|upper }}</div>
+                      <div>
+                        <div class="member-name">{{ row.person.name }}</div>
+                        <div class="member-meta">{{ row.person.member_code|default:row.person.portal_id|default:"No member code" }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="state {{ row.status }}">{{ row.status_label }}</span></td>
+                  <td>{{ row.method_label }}</td>
+                  <td>{% if row.record %}{{ row.record.check_in_time|default:"-" }}{% else %}-{% endif %}</td>
+                  <td>
+                    <div class="row-actions">
+                      <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark">
+                        <input type="hidden" name="person_id" value="{{ row.person.id }}">
+                        <input type="hidden" name="status" value="present">
+                        <button class="tiny-btn present" type="submit">Mark Present</button>
+                      </form>
+                      <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark">
+                        <input type="hidden" name="person_id" value="{{ row.person.id }}">
+                        <input type="hidden" name="status" value="absent">
+                        <button class="tiny-btn absent" type="submit">Mark Absent</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6">No authorized members are available yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span>Showing {{ rows|length }} of {{ total_members }} member{{ total_members|pluralize }}</span>
+          <div class="pager">
+            <button class="pager-btn" type="button"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="pager-btn" type="button">1</button>
+            <button class="pager-btn" type="button"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-card surface" data-tab-panel="settings">
+        <div class="section-head">
+          <div>
+            <h3>Session Settings</h3>
+            <p>Update session timing, status, check-in methods, and session rules.</p>
+          </div>
+        </div>
+
+        <form method="post" class="edit-form" id="sessionEditForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="edit">
+
+          <div class="edit-form-grid">
+            <div class="edit-section span-2">
+              <h4>Session basics</h4>
+              <p>Keep the label and current lifecycle state together.</p>
+              <div class="basics-grid">
+                <div class="field">
+                  <label for="session_name">Session Name</label>
+                  <input id="session_name" name="session_name" value="{{ session_edit.session_name }}">
+                </div>
+                <div class="field">
+                  <label for="status">Status</label>
+                  <select id="status" name="status">
+                    <option value="open" {% if session_edit.status == "open" %}selected{% endif %}>Open</option>
+                    <option value="scheduled" {% if session_edit.status == "scheduled" %}selected{% endif %}>Scheduled</option>
+                    <option value="closed" {% if session_edit.status == "closed" %}selected{% endif %}>Closed</option>
+                    <option value="cancelled" {% if session_edit.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-section span-2">
+              <div class="timing-head">
+                <div>
+                  <h4>Timing</h4>
+                  <p>Use a custom attendance window only if it should differ from the session time.</p>
+                </div>
+                <label class="inline-toggle" for="edit_custom_attendance_window">
+                  <input id="edit_custom_attendance_window" type="checkbox" {% if session_edit.check_in_opens_at or session_edit.check_in_closes_at %}checked{% endif %}>
+                  <span>
+                    Custom attendance window
+                    <small>Default behavior follows the session start and end time.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="timing-grid">
+                <div class="field">
+                  <label for="starts_at">Session starts</label>
+                  <input id="starts_at" name="starts_at" type="datetime-local" value="{{ session_edit.starts_at }}">
+                </div>
+                <div class="field">
+                  <label for="ends_at">Session ends</label>
+                  <input id="ends_at" name="ends_at" type="datetime-local" value="{{ session_edit.ends_at }}">
+                </div>
+              </div>
+              <div class="timing-window-grid" data-custom-window-fields {% if not session_edit.check_in_opens_at and not session_edit.check_in_closes_at %}hidden{% endif %}>
+                <div class="field">
+                  <label for="check_in_opens_at">Attendance starts</label>
+                  <input id="check_in_opens_at" name="check_in_opens_at" type="datetime-local" value="{{ session_edit.check_in_opens_at }}">
+                </div>
+                <div class="field">
+                  <label for="check_in_closes_at">Attendance ends</label>
+                  <input id="check_in_closes_at" name="check_in_closes_at" type="datetime-local" value="{{ session_edit.check_in_closes_at }}">
+                </div>
+                <div class="timing-note">
+                  <strong>Default behavior</strong>
+                  If this is off, members can check in during the full session time.
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-section span-2">
+              <h4>Check-in Methods</h4>
+              <p>Turn on what this session uses and jump out to the specialist screens for the rest.</p>
+              <div class="methods-grid">
+                <div class="method-card {% if session_edit.allow_member_self_check_in %}active{% endif %} {% if not can_use_qr %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Self Check-in</span>
+                    <span class="method-card-status {% if not can_use_qr %}locked{% elif not session_edit.allow_member_self_check_in %}off{% endif %}">
+                      {% if not can_use_qr %}Locked{% elif session_edit.allow_member_self_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_member_self_check_in">
+                    <input id="edit_allow_member_self_check_in" type="checkbox" name="allow_member_self_check_in" {% if session_edit.allow_member_self_check_in %}checked{% endif %} {% if not can_use_qr %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow mobile self check-in</b>
+                      <span>{% if can_use_qr %}Members use a word in the app.{% else %}Standard plan required to use mobile self check-in.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_qr %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="method-card qr {% if session_edit.allow_qr_check_in %}active{% endif %} {% if not can_use_qr %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-qrcode"></i> QR Code Check-in</span>
+                    <span class="method-card-status {% if not can_use_qr %}locked{% elif not session_edit.allow_qr_check_in %}off{% endif %}">
+                      {% if not can_use_qr %}Locked{% elif session_edit.allow_qr_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_qr_check_in">
+                    <input id="edit_allow_qr_check_in" type="checkbox" name="allow_qr_check_in" {% if session_edit.allow_qr_check_in %}checked{% endif %} {% if not can_use_qr %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow QR check-in</b>
+                      <span>{% if can_use_qr %}Generate and share event QR codes for this session.{% else %}Standard plan required.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_qr %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                  <div class="method-card-actions">
+                    {% if can_use_qr %}<a class="btn" href="{% url 'qr_attendance' %}">Open QR</a>{% endif %}
+                  </div>
+                </div>
+
+                <div class="method-card {% if session_edit.allow_swipe_check_in %}active{% endif %} {% if not can_use_swipe %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-hand-pointer"></i> Swipe Check-in</span>
+                    <span class="method-card-status {% if not can_use_swipe %}locked{% elif not session_edit.allow_swipe_check_in %}off{% endif %}">
+                      {% if not can_use_swipe %}Locked{% elif session_edit.allow_swipe_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_swipe_check_in">
+                    <input id="edit_allow_swipe_check_in" type="checkbox" name="allow_swipe_check_in" {% if session_edit.allow_swipe_check_in %}checked{% endif %} {% if not can_use_swipe %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow swipe check-in</b>
+                      <span>{% if can_use_swipe %}Use the swipe queue to mark members present or absent.{% else %}Starter plan required.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_swipe %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                  <div class="method-card-actions">
+                    {% if can_use_swipe %}<a class="btn" href="{% url 'swipe_attendance' %}">Open Swipe</a>{% endif %}
+                  </div>
+                </div>
+
+                <div class="method-card nfc {% if session_edit.allow_nfc_check_in %}active{% endif %} {% if not can_use_nfc %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-id-card-clip"></i> NFC Check-in</span>
+                    <span class="method-card-status {% if not can_use_nfc %}locked{% elif not session_edit.allow_nfc_check_in %}off{% endif %}">
+                      {% if not can_use_nfc %}Locked{% elif session_edit.allow_nfc_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_nfc_check_in">
+                    <input id="edit_allow_nfc_check_in" type="checkbox" name="allow_nfc_check_in" {% if session_edit.allow_nfc_check_in %}checked{% endif %} {% if not can_use_nfc %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow NFC check-in</b>
+                      <span>{% if can_use_nfc %}Tap cards or tags from the NFC attendance screen.{% else %}Professional plan required.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_nfc %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                  <div class="method-card-actions">
+                    {% if can_use_nfc %}<a class="btn" href="{% url 'nfc_attendance' %}">Open NFC</a>{% endif %}
+                  </div>
+                </div>
+
+                <div class="method-card face {% if session_edit.allow_face_check_in %}active{% endif %} {% if not can_use_face %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-face-smile"></i> Face Recognition</span>
+                    <span class="method-card-status {% if not can_use_face %}locked{% elif not session_edit.allow_face_check_in %}off{% endif %}">
+                      {% if not can_use_face %}Locked{% elif session_edit.allow_face_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_face_check_in">
+                    <input id="edit_allow_face_check_in" type="checkbox" name="allow_face_check_in" {% if session_edit.allow_face_check_in %}checked{% endif %} {% if not can_use_face %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow face recognition</b>
+                      <span>{% if can_use_face %}Use configured cameras for this session.{% else %}Professional plan required.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_face %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                  <div class="method-card-actions">
+                    {% if can_use_face %}<a class="btn" href="{% url 'stream_all_cameras' %}">Open Cameras</a>{% endif %}
+                  </div>
+                </div>
+
+                <div class="method-card geo {% if session_edit.allow_member_geo_check_in %}active{% endif %} {% if not can_use_geo %}locked{% endif %}">
+                  <div class="method-card-header">
+                    <span class="method-card-title"><i class="fa-solid fa-location-dot"></i> GeoTracking Check-in</span>
+                    <span class="method-card-status {% if not can_use_geo %}locked{% elif not session_edit.allow_member_geo_check_in %}off{% endif %}">
+                      {% if not can_use_geo %}Locked{% elif session_edit.allow_member_geo_check_in %}On{% else %}Off{% endif %}
+                    </span>
+                  </div>
+                  <label class="method-card-toggle" for="edit_allow_member_geo_check_in">
+                    <input id="edit_allow_member_geo_check_in" type="checkbox" name="allow_member_geo_check_in" {% if session_edit.allow_member_geo_check_in %}checked{% endif %} {% if not can_use_geo %}disabled{% endif %}>
+                    <span class="toggle-copy">
+                      <b>Allow GeoTracking</b>
+                      <span>{% if can_use_geo %}Members check in from an approved location.{% else %}Enterprise plan required.{% endif %}</span>
+                    </span>
+                  </label>
+                  {% if not can_use_geo %}
+                    <div class="method-card-note">
+                      <i class="fa-solid fa-lock"></i>
+                      <span>This method is unavailable on the current plan.</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="optional-panel" data-self-check-settings {% if not session_edit.allow_member_self_check_in %}hidden{% endif %}>
+                <div class="optional-panel-head">
+                  <strong>Word of the day setup</strong>
+                  <span>This appears only when mobile self check-in is enabled.</span>
+                </div>
+                <div class="self-check-panel">
+                  <div class="field">
+                    <label for="self_check_in_code">Self check-in word</label>
+                    <input id="self_check_in_code" name="self_check_in_code" value="{{ session_edit.self_check_in_code }}" placeholder="e.g. Heaven, Peace, Gate">
+                  </div>
+                  <div class="helper-note">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Share the word only with people physically present.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-section span-2">
+              <h4>Rules & Limits</h4>
+              <p>Fine-tune late arrivals and attendance limits.</p>
+              <div class="rules-grid">
+                <div class="field">
+                  <label for="late_check_in_grace_minutes">Late check-in grace period (minutes)</label>
+                  <input id="late_check_in_grace_minutes" name="late_check_in_grace_minutes" type="number" min="0" step="1" value="{{ session_edit.late_check_in_grace_minutes }}" placeholder="0">
+                </div>
+                <div class="field">
+                  <label for="max_capacity">Max capacity</label>
+                  <input id="max_capacity" name="max_capacity" type="number" min="1" step="1" value="{{ session_edit.max_capacity }}" placeholder="Optional">
+                </div>
+              </div>
+              <div class="helper-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Leave max capacity empty if this session should not have an attendance cap.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tools-row" style="justify-content:flex-end;">
+            <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Session Changes</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="section-card surface" data-tab-panel="reports">
+        <div class="section-head">
+          <div>
+            <h3>Reports</h3>
+            <p>Export attendance data and open the full session log.</p>
+          </div>
+          <div class="tools-row">
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=csv">CSV</a>
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=xlsx">Excel</a>
+            <a class="btn" href="{% url 'attendance_export_download' %}?{{ export_query }}&format=pdf">PDF</a>
+            <a class="btn" href="{% url 'person_attendance_list' %}?attendance_session_id={{ session.id }}">Full Log</a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="side-stack">
+      <section class="surface quick-card">
+        <h4>Quick Actions</h4>
+        <div class="quick-list">
+          <a class="btn quick-action-btn" href="{% url 'manual_attendance' %}"><i class="fa-solid fa-user-plus"></i> Add Manual Attendance</a>
+          {% if can_use_swipe and session_methods.swipe %}
+            <a class="btn quick-action-btn" href="{% url 'swipe_attendance' %}"><i class="fa-solid fa-hand-pointer"></i> Open Swipe Attendance</a>
+          {% endif %}
+          {% if can_use_qr and session_methods.qr %}
+            <a class="btn quick-action-btn" href="{% url 'qr_attendance' %}"><i class="fa-solid fa-link"></i> Share Check-in Link</a>
+          {% endif %}
+          {% if can_use_qr and session_methods.qr %}
+            <a class="btn quick-action-btn" href="{% url 'qr_attendance' %}"><i class="fa-solid fa-download"></i> Download QR Code</a>
+          {% endif %}
+          {% if can_use_nfc and session_methods.nfc %}
+            <a class="btn quick-action-btn" href="{% url 'nfc_attendance' %}"><i class="fa-solid fa-id-card-clip"></i> Open NFC Attendance</a>
+          {% endif %}
+          {% if can_use_face and session_methods.face %}
+            <a class="btn quick-action-btn" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-expand"></i> View Full Screen</a>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="surface activity-card">
+        <h4>Real-time Activity</h4>
+        <div class="activity-list">
+          <div class="activity-item"><i class="fa-solid fa-circle" style="color:#16a34a;"></i><div><strong>{% if session.starts_at %}{{ session.starts_at }}{% else %}Now{% endif %}</strong><span>Session {{ session.status|default:"open" }}.</span></div></div>
+          {% if session.allow_member_self_check_in %}
+            <div class="activity-item"><i class="fa-solid fa-circle" style="color:#16a34a;"></i><div><strong>Mobile self check-in</strong><span>Members can use the active word to check in.</span></div></div>
+          {% endif %}
+          <div class="activity-item"><i class="fa-solid fa-circle" style="color:#f59e0b;"></i><div><strong>Session settings</strong><span>Session details can be edited from Session Settings.</span></div></div>
+        </div>
+      </section>
+
+      <section class="surface methods-card">
+        <h4>Check-in Methods (Active)</h4>
+        <div class="method-status-list">
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-mobile-screen-button"></i><div><strong>Mobile Self Check-in</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.self %}off{% endif %}">{% if session_methods.self %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-hand-pointer"></i><div><strong>Swipe Check-in</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.swipe %}off{% endif %}">{% if session_methods.swipe %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-qrcode"></i><div><strong>QR Code Check-in</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.qr %}off{% endif %}">{% if session_methods.qr %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-id-card-clip"></i><div><strong>NFC Check-in</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.nfc %}off{% endif %}">{% if session_methods.nfc %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-face-smile"></i><div><strong>Face Recognition</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.face %}off{% endif %}">{% if session_methods.face %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+          <div class="method-status-row">
+            <div class="method-status-item"><i class="fa-solid fa-location-dot"></i><div><strong>GeoTracking Check-in</strong></div></div>
+            <span class="method-status-tag {% if not session_methods.geo %}off{% endif %}">{% if session_methods.geo %}Active{% else %}Inactive{% endif %}</span>
+          </div>
+        </div>
+        <button class="btn" type="button" data-open-tab="settings">Manage Methods</button>
+      </section>
+    </aside>
+  </div>
 </div>
+
+<script>
+  (function(){
+    const form = document.getElementById('sessionEditForm');
+    const tabButtons = document.querySelectorAll('[data-tab]');
+    const tabPanels = document.querySelectorAll('[data-tab-panel]');
+    const openTabButtons = document.querySelectorAll('[data-open-tab]');
+
+    function setTab(name){
+      tabButtons.forEach((button) => button.classList.toggle('active', button.dataset.tab === name));
+      tabPanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tabPanel === name));
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => setTab(button.dataset.tab));
+    });
+
+    openTabButtons.forEach((button) => {
+      button.addEventListener('click', () => setTab(button.dataset.openTab));
+    });
+
+    setTab('overview');
+
+    if (!form) return;
+    const selfCheckToggle = form.querySelector('#edit_allow_member_self_check_in');
+    const selfCheckSettings = form.querySelector('[data-self-check-settings]');
+    const selfCheckCode = form.querySelector('#self_check_in_code');
+    const customWindowToggle = form.querySelector('#edit_custom_attendance_window');
+    const customWindowFields = form.querySelector('[data-custom-window-fields]');
+    const opensAt = form.querySelector('#check_in_opens_at');
+    const closesAt = form.querySelector('#check_in_closes_at');
+
+    function syncSelfCheck(){
+      const enabled = !!selfCheckToggle?.checked;
+      if (selfCheckSettings) selfCheckSettings.hidden = !enabled;
+      if (selfCheckCode) selfCheckCode.required = enabled;
+    }
+
+    function syncCustomWindow(){
+      const enabled = !!customWindowToggle?.checked;
+      if (customWindowFields) customWindowFields.hidden = !enabled;
+      [opensAt, closesAt].forEach((field) => {
+        if (!field) return;
+        field.disabled = !enabled;
+        if (!enabled) field.value = '';
+      });
+    }
+
+    selfCheckToggle?.addEventListener('change', syncSelfCheck);
+    customWindowToggle?.addEventListener('change', syncCustomWindow);
+    syncSelfCheck();
+    syncCustomWindow();
+  })();
+</script>
 {% endblock %}

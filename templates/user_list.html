@@ -1,345 +1,304 @@
 {% extends "base.html" %}
 {% block page_crumb %}Members{% endblock %}
 {% block page_title %}All Members{% endblock %}
-{% block page_subtitle %}View and manage registered members.{% endblock %}
+{% block page_subtitle %}View and manage registered members across your organization.{% endblock %}
 {% block content %}
 
 <style>
-  :root{
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-    --shadow: 0 18px 45px rgba(2, 6, 23, .08);
-    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
-    --brand:#22c55e;
-    --brand2:#16a34a;
-    --accent:#38bdf8;
-    --radius:18px;
+  .members-shell{
+    max-width:1240px;
+    margin:0 auto;
+    display:grid;
+    gap:18px;
+    padding:8px 0 40px;
   }
 
-  .page-wrap{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px 0 40px;
+  .members-overview{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:16px;
   }
 
-  .hero{
-    border-radius: 22px;
-    padding: 18px 18px 16px;
-    background:
-      radial-gradient(900px 260px at 12% 0%, rgba(34,197,94,.16), transparent 55%),
-      radial-gradient(900px 260px at 86% 30%, rgba(56,189,248,.16), transparent 55%),
-      linear-gradient(180deg, #0b3c5d, #1c5874);
-    color: rgba(255,255,255,.94);
-    box-shadow: 0 20px 55px rgba(2, 6, 23, .18);
-    overflow: hidden;
-    position: relative;
+  .metric-card,
+  .registration-strip,
+  .members-table-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:24px;
+    box-shadow:0 18px 44px rgba(15,23,42,.06);
   }
 
-  .hero:before{
-    content:"";
-    position:absolute;
-    inset:-2px;
-    background: linear-gradient(90deg, rgba(253,219,58,.12), transparent 35%, rgba(34,197,94,.14));
-    opacity:.6;
-    pointer-events:none;
-  }
-
-  .hero-top{
-    position:relative;
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
+  .metric-card{
+    min-height:132px;
+    padding:20px;
+    display:grid;
+    grid-template-columns:56px minmax(0,1fr);
     gap:14px;
-    flex-wrap:wrap;
+    align-items:start;
   }
 
-  .hero-title{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    min-width: 0;
-  }
-
-  .hero-badge{
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
+  .metric-icon{
+    width:56px;
+    height:56px;
+    border-radius:18px;
     display:grid;
     place-items:center;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.10);
-    flex: 0 0 auto;
+    font-size:22px;
   }
 
-  .hero-badge i{
-    color:#fddb3a;
-    font-size:16px;
-  }
+  .metric-icon.green{ background:#eaf8ef; color:#16a34a; }
+  .metric-icon.emerald{ background:#edf9f2; color:#0f9f4a; }
+  .metric-icon.amber{ background:#fff5e8; color:#f59e0b; }
+  .metric-icon.blue{ background:#eff6ff; color:#3b82f6; }
 
-  .hero-copy{
+  .metric-copy{
     min-width:0;
   }
 
-  .hero-copy h1{
-    margin:0;
-    font-size:18px;
-    line-height:1.15;
+  .metric-copy b{
+    display:block;
+    color:#172033;
+    font-size:14px;
     font-weight:800;
-    letter-spacing:-0.02em;
   }
 
-  .hero-copy p{
-    margin:4px 0 0;
+  .metric-copy strong{
+    display:block;
+    margin-top:8px;
+    color:#172033;
+    font-size:24px;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:-.03em;
+  }
+
+  .metric-copy span{
+    display:block;
+    margin-top:10px;
+    color:#667085;
     font-size:12px;
-    line-height:1.45;
-    color: rgba(255,255,255,.72);
+    line-height:1.5;
   }
 
-  .chip-link{
+  .registration-strip{
+    padding:18px 20px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(320px,480px);
+    gap:18px;
+    align-items:center;
+  }
+
+  .registration-info{
+    display:grid;
+    grid-template-columns:74px minmax(0,1fr);
+    gap:16px;
+    align-items:center;
+  }
+
+  .registration-badge{
+    width:74px;
+    height:74px;
+    border-radius:24px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#eefbf3,#ffffff);
+    color:#16a34a;
+    font-size:28px;
+    border:1px solid #d9efe2;
+  }
+
+  .registration-copy h3{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .registration-copy p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.55;
+    max-width:540px;
+  }
+
+  .copy-strip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+
+  .copy-strip input{
+    width:100%;
+    min-height:48px;
+    border:1px solid #d9efe2;
+    border-radius:14px;
+    background:linear-gradient(135deg,#f6fdf8,#ffffff);
+    padding:0 14px;
+    color:#0f7a38;
+    font-size:13px;
+  }
+
+  .btn-soft,
+  .btn-primary{
+    min-height:46px;
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    padding: 10px 13px;
-    border-radius: 999px;
-    color: rgba(255,255,255,.92);
+    justify-content:center;
+    gap:9px;
+    padding:10px 16px;
+    border-radius:14px;
+    font-size:13px;
+    font-weight:800;
     text-decoration:none;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.20);
-    backdrop-filter: blur(10px);
-    transition: transform .06s ease, background .2s ease, border-color .2s ease;
-    user-select:none;
     white-space:nowrap;
-    font-weight:700;
+    cursor:pointer;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
   }
 
-  .chip-link:hover{
-    background: rgba(255,255,255,.14);
-    border-color: rgba(255,255,255,.24);
+  .btn-soft:hover{ background:#f8fbff; color:#172033; }
+
+  .btn-primary{
+    border-color:transparent;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#fff;
+    box-shadow:0 14px 28px rgba(22,163,74,.16);
   }
 
-  .chip-link:active{
-    transform: scale(.98);
+  .btn-primary:hover{ color:#fff; }
+
+  .btn-soft.disabled,
+  .btn-primary.disabled{
+    opacity:.55;
+    pointer-events:none;
   }
 
-  .hero-bottom{
-    position:relative;
-    margin-top: 14px;
+  .toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:16px;
+    align-items:center;
+  }
+
+  .filter-rail{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .filter-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    min-height:44px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+  }
+
+  .filter-pill span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:24px;
+    height:24px;
+    padding:0 8px;
+    border-radius:999px;
+    background:#f7faf8;
+    color:#667085;
+    font-size:11px;
+    font-weight:900;
+  }
+
+  .filter-pill.active{
+    border-color:#bde8cb;
+    background:linear-gradient(135deg,#f3fcf6,#ffffff);
+    color:#0f7a38;
+  }
+
+  .filter-pill.active span{
+    background:#dcfce7;
+    color:#15803d;
+  }
+
+  .search-actions{
     display:flex;
     gap:12px;
     flex-wrap:wrap;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-end;
   }
 
-  .kpis{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  .kpi{
+  .search-form{
     display:flex;
     gap:10px;
     align-items:center;
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
   }
 
-  .kpi .num{
-    font-size:16px;
-    font-weight:800;
-    letter-spacing:-0.02em;
-    line-height:1;
-  }
-
-  .kpi .lab{
-    font-size:11px;
-    color: rgba(255,255,255,.72);
-    line-height:1.2;
-  }
-
-  .search{
-    min-width: 280px;
+  .search-box{
+    min-width:280px;
+    min-height:46px;
     display:flex;
-    gap:10px;
     align-items:center;
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
+    gap:10px;
+    padding:0 14px;
+    border:1px solid #dfe9e3;
+    border-radius:14px;
+    background:#fff;
   }
 
-  .search i{
-    color: rgba(255,255,255,.8);
-    flex: 0 0 auto;
-  }
+  .search-box i{ color:#98a2b3; }
 
-  .search input{
+  .search-box input{
+    width:100%;
     border:none;
     outline:none;
-    background: transparent;
-    color: rgba(255,255,255,.92);
-    width: 260px;
-    font-size: 13px;
+    background:transparent;
+    color:#172033;
+    font-size:13px;
   }
 
-  .search input::placeholder{
-    color: rgba(255,255,255,.55);
-  }
-
-  .flash-wrap{
-    margin-top:16px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-
-  .flash{
-    padding:14px 16px;
-    border-radius:16px;
-    font-weight:700;
-    box-shadow: var(--softShadow);
-    border:1px solid rgba(34,197,94,.25);
-    background: rgba(34,197,94,.10);
-    color:#065f46;
-  }
-
-  .limit-card{
-    margin-top:16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:14px;
-    padding:16px;
-    border-radius:18px;
-    border:1px solid rgba(34,197,94,.22);
-    background:#f0fbf4;
-    color:#14532d;
-    box-shadow:var(--softShadow);
-  }
-
-  .limit-card.warning{
-    border-color:#fed7aa;
-    background:#fff7ed;
-    color:#9a3412;
-  }
-
-  .limit-card b{display:block;font-weight:900}
-  .limit-card span{display:block;margin-top:3px;font-size:12px;color:inherit;opacity:.78}
-
-  .onboarding-card{
-    margin-top:16px;
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:14px;
-    align-items:center;
-    padding:16px;
-    border-radius:18px;
-    border:1px solid rgba(34,197,94,.22);
-    background:#f0fbf4;
-    color:#14532d;
-    box-shadow:var(--softShadow);
-  }
-
-  .onboarding-card b{display:block;font-weight:900}
-  .onboarding-card span{display:block;margin-top:3px;font-size:12px;opacity:.78}
-
-  .copy-inline{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    min-width:min(100%,520px);
-  }
-
-  .copy-inline input{
-    width:100%;
-    min-height:40px;
-    border:1px solid rgba(34,197,94,.22);
-    background:#fff;
-    border-radius:13px;
-    padding:0 12px;
-    color:#14532d;
-    font-size:12px;
-    font-weight:800;
-  }
-
-  .filters{
-    margin-top:16px;
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .filter-chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:10px 12px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    background:#fff;
-    color:#334155;
-    font-size:12px;
-    font-weight:900;
-    box-shadow:var(--softShadow);
-  }
-
-  .filter-chip.active{
-    background:#dcfce7;
-    border-color:#bbf7d0;
-    color:#14532d;
-  }
-
-  .cardx{
-    margin-top: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+  .members-table-card{
     overflow:hidden;
   }
 
-  .cardx-head{
-    padding: 14px 16px;
+  .table-head{
+    padding:22px 24px 18px;
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,.92));
+    gap:18px;
+    align-items:flex-start;
     flex-wrap:wrap;
+    border-bottom:1px solid #edf2ef;
   }
 
-  .cardx-head .left{
+  .table-head-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .table-head-copy p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.55;
+  }
+
+  .table-head-actions{
     display:flex;
-    flex-direction:column;
-    gap:3px;
-  }
-
-  .cardx-head .left .h{
-    font-size:15px;
-    font-weight:800;
-    letter-spacing:-0.02em;
-    color: var(--text);
-  }
-
-  .cardx-head .left .s{
-    font-size:12px;
-    color: var(--muted);
-  }
-
-  .card-actions{
-    display:flex;
-    gap:8px;
+    gap:10px;
     flex-wrap:wrap;
   }
 
@@ -348,174 +307,179 @@
     overflow:auto;
   }
 
-  table.premium{
+  table.members-table{
     width:100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    min-width: 720px;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:960px;
   }
 
-  table.premium thead th{
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #0f172a;
-    color: rgba(255,255,255,.92);
-    font-weight: 800;
-    font-size: 12px;
-    letter-spacing: .02em;
-    padding: 14px 14px;
-    border-bottom: 1px solid rgba(255,255,255,.10);
+  table.members-table thead th{
+    padding:16px 18px;
+    color:#667085;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    border-bottom:1px solid #edf2ef;
+    background:#fff;
   }
 
-  table.premium tbody td{
-    padding: 14px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    font-size: 13px;
-    color: var(--text);
+  table.members-table tbody td{
+    padding:18px;
+    border-bottom:1px solid #edf2ef;
+    color:#172033;
+    font-size:13px;
+    vertical-align:middle;
+    background:#fff;
   }
 
-  table.premium tbody tr{
-    transition: background .18s ease;
-    background: #fff;
+  table.members-table tbody tr:hover td{
+    background:#fbfefd;
   }
 
-  table.premium tbody tr:hover{
-    background: rgba(34,197,94,.035);
-  }
-
-  .person{
-    display:flex;
+  .member-cell{
+    display:grid;
+    grid-template-columns:40px minmax(0,1fr);
     gap:12px;
     align-items:center;
     min-width:0;
   }
 
-  .avatar{
-    width: 38px;
-    height:38px;
-    border-radius: 14px;
+  .member-avatar{
+    width:40px;
+    height:40px;
+    border-radius:14px;
     display:grid;
     place-items:center;
-    font-weight: 900;
-    letter-spacing:-0.02em;
-    background: rgba(34,197,94,.12);
-    color: #065f46;
-    border: 1px solid rgba(34,197,94,.25);
-    flex: 0 0 auto;
+    background:#eaf8ef;
+    color:#15803d;
+    font-size:18px;
+    font-weight:900;
+    border:1px solid #d7ece0;
   }
 
-  .pmeta{
-    display:flex;
-    flex-direction:column;
+  .member-meta{
     min-width:0;
+    display:grid;
+    gap:5px;
   }
 
-  .pmeta .name{
-    font-weight: 800;
+  .member-name{
+    color:#172033;
+    font-size:14px;
+    font-weight:800;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 380px;
   }
 
-  .pmeta .sub{
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 2px;
-  }
-
-  .badge-soft{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding: 8px 10px;
-    border-radius: 999px;
-    font-weight: 800;
-    font-size: 12px;
-    border: 1px solid var(--border);
-    background: #f8fafc;
-    color: #0f172a;
+  .member-sub{
+    color:#667085;
+    font-size:12px;
     white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
 
-  .badge-soft .dot{
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background: var(--muted);
+  .member-tag{
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    max-width:100%;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#eaf8ef;
+    color:#15803d;
+    font-size:11px;
+    font-weight:800;
   }
 
-  .badge-soft.ok{
-    background: rgba(34,197,94,.10);
-    border-color: rgba(34,197,94,.22);
-    color: #065f46;
-  }
-
-  .badge-soft.ok .dot{
-    background: var(--brand2);
-  }
-
-  .badge-soft.no{
-    background: rgba(100,116,139,.10);
-    border-color: rgba(100,116,139,.22);
-    color: #334155;
-  }
-
-  .btn-mini{
+  .data-pill{
     display:inline-flex;
     align-items:center;
     gap:8px;
-    padding: 10px 12px;
-    border-radius: 14px;
-    font-weight: 800;
-    font-size: 12px;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid #e5ede8;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    width:max-content;
+    max-width:100%;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    width:max-content;
+  }
+
+  .status-pill.ok{
+    background:#ecfdf3;
+    color:#087533;
+    border:1px solid #d9f4e3;
+  }
+
+  .status-pill.no{
+    background:#f8fafc;
+    color:#64748b;
+    border:1px solid #e2e8f0;
+  }
+
+  .actions-cell{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .action-btn{
+    min-height:40px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:8px 14px;
+    border-radius:12px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
     text-decoration:none;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: #0f172a;
-    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
-    box-shadow: var(--softShadow);
-    user-select:none;
-    white-space:nowrap;
   }
 
-  .btn-mini:hover{
-    background: rgba(34,197,94,.06);
+  .action-btn:hover{
+    background:#f8fbff;
+    color:#172033;
   }
 
-  .btn-mini.disabled{
-    opacity:.55;
-    pointer-events:none;
-    filter:grayscale(.35);
-  }
-
-  .btn-mini:active{
-    transform: scale(.98);
-  }
-
-  .empty{
-    padding: 34px 18px;
+  .empty-state{
+    padding:42px 24px;
     text-align:center;
-    color: var(--muted);
+    color:#667085;
   }
 
-  .empty .icon{
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    margin: 0 auto 12px;
+  .empty-state .icon{
+    width:56px;
+    height:56px;
+    margin:0 auto 14px;
+    border-radius:18px;
+    border:1px solid #dfe9e3;
     display:grid;
     place-items:center;
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    color: #0f172a;
-    box-shadow: var(--softShadow);
+    color:#172033;
+    background:#f8fafc;
   }
 
-  .pagination-wrap{
-    padding: 16px;
+  .table-footer{
+    padding:16px 22px 20px;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -523,86 +487,108 @@
     flex-wrap:wrap;
   }
 
-  .pagination-text{
-    color: var(--muted);
-    font-size:13px;
+  .table-footer span{
+    color:#667085;
+    font-size:12px;
   }
 
-  .pagination-actions{
+  .pagination{
     display:flex;
     gap:8px;
     flex-wrap:wrap;
   }
 
-  .reveal{
-    animation: reveal .35s ease-out both;
+  .flash-wrap{
+    display:grid;
+    gap:10px;
   }
 
-  @keyframes reveal{
-    from{ opacity:0; transform: translateY(8px); }
-    to{ opacity:1; transform: translateY(0); }
+  .flash{
+    padding:14px 16px;
+    border-radius:16px;
+    border:1px solid #d9f4e3;
+    background:#ecfdf3;
+    color:#087533;
+    font-size:13px;
+    font-weight:700;
   }
 
-  @media (max-width: 768px){
-    .page-wrap{
-      padding: 8px 0 28px;
+  .limit-banner{
+    padding:16px 18px;
+    border-radius:20px;
+    border:1px solid #d9f4e3;
+    background:#f3fcf6;
+    color:#14532d;
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .limit-banner.warning{
+    border-color:#fed7aa;
+    background:#fff7ed;
+    color:#9a3412;
+  }
+
+  .limit-banner b{
+    display:block;
+    font-size:14px;
+    font-weight:900;
+  }
+
+  .limit-banner span{
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+    line-height:1.5;
+    opacity:.82;
+  }
+
+  @media (max-width:1120px){
+    .members-overview,
+    .registration-strip,
+    .toolbar{
+      grid-template-columns:1fr 1fr;
+    }
+  }
+
+  @media (max-width:900px){
+    .members-overview,
+    .registration-strip,
+    .toolbar{
+      grid-template-columns:1fr;
     }
 
-    .hero{
-      padding: 16px;
+    .registration-info{
+      grid-template-columns:1fr;
     }
 
-    .search{
-      min-width: 100%;
+    .copy-strip,
+    .search-form,
+    .search-actions{
+      flex-direction:column;
+      align-items:stretch;
     }
 
-    .search input{
-      width: 100%;
+    .search-box{
+      min-width:100%;
     }
-    .onboarding-card{grid-template-columns:1fr;}
-    .copy-inline{flex-direction:column;align-items:stretch;}
   }
 </style>
 
-<div class="page-wrap reveal">
-  <div class="hero">
-    <div class="hero-bottom">
-      <div class="kpis">
-        <div class="kpi">
-          <div class="num">{{ persons.paginator.count }}</div>
-          <div class="lab">Total Members</div>
-        </div>
-
-        <div class="kpi">
-          <div class="num" id="kpiAuthorized">—</div>
-          <div class="lab">Authorized</div>
-        </div>
-
-        <div class="kpi">
-          <div class="num" id="kpiNotAuthorized">—</div>
-          <div class="lab">Not Authorized</div>
-        </div>
-      </div>
-
-      <div class="search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input id="tableSearch" type="text" placeholder="Search by name or member code..." autocomplete="off">
-      </div>
-    </div>
-  </div>
-
+<div class="members-shell">
   {% if messages %}
     <div class="flash-wrap">
       {% for message in messages %}
-        <div class="flash">
-          <i class="fa-solid fa-circle-check"></i> {{ message }}
-        </div>
+        <div class="flash"><i class="fa-solid fa-circle-check"></i> {{ message }}</div>
       {% endfor %}
     </div>
   {% endif %}
 
   {% if member_limit.is_limited %}
-    <div class="limit-card {% if member_limit.is_reached %}warning{% endif %}">
+    <section class="limit-banner {% if member_limit.is_reached %}warning{% endif %}">
       <div>
         <b>Member usage: {{ member_limit.current }} / {{ member_limit.limit }}</b>
         {% if member_limit.is_reached %}
@@ -611,103 +597,158 @@
           <span>{{ member_limit.remaining }} member slot{{ member_limit.remaining|pluralize }} remaining on this plan.</span>
         {% endif %}
       </div>
-      <a class="btn-mini" href="{% url 'product_pricing' %}">
+      <a class="btn-soft" href="{% url 'product_pricing' %}">
         <i class="fa-solid fa-arrow-up"></i> View Plans
       </a>
-    </div>
+    </section>
   {% endif %}
+
+  <section class="members-overview">
+    <article class="metric-card">
+      <div class="metric-icon green"><i class="fa-solid fa-users"></i></div>
+      <div class="metric-copy">
+        <b>Total Members</b>
+        <strong>{{ member_counts.all }}</strong>
+        <span>All registered</span>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon emerald"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="metric-copy">
+        <b>Authorized</b>
+        <strong>{{ member_counts.authorized }}</strong>
+        <span>Can mark attendance</span>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon amber"><i class="fa-solid fa-circle-exclamation"></i></div>
+      <div class="metric-copy">
+        <b>Not Authorized</b>
+        <strong>{{ member_counts.pending }}</strong>
+        <span>Access restricted</span>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon blue"><i class="fa-solid fa-clock"></i></div>
+      <div class="metric-copy">
+        <b>Pending Approval</b>
+        <strong>{{ member_counts.pending }}</strong>
+        <span>Awaiting approval</span>
+      </div>
+    </article>
+  </section>
 
   {% if registration_url %}
-    <div class="onboarding-card">
-      <div>
-        <b>Member self-registration link</b>
-        <span>Share this link with members. New submissions appear as pending until staff approve them.</span>
+    <section class="registration-strip">
+      <div class="registration-info">
+        <div class="registration-badge"><i class="fa-solid fa-link"></i></div>
+        <div class="registration-copy">
+          <h3>Member self-registration link</h3>
+          <p>Share this link with members. New submissions appear as pending until staff review and approve them.</p>
+        </div>
       </div>
-      <div class="copy-inline">
+
+      <div class="copy-strip">
         <input id="selfRegistrationUrl" value="{{ registration_url }}" readonly>
-        <button class="btn-mini" type="button" onclick="navigator.clipboard.writeText(document.getElementById('selfRegistrationUrl').value)">
-          <i class="fa-regular fa-copy"></i> Copy
+        <button class="btn-soft" type="button" id="copyRegistrationLink">
+          <i class="fa-regular fa-copy"></i> Copy Link
         </button>
       </div>
-    </div>
+    </section>
   {% endif %}
 
-  <div class="filters">
-    <a class="filter-chip {% if filter_value == 'all' %}active{% endif %}" href="?filter=all{% if search %}&search={{ search|urlencode }}{% endif %}">
-      <i class="fa-solid fa-users"></i> All <span>{{ member_counts.all }}</span>
-    </a>
-    <a class="filter-chip {% if filter_value == 'pending' %}active{% endif %}" href="?filter=pending{% if search %}&search={{ search|urlencode }}{% endif %}">
-      <i class="fa-solid fa-user-clock"></i> Pending <span>{{ member_counts.pending }}</span>
-    </a>
-    <a class="filter-chip {% if filter_value == 'authorized' %}active{% endif %}" href="?filter=authorized{% if search %}&search={{ search|urlencode }}{% endif %}">
-      <i class="fa-solid fa-user-check"></i> Approved <span>{{ member_counts.authorized }}</span>
-    </a>
-    <a class="filter-chip {% if filter_value == 'self_registered' %}active{% endif %}" href="?filter=self_registered{% if search %}&search={{ search|urlencode }}{% endif %}">
-      <i class="fa-solid fa-mobile-screen"></i> Self-registered <span>{{ member_counts.self_registered }}</span>
-    </a>
-    <a class="filter-chip {% if filter_value == 'imported' %}active{% endif %}" href="?filter=imported{% if search %}&search={{ search|urlencode }}{% endif %}">
-      <i class="fa-solid fa-file-import"></i> Imported <span>{{ member_counts.imported }}</span>
-    </a>
-  </div>
+  <section class="toolbar">
+    <div class="filter-rail">
+      <a class="filter-pill {% if filter_value == 'all' %}active{% endif %}" href="?filter=all{% if search %}&search={{ search|urlencode }}{% endif %}">
+        <i class="fa-solid fa-users"></i> All <span>{{ member_counts.all }}</span>
+      </a>
+      <a class="filter-pill {% if filter_value == 'pending' %}active{% endif %}" href="?filter=pending{% if search %}&search={{ search|urlencode }}{% endif %}">
+        <i class="fa-solid fa-clock"></i> Pending <span>{{ member_counts.pending }}</span>
+      </a>
+      <a class="filter-pill {% if filter_value == 'authorized' %}active{% endif %}" href="?filter=authorized{% if search %}&search={{ search|urlencode }}{% endif %}">
+        <i class="fa-solid fa-circle-check"></i> Approved <span>{{ member_counts.authorized }}</span>
+      </a>
+      <a class="filter-pill {% if filter_value == 'self_registered' %}active{% endif %}" href="?filter=self_registered{% if search %}&search={{ search|urlencode }}{% endif %}">
+        <i class="fa-solid fa-mobile-screen-button"></i> Self-registered <span>{{ member_counts.self_registered }}</span>
+      </a>
+      <a class="filter-pill {% if filter_value == 'imported' %}active{% endif %}" href="?filter=imported{% if search %}&search={{ search|urlencode }}{% endif %}">
+        <i class="fa-solid fa-file-import"></i> Imported <span>{{ member_counts.imported }}</span>
+      </a>
+    </div>
 
-  <div class="cardx">
-    <div class="cardx-head">
-      <div class="left">
-        <div class="h">All Members</div>
-        <div class="s">Select a member to view details.</div>
+    <div class="search-actions">
+      <form class="search-form" method="get">
+        <input type="hidden" name="filter" value="{{ filter_value|default:'all' }}">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="search" value="{{ search }}" placeholder="Search by name, email or code...">
+        </div>
+        <button class="btn-soft" type="submit">
+          <i class="fa-solid fa-filter"></i> Filter
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <section class="members-table-card">
+    <div class="table-head">
+      <div class="table-head-copy">
+        <h2>Members ({{ persons.paginator.count }})</h2>
+        <p>Manage, authorize, and view member details.</p>
       </div>
-      <div class="card-actions">
+
+      <div class="table-head-actions">
         {% if can_import_members %}
-          <a class="btn-mini {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'member_import' %}">
+          <a class="btn-soft {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'member_import' %}">
             <i class="fa-solid fa-file-import"></i> Import CSV
           </a>
         {% endif %}
-        <a class="btn-mini {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'search_user' %}">
-          <i class="fa-solid fa-user-plus"></i> Add Member
+        <a class="btn-primary {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'register_user' %}">
+          <i class="fa-solid fa-plus"></i> Add Member
         </a>
       </div>
     </div>
 
     <div class="table-wrap">
-      <table class="premium" id="memberTable">
+      <table class="members-table" id="memberTable">
         <thead>
           <tr>
-            <th style="min-width: 320px;">Member</th>
-            <th style="min-width: 160px;">Member Code</th>
-            <th style="min-width: 150px;">Source</th>
-            <th style="min-width: 160px;">Authorized</th>
-            <th style="min-width: 160px;">Action</th>
+            <th>Member</th>
+            <th>Member Code</th>
+            <th>Source</th>
+            <th>Authorized</th>
+            <th>Registered On</th>
+            <th>Action</th>
           </tr>
         </thead>
-
         <tbody>
           {% for person in persons %}
             <tr>
               <td>
-                <div class="person">
-                  <div class="avatar" aria-hidden="true">
-                    {{ person.name|default:"?"|slice:":1"|upper }}
-                  </div>
-                  <div class="pmeta">
-                    <div class="name">{{ person.name }}</div>
-                    <div class="sub">
-                      {{ person.email|default:"Member Profile" }}
-                      {% if person.external_id %} · ID: {{ person.external_id }}{% endif %}
-                    </div>
+                <div class="member-cell">
+                  <div class="member-avatar">{{ person.name|default:"?"|slice:":1"|upper }}</div>
+                  <div class="member-meta">
+                    <div class="member-name">{{ person.name }}</div>
+                    <div class="member-sub">{{ person.email|default:"No email added yet" }}</div>
+                    {% if person.source == "self_registered" %}
+                      <span class="member-tag">Self-registered</span>
+                    {% endif %}
                   </div>
                 </div>
               </td>
-
               <td>
-                <span class="badge-soft">
-                  <i class="fa-solid fa-id-card-clip"></i> {{ person.member_code|default:person.portal_id }}
+                <span class="data-pill">
+                  <i class="fa-solid fa-id-card"></i>
+                  {{ person.member_code|default:person.portal_id|default:person.external_id|default:"—" }}
                 </span>
               </td>
-
               <td>
-                <span class="badge-soft">
+                <span class="data-pill">
                   {% if person.source == "self_registered" %}
-                    <i class="fa-solid fa-mobile-screen"></i> Self-registered
+                    <i class="fa-solid fa-mobile-screen-button"></i> Self-registered
                   {% elif person.source == "imported" %}
                     <i class="fa-solid fa-file-import"></i> Imported
                   {% elif person.source == "integration" %}
@@ -717,22 +758,21 @@
                   {% endif %}
                 </span>
               </td>
-
               <td>
                 {% if person.authorized %}
-                  <span class="badge-soft ok">
-                    <span class="dot"></span> Yes
-                  </span>
+                  <span class="status-pill ok"><i class="fa-solid fa-circle-check"></i> Yes</span>
                 {% else %}
-                  <span class="badge-soft no">
-                    <span class="dot"></span> No
-                  </span>
+                  <span class="status-pill no"><i class="fa-solid fa-clock"></i> No</span>
                 {% endif %}
               </td>
-
               <td>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <a class="btn-mini" href="{% url 'person_detail' pk=person.pk %}">
+                <div class="member-sub">
+                  {{ person.created_at|default:person.created_on|default:person.created|default:"—" }}
+                </div>
+              </td>
+              <td>
+                <div class="actions-cell">
+                  <a class="action-btn" href="{% url 'person_detail' pk=person.pk %}">
                     <i class="fa-solid fa-eye"></i> View
                   </a>
                   {% if not person.authorized %}
@@ -740,7 +780,7 @@
                       {% csrf_token %}
                       <input type="hidden" name="authorized" value="1">
                       <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                      <button class="btn-mini" type="submit">
+                      <button class="action-btn" type="submit">
                         <i class="fa-solid fa-user-check"></i> Approve
                       </button>
                     </form>
@@ -750,11 +790,9 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="5">
-                <div class="empty">
-                  <div class="icon">
-                    <i class="fa-solid fa-circle-info"></i>
-                  </div>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="icon"><i class="fa-solid fa-users"></i></div>
                   <div>No members yet. Register a member to get started.</div>
                 </div>
               </td>
@@ -764,75 +802,48 @@
       </table>
     </div>
 
-    {% if persons.paginator.num_pages > 1 %}
-      <div class="pagination-wrap">
-        <div class="pagination-text">
-          Page {{ persons.number }} of {{ persons.paginator.num_pages }}
-        </div>
+    <div class="table-footer">
+      <span>
+        Showing {{ persons.start_index }} to {{ persons.end_index }} of {{ persons.paginator.count }}
+      </span>
 
-        <div class="pagination-actions">
+      {% if persons.paginator.num_pages > 1 %}
+        <div class="pagination">
           {% if persons.has_previous %}
-            <a class="btn-mini" href="?page=1">
-              <i class="fa-solid fa-angles-left"></i> First
-            </a>
-            <a class="btn-mini" href="?page={{ persons.previous_page_number }}">
-              <i class="fa-solid fa-chevron-left"></i> Previous
+            <a class="action-btn" href="?page={{ persons.previous_page_number }}{% if filter_value %}&filter={{ filter_value|urlencode }}{% endif %}{% if search %}&search={{ search|urlencode }}{% endif %}">
+              <i class="fa-solid fa-chevron-left"></i>
             </a>
           {% endif %}
-
+          <span class="action-btn">{{ persons.number }}</span>
           {% if persons.has_next %}
-            <a class="btn-mini" href="?page={{ persons.next_page_number }}">
-              Next <i class="fa-solid fa-chevron-right"></i>
-            </a>
-            <a class="btn-mini" href="?page={{ persons.paginator.num_pages }}">
-              Last <i class="fa-solid fa-angles-right"></i>
+            <a class="action-btn" href="?page={{ persons.next_page_number }}{% if filter_value %}&filter={{ filter_value|urlencode }}{% endif %}{% if search %}&search={{ search|urlencode }}{% endif %}">
+              <i class="fa-solid fa-chevron-right"></i>
             </a>
           {% endif %}
         </div>
-      </div>
-    {% endif %}
-  </div>
+      {% endif %}
+    </div>
+  </section>
 </div>
 
 <script>
-  (function initKPIs(){
-    const rows = Array.from(document.querySelectorAll("#memberTable tbody tr"));
-    let ok = 0, no = 0;
+  const copyRegistrationBtn = document.getElementById('copyRegistrationLink');
+  const registrationInput = document.getElementById('selfRegistrationUrl');
 
-    rows.forEach(r => {
-      if (r.querySelector("td[colspan]")) return;
-
-      const badge = r.querySelector("td:nth-child(4) .badge-soft");
-      if (!badge) return;
-
-      if (badge.classList.contains("ok")) ok++;
-      else no++;
-    });
-
-    const authorized = document.getElementById("kpiAuthorized");
-    const notAuthorized = document.getElementById("kpiNotAuthorized");
-
-    if (authorized) authorized.textContent = ok;
-    if (notAuthorized) notAuthorized.textContent = no;
-  })();
-
-  const input = document.getElementById("tableSearch");
-  const tbody = document.querySelector("#memberTable tbody");
-  const rows = tbody ? Array.from(tbody.querySelectorAll("tr")) : [];
-
-  let t = null;
-
-  input?.addEventListener("input", () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
-      const q = (input.value || "").trim().toLowerCase();
-
-      rows.forEach(r => {
-        if (r.querySelector("td[colspan]")) return;
-        const text = (r.innerText || "").toLowerCase();
-        r.style.display = text.includes(q) ? "" : "none";
-      });
-    }, 80);
+  copyRegistrationBtn?.addEventListener('click', async () => {
+    if (!registrationInput) return;
+    try {
+      await navigator.clipboard.writeText(registrationInput.value);
+      copyRegistrationBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+      setTimeout(() => {
+        copyRegistrationBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Link';
+      }, 1800);
+    } catch (err) {
+      copyRegistrationBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Copy failed';
+      setTimeout(() => {
+        copyRegistrationBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy Link';
+      }, 1800);
+    }
   });
 </script>
 

@@ -291,6 +291,15 @@ def _desktop_plan_allows(request, feature: str) -> bool:
     return bool(plan.get(feature))
 
 
+def _desktop_plan_allows_or_default(request, feature: str, default: bool = False) -> bool:
+    if request.session.get(DESKTOP_USER_SESSION_KEY, {}).get("is_superuser"):
+        return True
+    plan = request.session.get(DESKTOP_PLAN_SESSION_KEY) or {}
+    if feature not in plan:
+        return default
+    return bool(plan.get(feature))
+
+
 def _desktop_plan_tier(request) -> str:
     return str((request.session.get(DESKTOP_PLAN_SESSION_KEY) or {}).get("tier") or "").lower()
 
@@ -539,7 +548,7 @@ def _build_setup_context(request, overview=None, active_session=None):
             "title": "Add members",
             "description": "Register members individually or import them from CSV.",
             "done": total_members > 0,
-            "href": reverse("search_user"),
+            "href": reverse("register_user"),
             "cta": "Add members",
             "icon": "fa-users",
         },
@@ -675,16 +684,114 @@ def _datetime_local_value(value):
     return timezone.localtime(parsed).strftime("%Y-%m-%dT%H:%M")
 
 
+def _coerce_session_flag(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off", ""}:
+            return False
+    return bool(value)
+
+
+def _session_method_plan_defaults(request):
+    return {
+        "self": _desktop_plan_allows(request, "allow_qr"),
+        "qr": _desktop_plan_allows(request, "allow_qr"),
+        "swipe": _desktop_plan_allows_or_default(request, "allow_swipe", default=True),
+        "nfc": _desktop_plan_allows(request, "allow_nfc"),
+        "face": _desktop_plan_allows(request, "allow_face_recognition"),
+        "geo": _desktop_plan_allows(request, "allow_geotracking"),
+    }
+
+
+def _session_method_field_map():
+    return {
+        "self": "allow_member_self_check_in",
+        "qr": "allow_qr_check_in",
+        "swipe": "allow_swipe_check_in",
+        "nfc": "allow_nfc_check_in",
+        "face": "allow_face_check_in",
+        "geo": "allow_member_geo_check_in",
+    }
+
+
+def _session_method_enabled(session, request, key: str) -> bool:
+    field_name = _session_method_field_map().get(key)
+    default = _session_method_plan_defaults(request).get(key, False)
+    if not field_name:
+        return default
+    value = _coerce_session_flag(getattr(session, field_name, None))
+    return default if value is None else value
+
+
+def _session_method_flags(session, request):
+    defaults = _session_method_plan_defaults(request)
+    flags = {}
+    for key, field_name in _session_method_field_map().items():
+        value = _coerce_session_flag(getattr(session, field_name, None))
+        flags[key] = defaults.get(key, False) if value is None else value
+    return flags
+
+
+def _session_method_guard_response(request, active_session, key: str, label: str):
+    if not active_session:
+        messages.warning(request, "Select an event session first.")
+        return redirect("attendance_sessions")
+    if _session_method_enabled(active_session, request, key):
+        return None
+    messages.warning(
+        request,
+        f"{label} is turned off for this session. Enable it in Session Settings first.",
+    )
+    return redirect("attendance_session_detail", pk=active_session.id)
+
+
 def _session_self_check_payload(request):
     opens_at = _parse_optional_datetime_local(request.POST.get("check_in_opens_at", ""))
     closes_at = _parse_optional_datetime_local(request.POST.get("check_in_closes_at", ""))
     return {
         "allow_member_self_check_in": request.POST.get("allow_member_self_check_in") == "on",
+        "allow_qr_check_in": request.POST.get("allow_qr_check_in") == "on",
+        "allow_swipe_check_in": request.POST.get("allow_swipe_check_in") == "on",
+        "allow_nfc_check_in": request.POST.get("allow_nfc_check_in") == "on",
+        "allow_face_check_in": request.POST.get("allow_face_check_in") == "on",
         "allow_member_geo_check_in": request.POST.get("allow_member_geo_check_in") == "on",
         "self_check_in_code": request.POST.get("self_check_in_code", "").strip(),
         "check_in_opens_at": opens_at.isoformat() if opens_at else None,
         "check_in_closes_at": closes_at.isoformat() if closes_at else None,
     }
+
+
+def _clean_optional_int(value: str, label: str):
+    value = str(value or "").strip()
+    if not value:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise AttendanceApiError(f"{label} must be a whole number.")
+
+
+def _session_advanced_payload(request):
+    payload = _session_self_check_payload(request)
+    payload.update(
+        {
+            "late_check_in_grace_minutes": _clean_optional_int(
+                request.POST.get("late_check_in_grace_minutes", ""),
+                "Late check-in grace period",
+            ),
+            "max_capacity": _clean_optional_int(
+                request.POST.get("max_capacity", ""),
+                "Max capacity",
+            ),
+        }
+    )
+    return payload
 
 
 def _clean_optional_number(value: str, cast=float):
@@ -999,6 +1106,9 @@ def stream_all_cameras(request):
     try:
         configs = get_all_cameras(request=request)
         active_session = _get_active_attendance_session(request)
+        guard = _session_method_guard_response(request, active_session, "face", "Face recognition")
+        if guard:
+            return guard
         method_context = _session_method_context(request, active_session) if active_session else {}
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
@@ -1718,6 +1828,8 @@ def attendance_sessions(request):
                     messages.error(request, "Choose an attendance session first.")
                 else:
                     session_payload = client.get_session(int(session_id))
+                    if (session_payload.get("status") or "").lower() == "scheduled":
+                        session_payload = client.update_session(int(session_id), {"status": "open"})
                     request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
                     messages.success(request, f"Active session set to {session_payload.get('session_name') or session_payload.get('event_name')}.")
                 return redirect("attendance_sessions")
@@ -1727,86 +1839,15 @@ def attendance_sessions(request):
                 messages.success(request, "Active attendance session cleared.")
                 return redirect("attendance_sessions")
 
-            if action == "save_session":
-                event_mode = request.POST.get("event_mode", "new").strip() or "new"
-                event_id = request.POST.get("event_id", "").strip()
-                event_name = request.POST.get("event_name", "").strip()
-                session_name = request.POST.get("session_name", "").strip()
-                starts_at = _parse_datetime_local(request.POST.get("starts_at", ""))
-                status_value = request.POST.get("status", "open").strip() or "open"
-
-                if event_mode == "existing":
-                    if not event_id:
-                        messages.error(request, "Choose an existing event first.")
-                        return redirect("attendance_sessions")
-                    selected_event_id = int(event_id)
-                    success_label = "Session created from existing event."
-                else:
-                    if not event_name:
-                        messages.error(request, "Event name is required.")
-                        return redirect("attendance_sessions")
-                    event_payload = client.create_event({"name": event_name, "is_active": True})
-                    selected_event_id = event_payload["id"]
-                    success_label = f"Created and selected {event_name}."
-
-                session_payload = client.create_session(
-                    {
-                        "event": selected_event_id,
-                        "name": session_name,
-                        "starts_at": starts_at.isoformat(),
-                        "status": status_value,
-                        **_session_self_check_payload(request),
-                    }
-                )
-                request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
-                messages.success(request, success_label)
-                return redirect("attendance_sessions")
-
-            if action == "create_event_session":
-                event_name = request.POST.get("event_name", "").strip()
-                session_name = request.POST.get("session_name", "").strip()
-                starts_at = _parse_datetime_local(request.POST.get("starts_at", ""))
-                status_value = request.POST.get("status", "open").strip() or "open"
-
-                if not event_name:
-                    messages.error(request, "Event name is required.")
+            if action == "delete":
+                session_id = request.POST.get("session_id", "").strip()
+                if not session_id:
+                    messages.error(request, "Choose a session to delete.")
                     return redirect("attendance_sessions")
-
-                event_payload = client.create_event({"name": event_name, "is_active": True})
-                session_payload = client.create_session(
-                    {
-                        "event": event_payload["id"],
-                        "name": session_name,
-                        "starts_at": starts_at.isoformat(),
-                        "status": status_value,
-                        **_session_self_check_payload(request),
-                    }
-                )
-                request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
-                messages.success(request, f"Created and selected {event_name}.")
-                return redirect("attendance_sessions")
-
-            if action == "create_session":
-                event_id = request.POST.get("event_id", "").strip()
-                session_name = request.POST.get("session_name", "").strip()
-                starts_at = _parse_datetime_local(request.POST.get("starts_at", ""))
-                status_value = request.POST.get("status", "open").strip() or "open"
-
-                if not event_id:
-                    messages.error(request, "Choose an event first.")
-                    return redirect("attendance_sessions")
-
-                session_payload = client.create_session(
-                    {
-                        "event": int(event_id),
-                        "name": session_name,
-                        "starts_at": starts_at.isoformat(),
-                        "status": status_value,
-                        **_session_self_check_payload(request),
-                    }
-                )
-                request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
-                messages.success(request, "Session created and selected.")
+                client.delete_session(int(session_id))
+                if str(_active_session_id(request) or "") == session_id:
+                    request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+                messages.success(request, "Session deleted.")
                 return redirect("attendance_sessions")
 
             messages.error(request, "Unknown session action.")
@@ -1820,10 +1861,11 @@ def attendance_sessions(request):
 
     try:
         events = [to_namespace(item) for item in extract_results(client.list_events(active="true"))]
-        sessions = [
-            to_namespace(item)
-            for item in extract_results(client.list_sessions(status="open"))
-        ]
+        session_map = {}
+        for status_value in ("open", "scheduled", "closed", "cancelled"):
+            for item in extract_results(client.list_sessions(status=status_value)):
+                session_map[item["id"]] = to_namespace(item)
+        sessions = list(session_map.values())
         active_session = _get_active_attendance_session(request)
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
@@ -1841,7 +1883,84 @@ def attendance_sessions(request):
             "events": events,
             "sessions": sessions,
             "active_session": active_session,
+        },
+    )
+
+
+@desktop_login_required
+def attendance_session_create(request):
+    client = _api_client(request)
+    if request.method == "POST":
+        action = request.POST.get("action", "").strip()
+        if action != "save_session":
+            messages.error(request, "Unknown session action.")
+            return redirect("attendance_session_create")
+        try:
+            event_mode = request.POST.get("event_mode", "new").strip() or "new"
+            event_id = request.POST.get("event_id", "").strip()
+            event_name = request.POST.get("event_name", "").strip()
+            session_name = request.POST.get("session_name", "").strip()
+            starts_at = _parse_datetime_local(request.POST.get("starts_at", ""))
+            ends_at = _parse_optional_datetime_local(request.POST.get("ends_at", ""))
+            status_value = request.POST.get("status", "open").strip() or "open"
+
+            if event_mode == "existing":
+                if not event_id:
+                    messages.error(request, "Choose an existing event first.")
+                    return redirect("attendance_session_create")
+                selected_event_id = int(event_id)
+                success_label = "Session created from existing event."
+            else:
+                if not event_name:
+                    messages.error(request, "Event name is required.")
+                    return redirect("attendance_session_create")
+                event_payload = client.create_event({"name": event_name, "is_active": True})
+                selected_event_id = event_payload["id"]
+                success_label = f"Created {event_name}."
+
+            session_payload = client.create_session(
+                {
+                    "event": selected_event_id,
+                    "name": session_name,
+                    "starts_at": starts_at.isoformat(),
+                    "ends_at": ends_at.isoformat() if ends_at else None,
+                    "status": status_value,
+                    **_session_advanced_payload(request),
+                }
+            )
+            if status_value == "open":
+                request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
+                success_label = f"{success_label} Attendance is now active."
+            else:
+                success_label = f"{success_label} Scheduled for later."
+            messages.success(request, success_label)
+            return redirect("attendance_sessions")
+        except AttendanceApiError as exc:
+            auth_response = _redirect_if_auth_error(request, exc)
+            if auth_response:
+                return auth_response
+            messages.error(request, f"Could not create attendance session: {exc}")
+            return redirect("attendance_session_create")
+
+    try:
+        events = [to_namespace(item) for item in extract_results(client.list_events(active="true"))]
+        active_session = _get_active_attendance_session(request)
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return auth_response
+        messages.error(request, f"Could not load create session form: {_friendly_api_error(exc)}")
+        events = []
+        active_session = None
+
+    return render(
+        request,
+        "attendance_session_create.html",
+        {
+            "events": events,
+            "active_session": active_session,
             "now_local": timezone.localtime().strftime("%Y-%m-%dT%H:%M"),
+            "method_defaults": _session_method_plan_defaults(request),
         },
     )
 
@@ -1929,10 +2048,12 @@ def _session_report_context(request, session_id: int):
         "method_cards": method_cards,
         "export_query": export_query,
         "is_active_session": str(_active_session_id(request) or "") == str(session_id),
+        "can_use_swipe": _desktop_plan_allows_or_default(request, "allow_swipe", default=True),
         "can_use_qr": _desktop_plan_allows(request, "allow_qr"),
         "can_use_nfc": _desktop_plan_allows(request, "allow_nfc"),
         "can_use_face": _desktop_plan_allows(request, "allow_face_recognition"),
         "can_use_geo": _desktop_plan_allows(request, "allow_geotracking"),
+        "session_methods": _session_method_flags(session, request),
     }
 
 
@@ -1973,6 +2094,8 @@ def attendance_session_detail(request, pk: int):
         try:
             if action == "select":
                 session_payload = client.get_session(pk)
+                if (session_payload.get("status") or "").lower() == "scheduled":
+                    session_payload = client.update_session(pk, {"status": "open"})
                 request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
                 messages.success(request, "Active attendance session updated.")
                 return redirect("attendance_session_detail", pk=pk)
@@ -1990,7 +2113,7 @@ def attendance_session_detail(request, pk: int):
                     "name": request.POST.get("session_name", "").strip(),
                     "status": request.POST.get("status", "open").strip() or "open",
                     "starts_at": _parse_datetime_local(request.POST.get("starts_at", "")).isoformat(),
-                    **_session_self_check_payload(request),
+                    **_session_advanced_payload(request),
                 }
                 ends_at = _parse_optional_datetime_local(request.POST.get("ends_at", ""))
                 payload["ends_at"] = ends_at.isoformat() if ends_at else None
@@ -2032,11 +2155,17 @@ def attendance_session_detail(request, pk: int):
         "starts_at": _datetime_local_value(getattr(context["session"], "starts_at", None)),
         "ends_at": _datetime_local_value(getattr(context["session"], "ends_at", None)),
         "status": getattr(context["session"], "status", "open") or "open",
-        "allow_member_self_check_in": bool(getattr(context["session"], "allow_member_self_check_in", False)),
-        "allow_member_geo_check_in": bool(getattr(context["session"], "allow_member_geo_check_in", False)),
+        "allow_member_self_check_in": _session_method_enabled(context["session"], request, "self"),
+        "allow_qr_check_in": _session_method_enabled(context["session"], request, "qr"),
+        "allow_swipe_check_in": _session_method_enabled(context["session"], request, "swipe"),
+        "allow_nfc_check_in": _session_method_enabled(context["session"], request, "nfc"),
+        "allow_face_check_in": _session_method_enabled(context["session"], request, "face"),
+        "allow_member_geo_check_in": _session_method_enabled(context["session"], request, "geo"),
         "self_check_in_code": getattr(context["session"], "self_check_in_code", "") or "",
         "check_in_opens_at": _datetime_local_value(getattr(context["session"], "check_in_opens_at", None)),
         "check_in_closes_at": _datetime_local_value(getattr(context["session"], "check_in_closes_at", None)),
+        "late_check_in_grace_minutes": getattr(context["session"], "late_check_in_grace_minutes", "") or "",
+        "max_capacity": getattr(context["session"], "max_capacity", "") or "",
     }
 
     return render(request, "attendance_session_detail.html", context)
@@ -2054,9 +2183,9 @@ def qr_attendance(request):
                 back_url="attendance_sessions",
             )
         active_session = _get_active_attendance_session(request)
-        if not active_session:
-            messages.warning(request, "Select an event session before generating a QR check-in code.")
-            return redirect("attendance_sessions")
+        guard = _session_method_guard_response(request, active_session, "qr", "QR check-in")
+        if guard:
+            return guard
 
         client = _api_client(request)
         token = getattr(active_session, "qr_code_token", "") or uuid.uuid4().hex
@@ -2096,9 +2225,9 @@ def nfc_attendance(request):
             )
 
         active_session = _get_active_attendance_session(request)
-        if not active_session:
-            messages.warning(request, "Select an event session before using NFC attendance.")
-            return redirect("attendance_sessions")
+        guard = _session_method_guard_response(request, active_session, "nfc", "NFC check-in")
+        if guard:
+            return guard
 
         method_context = _session_method_context(request, active_session)
         logs_payload = _api_client(request).list_attendance_logs(
@@ -2226,9 +2355,9 @@ def manual_attendance(request):
 def swipe_attendance(request):
     try:
         active_session = _get_active_attendance_session(request)
-        if not active_session:
-            messages.warning(request, "Select an event session before using swipe attendance.")
-            return redirect("attendance_sessions")
+        guard = _session_method_guard_response(request, active_session, "swipe", "Swipe check-in")
+        if guard:
+            return guard
 
         if request.method == "POST":
             person_id = int(request.POST.get("person_id", "0") or "0")
@@ -2256,6 +2385,7 @@ def swipe_attendance(request):
         {
             "active_session": active_session,
             "current_person": current_person,
+            "pending_preview": pending[:3],
             "pending_count": len(pending),
             "completed_count": len(persons) - len(pending),
             "total_count": len(persons),
@@ -2277,9 +2407,9 @@ def geotracking_attendance(request):
             )
 
         active_session = _get_active_attendance_session(request)
-        if not active_session:
-            messages.warning(request, "Select an event session before using GeoTracking attendance.")
-            return redirect("attendance_sessions")
+        guard = _session_method_guard_response(request, active_session, "geo", "GeoTracking")
+        if guard:
+            return guard
 
         if request.method == "POST":
             person_id = int(request.POST.get("person_id", "0") or "0")
@@ -2347,6 +2477,7 @@ def home(request):
         logs = fetch_all_attendance_logs(request=request)
         active_session = _get_active_attendance_session(request)
         setup_context = _build_setup_context(request, overview=overview, active_session=active_session)
+        active_method_flags = _session_method_flags(active_session, request) if active_session else {}
         active_session_logs = (
             fetch_all_attendance_logs(attendance_session_id=str(active_session.id), request=request)
             if active_session else []
@@ -2373,6 +2504,13 @@ def home(request):
             "desktop_user_name": request.session.get(DESKTOP_NAME_SESSION_KEY, "Desktop User"),
             "desktop_user_role": request.session.get(DESKTOP_ROLE_SESSION_KEY, ""),
             "active_session": active_session,
+            "active_session_methods": [
+                {"label": "Mobile Self Check-in", "icon": "fa-mobile-screen", "enabled": active_method_flags.get("self", False)},
+                {"label": "QR Code", "icon": "fa-qrcode", "enabled": active_method_flags.get("qr", False)},
+                {"label": "NFC Check-in", "icon": "fa-id-card-clip", "enabled": active_method_flags.get("nfc", False)},
+                {"label": "Face Recognition", "icon": "fa-face-smile", "enabled": active_method_flags.get("face", False)},
+                {"label": "GeoTracking", "icon": "fa-location-dot", "enabled": active_method_flags.get("geo", False)},
+            ],
             "active_session_present": active_present,
             "active_session_absent": active_absent,
             "active_session_pending": max(0, int(total_persons or 0) - len(active_marked_people)),
@@ -2390,12 +2528,13 @@ def home(request):
             "total_check_outs": 0,
             "total_cameras": 0,
             "desktop_user_name": request.session.get(DESKTOP_NAME_SESSION_KEY, "Desktop User"),
-            "desktop_user_role": request.session.get(DESKTOP_ROLE_SESSION_KEY, ""),
-            "active_session": None,
-              "active_session_present": 0,
-              "active_session_absent": 0,
-              "active_session_pending": 0,
-              "organization": request.session.get(DESKTOP_ORGANIZATION_SESSION_KEY) or {},
+                "desktop_user_role": request.session.get(DESKTOP_ROLE_SESSION_KEY, ""),
+                "active_session": None,
+                "active_session_methods": [],
+                "active_session_present": 0,
+                "active_session_absent": 0,
+                "active_session_pending": 0,
+                "organization": request.session.get(DESKTOP_ORGANIZATION_SESSION_KEY) or {},
               "plan": request.session.get(DESKTOP_PLAN_SESSION_KEY) or {},
               "attendance_methods": _attendance_method_cards(request),
               "setup_checklist": [],
@@ -2412,100 +2551,47 @@ def home(request):
 
 @desktop_login_required
 def search_user(request):
-    integration_enabled = _external_member_integration_enabled(request)
-
-    if request.method == "POST":
-        action = request.POST.get("action", "search").strip()
-
-        if action == "search":
-            if not integration_enabled:
-                return render(
-                    request,
-                    "search_user.html",
-                    _member_registration_context(
-                        request,
-                        error="External member lookup is not connected for this workspace. Create the member directly in KairosTrack.",
-                    ),
-                )
-
-            query = request.POST.get("last_name", "").strip()
-
-            if not query:
-                return render(
-                    request,
-                    "search_user.html",
-                    _member_registration_context(request, error="Enter a last name to search.")
-                )
-
-            user_data = fetch_user_data(query)
-
-            return render(
-                request,
-                "search_user.html",
-                _member_registration_context(
-                    request,
-                    user_data=user_data or [],
-                    searched_last_name=query,
-                    show_create_option=True,
-                    search_performed=True,
-                    prefill_last_name=query,
-                )
-            )
-
-        elif action == "show_portal_register":
-            searched_last_name = request.POST.get("searched_last_name", "").strip()
-            return render(
-                request,
-                "search_user.html",
-                _member_registration_context(
-                    request,
-                    show_portal_register=True,
-                    searched_last_name=searched_last_name,
-                    prefill_last_name=searched_last_name,
-                    show_create_option=True,
-                    search_performed=True,
-                )
-            )
-
-        elif action == "portal_register":
-            first_name = request.POST.get("first_name", "").strip()
-            last_name = request.POST.get("last_name", "").strip()
-            gender = request.POST.get("gender", "").strip()
-            email = request.POST.get("email", "").strip()
-            cell_phone = request.POST.get("cellPhone", "").strip()
-            address1 = request.POST.get("address1", "").strip()
-
-            if not first_name or not last_name:
-                return render(
-                    request,
-                    "search_user.html",
-                    _member_registration_context(
-                        request,
-                        error="First name and last name are required.",
-                        show_portal_register=True,
-                        prefill_first_name=first_name,
-                        prefill_last_name=last_name,
-                        prefill_gender=gender,
-                        prefill_email=email,
-                        prefill_cellPhone=cell_phone,
-                        prefill_address1=address1,
-                        show_create_option=True,
-                        search_performed=True,
-                        searched_last_name=last_name,
-                    )
-                )
-
-            full_name = f"{first_name} {last_name}".strip()
-            messages.success(request, f"{full_name} is ready for photo capture.")
-            return redirect(
-                f"{reverse('register_user')}?name={quote(full_name)}&email={quote(email)}&phone={quote(cell_phone)}"
-            )
-
-    return render(request, "search_user.html", _member_registration_context(request))
+    messages.info(request, "External member lookup now starts inside Register Member.")
+    return redirect(f"{reverse('register_user')}?mode=external")
 
 
 @desktop_login_required
 def register_user(request):
+    integration_enabled = _external_member_integration_enabled(request)
+
+    def _split_name_parts(full_name: str | None):
+        text = (full_name or "").strip()
+        if not text:
+            return "", ""
+        bits = text.split(None, 1)
+        if len(bits) == 1:
+            return bits[0], ""
+        return bits[0], bits[1]
+
+    def _register_context(**extra):
+        base = {
+            "registration_mode": "single",
+            "portal_id": "",
+            "name": "",
+            "first_name": "",
+            "last_name": "",
+            "email": "",
+            "phone": "",
+            "nfc_uid": "",
+            "camera_configs": cams,
+            "member_limit": member_limit,
+            "integration_enabled": integration_enabled,
+            "user_data": [],
+            "search_performed": False,
+            "searched_last_name": "",
+            "lookup_error": "",
+            "created_member_id": "",
+            "created_member_name": "",
+            "success_mode": False,
+        }
+        base.update(extra)
+        return base
+
     try:
         cams = get_all_cameras(request=request)
         member_limit = _member_limit_status(request)
@@ -2527,35 +2613,114 @@ def register_user(request):
         )
 
     if request.method == "GET":
+        requested_mode = (request.GET.get("mode") or "single").strip().lower()
+        registration_mode = "external" if requested_mode == "external" else "single"
         portal_id = request.GET.get("portal_id")
-        if portal_id and not _external_member_integration_enabled(request):
+        if portal_id and not integration_enabled:
             messages.warning(request, "External IDs are ignored because this workspace has no member integration connected.")
             portal_id = ""
+        if portal_id:
+            registration_mode = "external"
         name = request.GET.get("name")
+        first_name, last_name = _split_name_parts(name)
         email = request.GET.get("email", "")
         phone = request.GET.get("phone", "")
         nfc_uid = request.GET.get("nfc_uid", "")
+        created_member_id = request.GET.get("created_member_id", "").strip()
+        created_member_name = request.GET.get("created_member_name", "").strip()
+        success_mode = request.GET.get("created") == "1"
 
         return render(
             request,
             "register_user.html",
-            {
-                "portal_id": portal_id,
-                "name": name,
-                "email": email,
-                "phone": phone,
-                "nfc_uid": nfc_uid,
-                "camera_configs": cams,
-                "member_limit": member_limit,
-                "integration_enabled": _external_member_integration_enabled(request),
-            },
+            _register_context(
+                registration_mode=registration_mode,
+                portal_id=portal_id,
+                name=name,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                nfc_uid=nfc_uid,
+                created_member_id=created_member_id,
+                created_member_name=created_member_name or name or "",
+                success_mode=success_mode,
+            ),
         )
 
     if request.method == "POST":
+        action = (request.POST.get("action") or "register").strip().lower()
+        registration_mode = (request.POST.get("registration_mode") or "single").strip().lower()
+        if registration_mode not in {"single", "external"}:
+            registration_mode = "single"
+
+        if action == "external_search":
+            searched_last_name = request.POST.get("searched_last_name", "").strip()
+            first_name = request.POST.get("first_name", "").strip()
+            last_name = request.POST.get("last_name", "").strip()
+            portal_id = request.POST.get("portal_id", "").strip()
+            email = request.POST.get("email", "").strip()
+            phone = request.POST.get("phone", "").strip()
+            nfc_uid = request.POST.get("nfc_uid", "").strip()
+
+            if not integration_enabled:
+                return render(
+                    request,
+                    "register_user.html",
+                    _register_context(
+                        registration_mode="external",
+                        portal_id=portal_id,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        phone=phone,
+                        nfc_uid=nfc_uid,
+                        lookup_error="External member lookup is not connected for this workspace.",
+                    ),
+                )
+
+            if not searched_last_name:
+                return render(
+                    request,
+                    "register_user.html",
+                    _register_context(
+                        registration_mode="external",
+                        portal_id=portal_id,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        phone=phone,
+                        nfc_uid=nfc_uid,
+                        lookup_error="Enter a last name to search.",
+                    ),
+                )
+
+            user_data = fetch_user_data(searched_last_name) or []
+            return render(
+                request,
+                "register_user.html",
+                _register_context(
+                    registration_mode="external",
+                    portal_id=portal_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone,
+                    nfc_uid=nfc_uid,
+                    user_data=user_data,
+                    searched_last_name=searched_last_name,
+                    search_performed=True,
+                ),
+            )
+
         portal_id = request.POST.get("portal_id")
-        if portal_id and not _external_member_integration_enabled(request):
+        if portal_id and not integration_enabled:
             portal_id = ""
-        name = request.POST.get("name")
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        name = request.POST.get("name", "").strip()
+        if first_name or last_name:
+            name = f"{first_name} {last_name}".strip()
         email = request.POST.get("email", "").strip()
         phone = request.POST.get("phone", "").strip()
         nfc_uid = request.POST.get("nfc_uid", "").strip()
@@ -2565,35 +2730,35 @@ def register_user(request):
             return render(
                 request,
                 "register_user.html",
-                {
-                    "error": "Name is required.",
-                    "portal_id": portal_id,
-                    "name": name,
-                    "email": email,
-                    "phone": phone,
-                      "nfc_uid": nfc_uid,
-                      "camera_configs": cams,
-                      "member_limit": member_limit,
-                      "integration_enabled": _external_member_integration_enabled(request),
-                  },
-              )
+                _register_context(
+                    error="Name is required.",
+                    registration_mode=registration_mode,
+                    portal_id=portal_id,
+                    name=name,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone,
+                    nfc_uid=nfc_uid,
+                ),
+                )
 
         if not image_data:
             return render(
                 request,
                 "register_user.html",
-                {
-                    "error": "Image is required. Please capture a photo.",
-                    "portal_id": portal_id,
-                    "name": name,
-                    "email": email,
-                    "phone": phone,
-                      "nfc_uid": nfc_uid,
-                      "camera_configs": cams,
-                      "member_limit": member_limit,
-                      "integration_enabled": _external_member_integration_enabled(request),
-                  },
-              )
+                _register_context(
+                    error="Image is required. Please capture a photo.",
+                    registration_mode=registration_mode,
+                    portal_id=portal_id,
+                    name=name,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone,
+                    nfc_uid=nfc_uid,
+                ),
+                )
 
         try:
             person = _api_client(request).create_person(
@@ -2616,18 +2781,18 @@ def register_user(request):
             return render(
                 request,
                 "register_user.html",
-                {
-                    "error": f"Could not save member to API: {exc}",
-                    "portal_id": portal_id,
-                    "name": name,
-                    "email": email,
-                    "phone": phone,
-                      "nfc_uid": nfc_uid,
-                      "camera_configs": cams,
-                      "member_limit": member_limit,
-                      "integration_enabled": _external_member_integration_enabled(request),
-                  },
-              )
+                _register_context(
+                    error=f"Could not save member to API: {exc}",
+                    registration_mode=registration_mode,
+                    portal_id=portal_id,
+                    name=name,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone,
+                    nfc_uid=nfc_uid,
+                ),
+                )
 
         # Upload same image to ChurchCRM behind the scenes
         if portal_id:
@@ -2647,9 +2812,16 @@ def register_user(request):
         else:
             messages.success(request, f"{person.get('name', name)} registered successfully.")
 
-        return redirect("person_list")
+        success_query = urlencode(
+            {
+                "created": "1",
+                "created_member_id": person.get("id", ""),
+                "created_member_name": person.get("name", name),
+            }
+        )
+        return redirect(f"{reverse('register_user')}?{success_query}")
 
-    return render(request, "register_user.html", {"camera_configs": cams, "member_limit": member_limit})
+    return render(request, "register_user.html", _register_context())
 
 
 def success_page(request):
