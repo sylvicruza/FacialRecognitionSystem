@@ -6,17 +6,17 @@
 
 {% block content %}
 <style>
-  .wizard-page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:18px}
-  .wizard-main,.wizard-side{display:grid;gap:18px;align-content:start}
-  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
+  .wizard-page{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 232px;gap:16px}
+  .wizard-main,.wizard-side{display:grid;gap:16px;align-content:start}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:18px;box-shadow:0 14px 32px rgba(15,23,42,.05)}
 
-  .wizard-shell{padding:18px;display:grid;gap:16px}
+  .wizard-shell{padding:16px;display:grid;gap:14px}
   .wizard-header{display:grid;gap:4px}
   .wizard-header h2,.section-title h3,.side-card h3,.session-list-card h3{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
   .wizard-header p,.section-title p,.side-card p,.session-list-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
 
-  .stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:4px;border:1px solid #dfe8e3;border-radius:16px;background:#fff}
-  .step-tab{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:10px;padding:12px 14px;border-radius:12px;color:#344054;cursor:pointer;transition:.18s ease}
+  .stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:4px;border:1px solid #dfe8e3;border-radius:14px;background:#fff}
+  .step-tab{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#344054;cursor:pointer;transition:.18s ease}
   .step-tab:not(:last-child)::after{content:"";position:absolute;right:-1px;top:16px;width:2px;height:22px;background:#eef2ef}
   .step-tab.active{background:#f6fcf8}
   .step-tab.done .step-dot{background:#16a34a;color:#fff}
@@ -26,16 +26,16 @@
   .step-copy strong{color:#172033;font-size:12px;font-weight:700;line-height:1.3}
   .step-copy span{color:var(--muted);font-size:10px;line-height:1.35}
 
-  .wizard-form{display:grid;gap:16px}
-  .step-panel{display:none;gap:16px}
+  .wizard-form{display:grid;gap:14px}
+  .step-panel{display:none;gap:14px}
   .step-panel.active{display:grid}
 
-  .panel-card{padding:18px;border:1px solid #e1ebe5;border-radius:18px;background:#fff;display:grid;gap:14px}
+  .panel-card{padding:16px;border:1px solid #e1ebe5;border-radius:14px;background:#fff;display:grid;gap:12px}
   .section-title{display:grid;gap:4px}
   .section-title h3{font-size:16px}
 
-  .option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .option-card{position:relative;display:grid;gap:6px;padding:14px 16px;border:1px solid #dfe8e3;border-radius:16px;background:#fff;cursor:pointer}
+  .option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .option-card{position:relative;display:grid;gap:6px;padding:12px 14px;border:1px solid #dfe8e3;border-radius:14px;background:#fff;cursor:pointer}
   .option-card input{position:absolute;opacity:0;pointer-events:none}
   .option-card.active{border-color:#82d09f;background:#f6fcf8;box-shadow:0 8px 18px rgba(22,163,74,.08)}
   .option-top{display:flex;align-items:center;gap:10px}
@@ -58,7 +58,7 @@
   .info-strip i{color:#16a34a;margin-top:2px}
   .info-strip strong{display:block;color:#172033;font-size:12px;margin-bottom:2px}
 
-  .window-card,.method-card,.rules-card{padding:14px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
+  .window-card,.method-card,.rules-card{padding:12px;border:1px solid #e1ebe5;border-radius:14px;background:#fff;display:grid;gap:12px}
   .window-head,.method-head,.rules-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
   .window-head strong,.method-head strong,.rules-head strong{display:block;color:#172033;font-size:13px;font-weight:700}
   .window-head span,.method-head span,.rules-head span{display:block;color:var(--muted);font-size:11px;line-height:1.4}
@@ -72,8 +72,8 @@
 
   .window-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 
-  .method-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
-  .method-tile{position:relative;display:grid;gap:8px;justify-items:center;padding:12px 8px;border:1px solid #dce7df;border-radius:14px;background:#fff;min-height:94px;text-align:center}
+  .method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .method-tile{position:relative;display:grid;gap:8px;justify-items:center;padding:10px 8px;border:1px solid #dce7df;border-radius:12px;background:#fff;min-height:82px;text-align:center}
   .method-tile input{position:absolute;opacity:0;pointer-events:none}
   .method-tile.active{border-color:#82d09f;background:#f6fcf8}
   .method-tile.locked{background:#f8faf9;border-style:dashed;cursor:not-allowed;opacity:.72}
@@ -96,8 +96,8 @@
   .tip-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #dcecdf;border-radius:13px;background:#f8fcf9;color:#2f6f46;font-size:11px}
   .tip-bar i{color:#16a34a}
 
-  .review-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;align-items:start}
-  .summary-panel{padding:16px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
+  .review-grid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}
+  .summary-panel{padding:14px;border:1px solid #e1ebe5;border-radius:14px;background:#fff;display:grid;gap:12px}
   .summary-panel h4,.start-panel h4{margin:0;color:#172033;font-size:14px;font-weight:800}
   .summary-list{display:grid;gap:10px}
   .summary-item{display:grid;grid-template-columns:18px 120px minmax(0,1fr);gap:10px;align-items:start;color:#344054;font-size:12px}
@@ -105,19 +105,12 @@
   .summary-item label{color:#667085}
   .summary-item strong{color:#172033;font-size:12px;font-weight:700;line-height:1.4}
 
-  .ready-card{display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid #dcecdf;border-radius:14px;background:#f6fcf8;color:#2f6f46}
+  .ready-card{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #dcecdf;border-radius:14px;background:#f6fcf8;color:#2f6f46}
   .ready-card i{width:30px;height:30px;border-radius:999px;display:grid;place-items:center;background:#16a34a;color:#fff;font-size:14px;flex:0 0 auto}
   .ready-card strong{display:block;color:#0f7a38;font-size:13px}
   .ready-card span{display:block;color:#2f6f46;font-size:11px;line-height:1.45;margin-top:2px}
 
-  .next-steps{padding:16px;border:1px solid #e1ebe5;border-radius:16px;background:#fff;display:grid;gap:12px}
-  .next-steps-list{display:grid;gap:10px}
-  .next-step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px}
-  .next-step .num{width:22px;height:22px;border-radius:999px;background:#eef4ff;color:#2563eb;display:grid;place-items:center;font-size:11px;font-weight:800}
-  .next-step strong{display:block;color:#172033;font-size:12px;font-weight:700}
-  .next-step span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
-
-  .start-panel{padding:16px;border:1px solid #dcecdf;border-radius:16px;background:linear-gradient(135deg,#f5fbf7,#f9fefb);display:grid;gap:12px}
+  .start-panel{padding:14px;border:1px solid #dcecdf;border-radius:14px;background:#f7fcf8;display:grid;gap:12px}
   .start-actions{display:flex;gap:10px;flex-wrap:wrap}
   .ghost-btn,.light-btn,.primary-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer}
   .primary-btn{color:#fff;border-color:transparent;background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 14px 28px rgba(37,99,235,.18)}
@@ -126,18 +119,13 @@
   .wizard-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .wizard-nav{display:flex;gap:10px;flex-wrap:wrap}
 
-  .side-card,.session-list-card{padding:18px;display:grid;gap:14px}
+  .side-card,.session-list-card{padding:16px;display:grid;gap:12px}
   .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#eaf8ef;color:#0f7a38;font-size:10px;font-weight:800;text-transform:uppercase}
   .side-meta{display:grid;gap:8px;color:#667085;font-size:12px}
   .side-meta span{display:inline-flex;align-items:center;gap:8px}
   .side-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:12px;border-top:1px solid #edf2ef}
   .side-stat span{display:block;color:#667085;font-size:11px}
   .side-stat strong{display:block;margin-top:2px;color:#172033;font-size:20px;font-weight:800}
-  .tip-list{display:grid;gap:12px}
-  .tip-item{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}
-  .tip-item i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:14px}
-  .tip-item span{color:#344054;font-size:11px;line-height:1.5}
-
   .session-list{display:grid;gap:10px}
   .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #edf2ef;border-radius:16px;background:#fff}
   .session-row b{display:block;color:#172033;font-size:13px;font-weight:700}
@@ -440,8 +428,8 @@
         <div class="step-panel" data-step-panel="3">
           <div class="panel-card">
             <div class="section-title">
-              <h3>Review your session details</h3>
-              <p>Review your session details before starting.</p>
+              <h3>Review Session</h3>
+              <p>Confirm the details before saving or starting.</p>
             </div>
 
             <div class="review-grid">
@@ -500,40 +488,13 @@
                 <div class="ready-card">
                   <i class="fa-solid fa-check"></i>
                   <div>
-                    <strong>You’re all set!</strong>
+                    <strong>Ready to go</strong>
                     <span>Once you start, members will be able to check in based on the configured settings.</span>
                   </div>
                 </div>
               </div>
 
               <div style="display:grid;gap:14px;">
-                <div class="next-steps">
-                  <h4>Next Steps</h4>
-                  <div class="next-steps-list">
-                    <div class="next-step">
-                      <span class="num">1</span>
-                      <div>
-                        <strong>Session will go live</strong>
-                        <span>Your session will be active and ready for check-in.</span>
-                      </div>
-                    </div>
-                    <div class="next-step">
-                      <span class="num">2</span>
-                      <div>
-                        <strong>Members can check in</strong>
-                        <span>Members can check in using the enabled methods.</span>
-                      </div>
-                    </div>
-                    <div class="next-step">
-                      <span class="num">3</span>
-                      <div>
-                        <strong>Monitor attendance</strong>
-                        <span>Track attendance in real time from the dashboard.</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="start-panel">
                   <h4>Start Attendance</h4>
                   <p id="submit_primary_hint">Save this session and open attendance now.</p>
@@ -591,25 +552,6 @@
       {% endif %}
     </section>
 
-    <section class="surface side-card">
-      <div class="section-title">
-        <h3>Quick Tips</h3>
-      </div>
-      <div class="tip-list">
-        <div class="tip-item">
-          <i class="fa-regular fa-calendar-check"></i>
-          <span>Use saved events as templates. Every time you take attendance, a new session is created.</span>
-        </div>
-        <div class="tip-item">
-          <i class="fa-solid fa-layer-group"></i>
-          <span>An event is the reusable activity. A session is one attendance occurrence inside that event.</span>
-        </div>
-        <div class="tip-item">
-          <i class="fa-regular fa-pen-to-square"></i>
-          <span>You can save for later in step 3 and make the session active whenever you are ready.</span>
-        </div>
-      </div>
-    </section>
   </aside>
 </div>
 

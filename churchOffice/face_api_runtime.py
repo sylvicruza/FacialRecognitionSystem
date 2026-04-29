@@ -15,6 +15,7 @@ _TORCH = None
 _DEVICE = None
 _MTCNN = None
 _RESNET = None
+_RUNTIME_ERROR = None
 
 ENCODING_CACHE: dict[str, Any] = {
     "loaded_at": 0.0,
@@ -25,15 +26,21 @@ ENCODING_CACHE_TTL_SECONDS = 300
 
 
 def get_face_runtime():
-    global _TORCH, _DEVICE, _MTCNN, _RESNET
+    global _TORCH, _DEVICE, _MTCNN, _RESNET, _RUNTIME_ERROR
+    if _RUNTIME_ERROR is not None:
+        raise RuntimeError(_RUNTIME_ERROR)
     if _MTCNN is None or _RESNET is None:
-        import torch
-        from facenet_pytorch import InceptionResnetV1, MTCNN
+        try:
+            import torch
+            from facenet_pytorch import InceptionResnetV1, MTCNN
 
-        _TORCH = torch
-        _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        _MTCNN = MTCNN(keep_all=True, device=_DEVICE)
-        _RESNET = InceptionResnetV1(pretrained="vggface2").eval().to(_DEVICE)
+            _TORCH = torch
+            _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            _MTCNN = MTCNN(keep_all=True, device=_DEVICE)
+            _RESNET = InceptionResnetV1(pretrained="vggface2").eval().to(_DEVICE)
+        except Exception as exc:
+            _RUNTIME_ERROR = str(exc) or "Face recognition runtime is unavailable."
+            raise RuntimeError(_RUNTIME_ERROR) from exc
     return _TORCH, _DEVICE, _MTCNN, _RESNET
 
 

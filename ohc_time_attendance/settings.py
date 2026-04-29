@@ -148,7 +148,7 @@ STATICFILES_DIRS = [
 
 ATTENDANCE_API_BASE_URL = os.getenv(
     "ATTENDANCE_API_BASE_URL",
-    "https://heavensconnect.onrender.com/api/attendance",
+    "http://127.0.0.1:8085/api/attendance",
 )
 ATTENDANCE_API_TOKEN = os.getenv("ATTENDANCE_API_TOKEN", "")
 ATTENDANCE_API_TIMEOUT = int(os.getenv("ATTENDANCE_API_TIMEOUT", "30"))
@@ -156,6 +156,14 @@ ATTENDANCE_API_VERIFY_SSL = os.getenv("ATTENDANCE_API_VERIFY_SSL", "True") == "T
 TIME_ATTENDANCE_DOWNLOAD_URL = os.getenv(
     "TIME_ATTENDANCE_DOWNLOAD_URL",
     "https://github.com/sylvicruza/FacialRecognitionSystem/releases/latest/download/KairosTrackSetup-latest.exe",
+)
+TIME_ATTENDANCE_ANDROID_DOWNLOAD_URL = os.getenv(
+    "TIME_ATTENDANCE_ANDROID_DOWNLOAD_URL",
+    "https://play.google.com/store",
+)
+TIME_ATTENDANCE_IOS_DOWNLOAD_URL = os.getenv(
+    "TIME_ATTENDANCE_IOS_DOWNLOAD_URL",
+    "https://www.apple.com/app-store/",
 )
 KAIROSTRACK_DESKTOP_VERSION = os.getenv("KAIROSTRACK_DESKTOP_VERSION", "1.0.0")
 KAIROSTRACK_UPDATE_CHECK_URL = os.getenv(

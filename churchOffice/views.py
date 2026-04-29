@@ -73,7 +73,7 @@ from .utils import (
 )
 from django.views.decorators.http import require_GET
 
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -635,19 +635,93 @@ def _active_session_id(request):
         return None
 
 
+def _session_ends_at(session):
+    raw_value = getattr(session, "ends_at", None)
+    if not raw_value:
+        return None
+    if hasattr(raw_value, "tzinfo"):
+        value = raw_value
+    else:
+        try:
+            value = datetime.fromisoformat(str(raw_value))
+        except ValueError:
+            return None
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value, timezone.get_current_timezone())
+    return timezone.localtime(value)
+
+
+def _session_has_ended(session) -> bool:
+    ends_at = _session_ends_at(session)
+    if not ends_at:
+        return False
+    return timezone.now() >= ends_at
+
+
+def _session_is_open(session) -> bool:
+    return str(getattr(session, "status", "") or "").strip().lower() == "open"
+
+
+def _close_session_if_expired(request, session):
+    if not session or not _session_is_open(session) or not _session_has_ended(session):
+        return session
+    try:
+        updated = _api_client(request).update_session(int(getattr(session, "id")), {"status": "closed"})
+        return to_namespace(updated)
+    except AttendanceApiError as exc:
+        if _is_auth_api_error(exc):
+            raise
+        return session
+
+
+def _restore_live_open_session(request):
+    open_sessions = [
+        to_namespace(item)
+        for item in extract_results(_api_client(request).list_sessions(status="open"))
+    ]
+    live_sessions = []
+    for session in open_sessions:
+        refreshed = _close_session_if_expired(request, session)
+        if _session_is_open(refreshed) and not _session_has_ended(refreshed):
+            live_sessions.append(refreshed)
+
+    if not live_sessions:
+        request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+        return None
+
+    live_sessions.sort(
+        key=lambda item: (
+            _session_ends_at(item) is None,
+            _session_ends_at(item) or timezone.now(),
+            getattr(item, "starts_at", None) or "",
+        ),
+        reverse=True,
+    )
+    selected = live_sessions[0]
+    request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = getattr(selected, "id", None)
+    request.session.modified = True
+    return selected
+
+
 def _get_active_attendance_session(request):
     session_id = _active_session_id(request)
     if not session_id:
-        return None
+        return _restore_live_open_session(request)
 
     try:
-        return to_namespace(_api_client(request).get_session(session_id))
+        session = to_namespace(_api_client(request).get_session(session_id))
     except AttendanceApiError as exc:
         if _is_auth_api_error(exc):
             raise
         request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
-        messages.warning(request, "The selected attendance session is no longer available. Please select another session.")
-        return None
+        return _restore_live_open_session(request)
+
+    session = _close_session_if_expired(request, session)
+    if not _session_is_open(session) or _session_has_ended(session):
+        request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+        request.session.modified = True
+        return _restore_live_open_session(request)
+    return session
 
 
 def _parse_datetime_local(value: str):
@@ -934,7 +1008,18 @@ def gen_frames(
             frame = cv2.resize(frame, (960, 540), interpolation=cv2.INTER_LINEAR)
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            test_encodings = detect_and_encode(frame_rgb)
+            try:
+                test_encodings = detect_and_encode(frame_rgb)
+            except Exception as exc:
+                detail = str(exc).strip()
+                if len(detail) > 120:
+                    detail = detail[:117] + "..."
+                for payload in gen_message_frame(
+                    "Face runtime unavailable",
+                    detail or "Check the local PyTorch / facenet installation.",
+                ):
+                    yield payload
+                break
 
             if test_encodings:
                 recognized = recognize_faces(
@@ -1047,7 +1132,19 @@ def video_feed(request, cam_id):
     src = cam_config.camera_source.strip()
     source = int(src) if src.isdigit() else src
     api_client = _api_client(request)
-    known_encodings, person_by_index = load_authorized_face_encodings(request=request)
+    try:
+        known_encodings, person_by_index = load_authorized_face_encodings(request=request)
+    except Exception as exc:
+        detail = str(exc).strip()
+        if len(detail) > 120:
+            detail = detail[:117] + "..."
+        return StreamingHttpResponse(
+            gen_message_frame(
+                "Face runtime unavailable",
+                detail or "Check the local PyTorch / facenet installation.",
+            ),
+            content_type="multipart/x-mixed-replace; boundary=frame",
+        )
 
     draw_boxes = _get_bool_qs(request, "boxes", True)
     draw_names = _get_bool_qs(request, "names", True)
@@ -1197,6 +1294,24 @@ def camera_preview_feed(request, cam_id):
     )
 
 
+@require_GET
+@desktop_login_required
+def camera_preview_source(request):
+    source_value = (request.GET.get("source") or "").strip()
+    if not source_value:
+        return StreamingHttpResponse(content_type="multipart/x-mixed-replace; boundary=frame")
+
+    if source_value.isdigit():
+        source = int(source_value)
+    else:
+        source = source_value
+
+    return StreamingHttpResponse(
+        gen_preview_frames(source, max_fps=10),
+        content_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
 # =========================================================
 # NFC API (MATCH your urls.py)
 # =========================================================
@@ -1244,7 +1359,9 @@ def product_about(request):
         request,
         "product_about.html",
         {
-            "download_url": settings.TIME_ATTENDANCE_DOWNLOAD_URL,
+            "desktop_download_url": settings.TIME_ATTENDANCE_DOWNLOAD_URL,
+            "android_download_url": settings.TIME_ATTENDANCE_ANDROID_DOWNLOAD_URL,
+            "ios_download_url": settings.TIME_ATTENDANCE_IOS_DOWNLOAD_URL,
         },
     )
 
@@ -1764,6 +1881,33 @@ def attendance_reports(request):
     event_id = request.GET.get("event_id", "").strip()
     branch_id = request.GET.get("branch_id", "").strip()
     method = request.GET.get("method", "").strip()
+
+    def _safe_int(value):
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def _percent(part, whole):
+        if not whole:
+            return 0
+        return round((part / whole) * 100, 1)
+
+    def _method_label(value):
+        labels = {
+            "qr": "QR Code",
+            "nfc": "NFC",
+            "swipe": "Swipe",
+            "manual": "Manual",
+            "member_self": "Self Check-In",
+            "mobile_self": "Self Check-In",
+            "face": "Face Recognition",
+            "face_recognition": "Face Recognition",
+            "geotracking": "GeoTracking",
+        }
+        cleaned = (value or "").strip().lower().replace("-", "_").replace(" ", "_")
+        return labels.get(cleaned, (value or "Unknown").replace("_", " ").title())
+
     try:
         client = _api_client(request)
         params = {"date_from": date_from, "date_to": date_to}
@@ -1784,6 +1928,68 @@ def attendance_reports(request):
         report = to_namespace({"counts": {}, "daily": [], "methods": [], "statuses": [], "top_events": [], "branches": []})
         events = []
         branches = []
+
+    total_records = _safe_int(getattr(report.counts, "total", 0))
+    present_count = _safe_int(getattr(report.counts, "present", 0))
+    absent_count = _safe_int(getattr(report.counts, "absent", 0))
+    pending_count = _safe_int(getattr(report.counts, "pending", 0))
+    checked_out_count = _safe_int(getattr(report.counts, "checked_out", 0))
+
+    method_rows = []
+    for item in getattr(report, "methods", []) or []:
+        count = _safe_int(getattr(item, "count", 0))
+        method_rows.append(
+            {
+                "label": _method_label(getattr(item, "key", "")),
+                "count": count,
+                "percent": _percent(count, total_records),
+            }
+        )
+
+    top_events = []
+    for item in getattr(report, "top_events", []) or []:
+        count = _safe_int(getattr(item, "count", 0))
+        top_events.append(
+            {
+                "label": getattr(item, "event_name", "Unknown event"),
+                "count": count,
+                "percent": _percent(count, total_records),
+            }
+        )
+
+    branch_rows = []
+    for item in getattr(report, "branches", []) or []:
+        count = _safe_int(getattr(item, "count", 0))
+        branch_rows.append(
+            {
+                "label": getattr(item, "branch_name", "No branch"),
+                "count": count,
+                "percent": _percent(count, total_records),
+            }
+        )
+
+    daily_rows = []
+    max_daily = 0
+    for item in getattr(report, "daily", []) or []:
+        count = _safe_int(getattr(item, "count", 0))
+        max_daily = max(max_daily, count)
+        daily_rows.append({"date": getattr(item, "date", ""), "count": count})
+    for row in daily_rows:
+        row["height"] = 14 if not max_daily else max(14, round((row["count"] / max_daily) * 88))
+
+    donut_segments = [
+        {"label": "Present", "count": present_count, "percent": _percent(present_count, total_records), "color": "#22c55e"},
+        {"label": "Absent", "count": absent_count, "percent": _percent(absent_count, total_records), "color": "#ff5c4d"},
+        {"label": "Pending", "count": pending_count, "percent": _percent(pending_count, total_records), "color": "#f7b53b"},
+        {"label": "Checked Out", "count": checked_out_count, "percent": _percent(checked_out_count, total_records), "color": "#4c8bf5"},
+    ]
+    donut_parts = []
+    current_angle = 0
+    for segment in donut_segments:
+        next_angle = current_angle + (segment["percent"] * 3.6)
+        donut_parts.append(f"{segment['color']} {current_angle:.1f}deg {next_angle:.1f}deg")
+        current_angle = next_angle
+    donut_style = "conic-gradient(" + ", ".join(donut_parts or ["#e5e7eb 0deg 360deg"]) + ")"
 
     export_query = urlencode(
         {
@@ -1811,6 +2017,22 @@ def attendance_reports(request):
             "branch_id": branch_id,
             "method": method,
             "export_query": export_query,
+            "total_records": total_records,
+            "present_count": present_count,
+            "absent_count": absent_count,
+            "pending_count": pending_count,
+            "checked_out_count": checked_out_count,
+            "present_percent": _percent(present_count, total_records),
+            "absent_percent": _percent(absent_count, total_records),
+            "pending_percent": _percent(pending_count, total_records),
+            "checked_out_percent": _percent(checked_out_count, total_records),
+            "method_rows": method_rows,
+            "top_event_rows": top_events,
+            "branch_rows": branch_rows,
+            "daily_rows": daily_rows,
+            "max_daily": max_daily,
+            "donut_segments": donut_segments,
+            "donut_style": donut_style,
         },
     )
 
@@ -2294,6 +2516,38 @@ def _mark_session_attendance(request, person_id: int, status_value: str, method:
 @desktop_login_required
 def manual_attendance(request):
     try:
+        def _manual_redirect_url(source):
+            query = {}
+            search_value = (source.get("search") or "").strip()
+            status_value = (source.get("filter_status") or source.get("status_filter") or request.GET.get("status") or "all").strip().lower() or "all"
+            method_value = (source.get("method") or "all").strip().lower() or "all"
+            if search_value:
+                query["search"] = search_value
+            if status_value != "all":
+                query["status"] = status_value
+            if method_value != "all":
+                query["method"] = method_value
+            if not query:
+                return reverse("manual_attendance")
+            return f"{reverse('manual_attendance')}?{urlencode(query)}"
+
+        def _display_dt(value):
+            if not value:
+                return ""
+            if isinstance(value, str):
+                try:
+                    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    if timezone.is_naive(parsed):
+                        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+                    value = timezone.localtime(parsed)
+                except ValueError:
+                    return value
+            try:
+                localized = timezone.localtime(value)
+            except Exception:
+                localized = value
+            return localized.strftime("%d %b %Y %I:%M %p")
+
         active_session = _get_active_attendance_session(request)
         if not active_session:
             messages.warning(request, "Select an event session before marking manual attendance.")
@@ -2304,6 +2558,7 @@ def manual_attendance(request):
             status_value = request.POST.get("status", "present").strip()
             if status_value not in {"present", "absent"}:
                 status_value = "present"
+            redirect_url = _manual_redirect_url(request.POST)
             if action in {"mark_all", "mark_pending"}:
                 search = request.POST.get("search", request.GET.get("search", "")).strip()
                 persons = get_all_people(search=search, request=request, authorized=True)
@@ -2315,23 +2570,59 @@ def manual_attendance(request):
                     _mark_attendance_for_session(request, active_session.id, person.id, status_value, method="manual")
                     updated += 1
                 messages.success(request, f"{updated} member{'s' if updated != 1 else ''} marked {status_value}.")
+            elif action == "mark_selected":
+                selected_ids = [int(value) for value in request.POST.getlist("person_ids") if str(value).isdigit()]
+                if not selected_ids:
+                    messages.warning(request, "Select at least one member first.")
+                else:
+                    updated = 0
+                    for person_id in selected_ids:
+                        _mark_attendance_for_session(request, active_session.id, person_id, status_value, method="manual")
+                        updated += 1
+                    messages.success(request, f"{updated} selected member{'s' if updated != 1 else ''} marked {status_value}.")
             else:
                 person_id = int(request.POST.get("person_id", "0") or "0")
                 _mark_session_attendance(request, person_id, status_value, method="manual")
                 messages.success(request, "Attendance updated.")
-            return redirect("manual_attendance")
+            return redirect(redirect_url)
 
         search = request.GET.get("search", "").strip()
+        status_filter = (request.GET.get("status") or "all").strip().lower() or "all"
+        method_filter = (request.GET.get("method") or "all").strip().lower() or "all"
         persons = get_all_people(search=search, request=request, authorized=True)
         attendance_by_person = _session_attendance_map(request, active_session.id)
         method_context = _session_method_context(request, active_session)
-        rows = [
-            {
-                "person": person,
-                "record": attendance_by_person.get(person.id),
-            }
-            for person in persons
-        ]
+        rows = []
+        for person in persons:
+            record = attendance_by_person.get(person.id)
+            status_key = "pending"
+            status_label = "Pending"
+            method_key = ""
+            method_label = "-"
+            attendance_time = ""
+            if record:
+                status_key = "absent" if record.get("status") == "absent" else "present"
+                status_label = "Absent" if status_key == "absent" else "Present"
+                method_key = (record.get("method") or "").strip().lower()
+                method_label = (record.get("method") or "-").replace("_", " ").title()
+                attendance_time = _display_dt(record.get("check_in_time") or "")
+
+            if status_filter != "all" and status_key != status_filter:
+                continue
+            if method_filter != "all" and method_key != method_filter:
+                continue
+
+            rows.append(
+                {
+                    "person": person,
+                    "record": record,
+                    "status_key": status_key,
+                    "status_label": status_label,
+                    "method_key": method_key,
+                    "method_label": method_label,
+                    "attendance_time": attendance_time,
+                }
+            )
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
         if auth_response:
@@ -2346,6 +2637,11 @@ def manual_attendance(request):
             "active_session": active_session,
             "rows": rows,
             "search_query": request.GET.get("search", "").strip(),
+            "status_filter": status_filter,
+            "method_filter": method_filter,
+            "row_count": len(rows),
+            "session_time_label": _display_dt(getattr(active_session, "attendance_opens_at", None) or getattr(active_session, "starts_at", None)),
+            "session_end_label": _display_dt(getattr(active_session, "attendance_closes_at", None) or getattr(active_session, "ends_at", None)),
             **method_context,
         },
     )
@@ -3208,6 +3504,13 @@ def member_import(request):
 
 @desktop_login_required
 def person_detail(request, pk: int):
+    def _member_date_label(member, *attrs):
+        for attr in attrs:
+            value = getattr(member, attr, None)
+            if value:
+                return value
+        return "—"
+
     try:
         person = normalize_person(_api_client(request).get_person(pk))
     except AttendanceApiError as exc:
@@ -3224,7 +3527,40 @@ def person_detail(request, pk: int):
             "CellPhone": getattr(person, "phone", ""),
             "Address": "",
         }
-    return render(request, "user_detail.html", {"person": person, "user_data": user_data})
+    return render(
+        request,
+        "user_detail.html",
+        {
+            "person": person,
+            "user_data": user_data,
+            "created_label": _member_date_label(person, "created_at", "created_on", "created", "date_joined"),
+            "updated_label": _member_date_label(person, "updated_at", "modified_at", "updated", "created_at", "created"),
+        },
+    )
+
+
+@desktop_login_required
+@require_POST
+def person_update(request, pk: int):
+    payload = {
+        "name": request.POST.get("name", "").strip(),
+        "email": request.POST.get("email", "").strip(),
+        "phone": request.POST.get("phone", "").strip(),
+    }
+
+    if not payload["name"]:
+        messages.error(request, "Member name is required.")
+        return redirect("person_detail", pk=pk)
+
+    try:
+        _api_client(request).update_person(pk, payload)
+        messages.success(request, "Member details updated.")
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return auth_response
+        messages.error(request, f"Could not update member details: {_friendly_api_error(exc)}")
+    return redirect("person_detail", pk=pk)
 
 
 @desktop_login_required
@@ -3305,47 +3641,168 @@ def person_attendance_list(request):
     date_filter = request.GET.get("attendance_date", "").strip()
     event_filter = request.GET.get("event_id", "").strip()
     session_filter = request.GET.get("attendance_session_id", "").strip()
+    status_filter = request.GET.get("status", "").strip().lower() or "all"
+    method_filter = request.GET.get("method", "").strip().lower()
     page_size = int(request.GET.get("page_size", 25) or 25)
     page_size = max(10, min(page_size, 200))  # clamp
     page_number = int(request.GET.get("page", 1) or 1)
+
+    def _normalize_method_label(value):
+        labels = {
+            "qr": "QR",
+            "nfc": "NFC",
+            "swipe": "Swipe",
+            "manual": "Manual",
+            "mobile_self": "Self Check-in",
+            "mobile_self_check_in": "Self Check-in",
+            "self_check_in": "Self Check-in",
+            "geotracking": "GeoTracking",
+            "face": "Face Recognition",
+            "face_recognition": "Face Recognition",
+        }
+        cleaned = (value or "").strip().lower().replace("-", "_").replace(" ", "_")
+        return labels.get(cleaned, (value or "—").replace("_", " ").title())
+
+    def _parse_dt(value):
+        if not value:
+            return None
+        if isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if timezone.is_naive(parsed):
+                    parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+                return timezone.localtime(parsed)
+            except ValueError:
+                return None
+        try:
+            return timezone.localtime(value)
+        except Exception:
+            return None
+
+    def _status_matches(record, selected_status):
+        if not selected_status or selected_status == "all":
+            return True
+        return (getattr(record, "status", "") or "").strip().lower() == selected_status
+
     try:
-        page_obj = fetch_attendance_page(
-            search_query,
-            date_filter,
-            page_number,
-            page_size,
-            event_id=event_filter,
-            attendance_session_id=session_filter,
-            request=request,
-        )
         client = _api_client(request)
         events = [to_namespace(item) for item in extract_results(client.list_events())]
         session_params = {"event_id": event_filter} if event_filter else {}
         sessions = [to_namespace(item) for item in extract_results(client.list_sessions(**session_params))]
         active_session = _get_active_attendance_session(request)
+        all_records = fetch_all_attendance_logs(
+            search_query,
+            date_filter,
+            event_id=event_filter,
+            attendance_session_id=session_filter,
+            method=method_filter,
+            request=request,
+        )
+        filtered_records = [record for record in all_records if _status_matches(record, status_filter)]
+        for record in filtered_records:
+            record.method_label = _normalize_method_label(getattr(record, "method", ""))
+            current_status = (getattr(record, "status", "") or "present").strip().lower()
+            record.status_css = current_status if current_status in {"present", "absent", "pending"} else "present"
+        paginator = Paginator(filtered_records, page_size)
+        page_obj = paginator.get_page(page_number)
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
         if auth_response:
             return auth_response
         messages.error(request, f"Could not load attendance logs: {_friendly_api_error(exc)}")
-        page_obj = wrap_api_page({"count": 0}, [], 1, page_size)
+        all_records = []
+        filtered_records = []
+        paginator = Paginator([], page_size)
+        page_obj = paginator.get_page(1)
         events = []
         sessions = []
         active_session = None
+
+    present_count = sum(1 for record in filtered_records if (getattr(record, "status", "") or "").lower() == "present")
+    absent_count = sum(1 for record in filtered_records if (getattr(record, "status", "") or "").lower() == "absent")
+    pending_count = sum(1 for record in filtered_records if (getattr(record, "status", "") or "").lower() == "pending")
+    total_count = len(filtered_records)
+
+    activity_source = []
+    for record in filtered_records:
+        person = getattr(record, "person", None)
+        timestamp = _parse_dt(getattr(record, "check_in_time", None)) or _parse_dt(getattr(record, "check_out_time", None))
+        activity_source.append(
+            {
+                "record": record,
+                "person_name": getattr(person, "name", "Unknown Member") if person else "Unknown Member",
+                "status": (getattr(record, "status", "") or "pending").replace("_", " ").title(),
+                "method_label": _normalize_method_label(getattr(record, "method", "")),
+                "timestamp": timestamp,
+                "timestamp_label": timestamp.strftime("%I:%M %p") if timestamp else "—",
+            }
+        )
+    recent_activity = sorted(activity_source, key=lambda item: item["timestamp"] or datetime.min.replace(tzinfo=timezone.get_current_timezone()), reverse=True)[:6]
+
+    completed_methods = {
+        _normalize_method_label(getattr(record, "method", ""))
+        for record in filtered_records
+        if getattr(record, "method", None)
+    }
+
+    checkin_minutes = []
+    for record in filtered_records:
+        check_in_dt = _parse_dt(getattr(record, "check_in_time", None))
+        if check_in_dt:
+            checkin_minutes.append(check_in_dt.hour * 60 + check_in_dt.minute)
+
+    if checkin_minutes:
+        average_minutes = round(sum(checkin_minutes) / len(checkin_minutes))
+        avg_hour = average_minutes // 60
+        avg_minute = average_minutes % 60
+        avg_meridiem = "AM" if avg_hour < 12 else "PM"
+        avg_hour_display = avg_hour % 12 or 12
+        average_checkin_label = f"{avg_hour_display:02d}:{avg_minute:02d} {avg_meridiem}"
+    else:
+        average_checkin_label = "—"
+
+    status_tabs = [
+        {"key": "all", "label": "All", "count": total_count},
+        {"key": "present", "label": "Present", "count": present_count},
+        {"key": "absent", "label": "Absent", "count": absent_count},
+        {"key": "pending", "label": "Pending", "count": pending_count},
+    ]
+
+    method_options = [
+        ("", "All methods"),
+        ("manual", "Manual"),
+        ("qr", "QR Code"),
+        ("nfc", "NFC"),
+        ("swipe", "Swipe"),
+        ("face_recognition", "Face Recognition"),
+        ("geotracking", "GeoTracking"),
+        ("mobile_self", "Mobile Self Check-in"),
+    ]
 
     return render(
         request,
         "user_attendance_list.html",
         {
-            "attendance_page": page_obj,   # <--- use this in template
+            "attendance_page": page_obj,
             "search_query": search_query,
             "date_filter": date_filter,
             "event_filter": event_filter,
             "session_filter": session_filter,
+            "status_filter": status_filter,
+            "method_filter": method_filter,
             "page_size": page_size,
             "events": events,
             "sessions": sessions,
             "active_session": active_session,
+            "present_count": present_count,
+            "absent_count": absent_count,
+            "pending_count": pending_count,
+            "total_count": total_count,
+            "recent_activity": recent_activity,
+            "methods_used_count": len(completed_methods),
+            "average_checkin_label": average_checkin_label,
+            "status_tabs": status_tabs,
+            "method_options": method_options,
         },
     )
 
@@ -3420,7 +3877,44 @@ def camera_config_list(request):
             return auth_response
         configs = []
         messages.error(request, f"Could not load cameras: {_friendly_api_error(exc)}")
-    return render(request, "camera_config_list.html", {"configs": configs})
+    active_count = 0
+    inactive_count = 0
+    normalized_configs = []
+    for config in configs:
+        source_value = str(getattr(config, "camera_source", "") or "").strip()
+        if hasattr(config, "is_active"):
+            is_active = bool(getattr(config, "is_active"))
+        else:
+            is_active = bool(source_value)
+        if is_active:
+            active_count += 1
+        else:
+            inactive_count += 1
+
+        if source_value.isdigit():
+            source_kind = "Local Webcam"
+        elif source_value.lower().startswith("rtsp://"):
+            source_kind = "IP Camera (RTSP)"
+        elif source_value.lower().startswith("http://") or source_value.lower().startswith("https://"):
+            source_kind = "IP Camera (HTTP)"
+        else:
+            source_kind = "Custom Source"
+
+        setattr(config, "source_kind", source_kind)
+        normalized_configs.append(config)
+
+    return render(
+        request,
+        "camera_config_list.html",
+        {
+            "configs": normalized_configs,
+            "camera_stats": {
+                "active": active_count,
+                "inactive": inactive_count,
+                "total": len(normalized_configs),
+            },
+        },
+    )
 
 
 @desktop_login_required
@@ -3557,6 +4051,13 @@ def _duration_text(a) -> str:
     return "Not Checked Out"
 
 
+def _attendance_status_matches(record, selected_status: str = "") -> bool:
+    selected = (selected_status or "").strip().lower()
+    if not selected or selected == "all":
+        return True
+    return (getattr(record, "status", "") or "").strip().lower() == selected
+
+
 ATTENDANCE_EXPORT_HEADERS = [
     "Name",
     "Member Code",
@@ -3669,6 +4170,7 @@ def attendance_export_download(request):
     session_filter = request.GET.get("attendance_session_id", "").strip()
     branch_filter = request.GET.get("branch_id", "").strip()
     method_filter = request.GET.get("method", "").strip()
+    status_filter = request.GET.get("status", "").strip()
     fmt = (request.GET.get("format") or "csv").lower().strip()
     qs = fetch_all_attendance_logs(
         search_query,
@@ -3681,6 +4183,8 @@ def attendance_export_download(request):
         method=method_filter,
         request=request,
     )
+    if status_filter:
+        qs = [record for record in qs if _attendance_status_matches(record, status_filter)]
 
     # filename
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -3759,8 +4263,13 @@ def attendance_email_export(request):
     fmt = (request.POST.get("format") or "csv").lower().strip()
     search_query = (request.POST.get("search") or "").strip()
     date_filter = (request.POST.get("attendance_date") or "").strip()
+    date_from = (request.POST.get("date_from") or "").strip()
+    date_to = (request.POST.get("date_to") or "").strip()
     event_filter = (request.POST.get("event_id") or "").strip()
     session_filter = (request.POST.get("attendance_session_id") or "").strip()
+    branch_filter = (request.POST.get("branch_id") or "").strip()
+    method_filter = (request.POST.get("method") or "").strip()
+    status_filter = (request.POST.get("status") or "").strip()
 
     if not to_email:
         messages.error(request, "Recipient email is required.")
@@ -3771,8 +4280,14 @@ def attendance_email_export(request):
         date_filter,
         event_id=event_filter,
         attendance_session_id=session_filter,
+        date_from=date_from,
+        date_to=date_to,
+        branch_id=branch_filter,
+        method=method_filter,
         request=request,
     )
+    if status_filter:
+        qs = [record for record in qs if _attendance_status_matches(record, status_filter)]
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     label = "attendance"
@@ -3837,6 +4352,7 @@ def attendance_email_export(request):
         f"Filters:\n"
         f"- Search: {search_query or '-'}\n"
         f"- Date: {date_filter or '-'}\n"
+        f"- Range: {(date_from or '-') + ' to ' + (date_to or '-') if (date_from or date_to) else '-'}\n"
         f"- Event ID: {event_filter or '-'}\n"
         f"- Session ID: {session_filter or '-'}\n\n"
         "Regards,\nKairosTrack"

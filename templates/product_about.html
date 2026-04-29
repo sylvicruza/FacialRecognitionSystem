@@ -139,6 +139,89 @@
       box-shadow: 0 16px 32px rgba(19, 131, 59, .22);
     }
 
+    .download-menu {
+      position: relative;
+    }
+
+    .download-menu summary {
+      list-style: none;
+    }
+
+    .download-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .download-toggle i:last-child {
+      font-size: 11px;
+      transition: transform .18s ease;
+    }
+
+    .download-menu[open] .download-toggle i:last-child {
+      transform: rotate(180deg);
+    }
+
+    .download-list {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 248px;
+      padding: 8px;
+      border: 1px solid rgba(6, 39, 25, .12);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 22px 44px rgba(15, 23, 42, .12);
+      display: grid;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .download-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 13px;
+      border-radius: 10px;
+      color: #172033;
+      transition: background .18s ease, transform .18s ease;
+    }
+
+    .download-item:hover {
+      background: #f6fbf7;
+      transform: translateY(-1px);
+    }
+
+    .download-item i:first-child {
+      width: 18px;
+      color: var(--green);
+      text-align: center;
+      flex: 0 0 18px;
+    }
+
+    .download-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .download-copy b {
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .download-copy span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .download-arrow {
+      margin-left: auto;
+      color: #98a2b3;
+      font-size: 11px;
+    }
+
     .hero {
       display: grid;
       grid-template-columns: .84fr 1.16fr;
@@ -907,70 +990,85 @@
 
     .demo-panel {
       display: grid;
-      grid-template-columns: .88fr 1.12fr;
-      gap: 24px;
+      grid-template-columns: .72fr 1.28fr;
+      gap: 18px;
       align-items: stretch;
-      padding: 14px;
-      border-radius: 20px;
-      background: var(--deep);
-      box-shadow: 0 28px 70px rgba(15, 23, 42, .18);
+      padding: 0;
     }
 
     .demo-story {
-      position: relative;
-      min-height: 260px;
-      padding: 34px;
-      color: #fff;
-      overflow: hidden;
-    }
-
-    .demo-story::before {
-      content: "";
-      position: absolute;
-      width: 350px;
-      height: 350px;
-      right: -40px;
-      bottom: -150px;
-      border-radius: 999px;
-      background:
-        radial-gradient(circle, rgba(34, 197, 94, .15) 0 34%, transparent 35%),
-        repeating-radial-gradient(circle, rgba(34, 197, 94, .13) 0 2px, transparent 2px 26px);
-    }
-
-    .demo-story > * {
-      position: relative;
-      z-index: 2;
+      min-height: auto;
+      padding: 24px 0;
+      color: var(--ink);
     }
 
     .demo-story h2 {
-      margin: 22px 0 0;
-      font-size: 34px;
-      line-height: 1.08;
-      letter-spacing: -.055em;
+      margin: 10px 0 0;
+      font-size: 28px;
+      line-height: 1.14;
+      letter-spacing: -.04em;
       font-weight: 900;
     }
 
     .demo-story p {
       max-width: 420px;
-      margin: 14px 0 0;
-      color: rgba(255, 255, 255, .78);
+      margin: 12px 0 0;
+      color: var(--muted);
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.65;
       font-weight: 700;
     }
 
-    .demo-camera {
-      position: absolute;
-      right: 24px;
-      bottom: -18px;
-      width: 210px;
-      filter: drop-shadow(0 26px 26px rgba(0, 0, 0, .32));
+    .demo-points {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .demo-points li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .demo-points i {
+      width: 18px;
+      color: #16a34a;
+      text-align: center;
     }
 
     .demo-form {
-      padding: 22px;
-      border-radius: 14px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
       background: #fff;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, .08);
+    }
+
+    .demo-form-head {
+      margin-bottom: 14px;
+    }
+
+    .demo-form-head h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: -.03em;
+      font-weight: 900;
+    }
+
+    .demo-form-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 700;
     }
 
     .messages {
@@ -1159,6 +1257,12 @@
         flex: 1;
       }
 
+      .download-list {
+        left: 0;
+        right: auto;
+        min-width: min(100%, 280px);
+      }
+
       .hero {
         padding-top: 28px;
       }
@@ -1178,8 +1282,7 @@
 
       .mock-side,
       .top-pills,
-      .mobile-phone,
-      .demo-camera {
+      .mobile-phone {
         display: none;
       }
 
@@ -1208,7 +1311,37 @@
 
     <div class="nav-actions">
       <a class="btn" href="#demo"><i class="fa-regular fa-calendar"></i> Book a demo</a>
-      <a class="btn primary" href="{{ download_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Download app</a>
+      <details class="download-menu">
+        <summary class="btn primary download-toggle">
+          <i class="fa-solid fa-download"></i> Download app <i class="fa-solid fa-chevron-down"></i>
+        </summary>
+        <div class="download-list">
+          <a class="download-item" href="{{ desktop_download_url }}" target="_blank" rel="noopener">
+            <i class="fa-solid fa-desktop"></i>
+            <span class="download-copy">
+              <b>Desktop app</b>
+              <span>Windows installer for check-in stations</span>
+            </span>
+            <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+          </a>
+          <a class="download-item" href="{{ android_download_url }}" target="_blank" rel="noopener">
+            <i class="fa-brands fa-android"></i>
+            <span class="download-copy">
+              <b>Mobile app</b>
+              <span>Android device</span>
+            </span>
+            <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+          </a>
+          <a class="download-item" href="{{ ios_download_url }}" target="_blank" rel="noopener">
+            <i class="fa-brands fa-apple"></i>
+            <span class="download-copy">
+              <b>Mobile app</b>
+              <span>iOS device</span>
+            </span>
+            <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+          </a>
+        </div>
+      </details>
     </div>
   </header>
 
@@ -1221,7 +1354,37 @@
           KairosTrack helps organisations register people, create events, and <b>mark attendance using manual swipe, QR code, NFC, facial recognition,</b> and future geotracking mobile workflows.
         </p>
         <div class="cta-row">
-          <a class="btn primary" href="{{ download_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Download app</a>
+          <details class="download-menu">
+            <summary class="btn primary download-toggle">
+              <i class="fa-solid fa-download"></i> Download app <i class="fa-solid fa-chevron-down"></i>
+            </summary>
+            <div class="download-list">
+              <a class="download-item" href="{{ desktop_download_url }}" target="_blank" rel="noopener">
+                <i class="fa-solid fa-desktop"></i>
+                <span class="download-copy">
+                  <b>Desktop app</b>
+                  <span>Windows installer for check-in stations</span>
+                </span>
+                <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+              </a>
+              <a class="download-item" href="{{ android_download_url }}" target="_blank" rel="noopener">
+                <i class="fa-brands fa-android"></i>
+                <span class="download-copy">
+                  <b>Mobile app</b>
+                  <span>Android device</span>
+                </span>
+                <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+              </a>
+              <a class="download-item" href="{{ ios_download_url }}" target="_blank" rel="noopener">
+                <i class="fa-brands fa-apple"></i>
+                <span class="download-copy">
+                  <b>Mobile app</b>
+                  <span>iOS device</span>
+                </span>
+                <i class="fa-solid fa-arrow-up-right-from-square download-arrow"></i>
+              </a>
+            </div>
+          </details>
           <a class="btn" href="#demo"><i class="fa-regular fa-calendar"></i> Book a demo</a>
         </div>
         <div class="chips">
@@ -1432,7 +1595,7 @@
           <span class="price-tag">Starter</span>
           <h3>Starter</h3>
           <p class="price-desc">For small groups starting with basic event attendance.</p>
-          <div class="amount">GBP 0 <span>/ trial</span></div>
+          <div class="amount">£0 <span>/ trial</span></div>
           <ul>
             <li><i class="fa-solid fa-check"></i>Direct member entry</li>
             <li><i class="fa-solid fa-check"></i>Event creation</li>
@@ -1449,7 +1612,7 @@
           <span class="price-tag">Standard</span>
           <h3>Standard</h3>
           <p class="price-desc">For churches, schools, clubs, and teams needing faster check-in.</p>
-          <div class="amount">GBP 9.99 <span>/ month</span></div>
+          <div class="amount">£9.99 <span>/ month</span></div>
           <ul>
             <li><i class="fa-solid fa-check"></i>Everything in Starter</li>
             <li><i class="fa-solid fa-check"></i>QR Code attendance</li>
@@ -1465,7 +1628,7 @@
           <span class="price-tag">Professional</span>
           <h3>Professional</h3>
           <p class="price-desc">For growing organisations using devices, cameras, and deeper reports.</p>
-          <div class="amount">GBP 19.99 <span>/ month</span></div>
+          <div class="amount">£19.99 <span>/ month</span></div>
           <ul>
             <li><i class="fa-solid fa-check"></i>Everything in Standard</li>
             <li><i class="fa-solid fa-check"></i>NFC attendance</li>
@@ -1509,14 +1672,23 @@
     <section class="wrap demo" id="demo">
       <div class="demo-panel">
         <div class="demo-story">
-          <div class="eyebrow"><i class="fa-solid fa-circle-play"></i> Let us walk you through it</div>
+          <div class="eyebrow"><i class="fa-regular fa-calendar-check"></i> Demo request</div>
           <h2>Book a KairosTrack demo</h2>
-          <p>Tell us your organisation type, expected attendance size, and the methods you want to use. We will help you choose the right plan and setup path.</p>
-          <img class="demo-camera" src="{% static 'images/dashboard-camera-transparent.png' %}" alt="">
+          <p>Share a few details about your team and attendance process. We will help you choose the right setup and follow up with the next steps.</p>
+          <ul class="demo-points">
+            <li><i class="fa-solid fa-check"></i> Attendance method guidance</li>
+            <li><i class="fa-solid fa-check"></i> Plan and rollout recommendation</li>
+            <li><i class="fa-solid fa-check"></i> Direct follow-up from our team</li>
+          </ul>
         </div>
 
         <form class="demo-form" method="post" action="{% url 'demo_request' %}">
           {% csrf_token %}
+
+          <div class="demo-form-head">
+            <h3>Request a demo</h3>
+            <p>We usually only need your contact details, organisation, and a short note about your attendance needs.</p>
+          </div>
 
           {% if messages %}
             <div class="messages">

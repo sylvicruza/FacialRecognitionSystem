@@ -2,212 +2,326 @@
 {% block title %}Organization Settings{% endblock %}
 {% block page_crumb %}Setup{% endblock %}
 {% block page_title %}Organization{% endblock %}
-{% block page_subtitle %}Manage your workspace, plan, registration link, branches, and staff.{% endblock %}
+{% block page_subtitle %}Manage your organization, plan, settings and team.{% endblock %}
 
 {% block content %}
 <style>
-  .org-wrap{
+  .org-shell{
+    max-width:1140px;
+    margin:0 auto;
     display:grid;
-    gap:18px;
+    gap:12px;
+    padding:4px 0 24px;
   }
 
-  .org-hero{
-    display:grid;
-    grid-template-columns:1.05fr .95fr;
-    gap:18px;
-    align-items:stretch;
-  }
-
-  .panel{
+  .org-card{
     background:#fff;
     border:1px solid #dfe9e3;
-    border-radius:26px;
-    box-shadow:0 22px 54px rgba(15,23,42,.08);
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(15,23,42,.04);
     overflow:hidden;
   }
 
-  .panel.pad{ padding:22px; }
-
-  .panel-head{
-    padding:20px 22px;
-    border-bottom:1px solid #edf2ef;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    flex-wrap:wrap;
+  .org-card-inner{
+    padding:16px 18px;
   }
 
-  .panel-title h2{
+  .section-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .section-head h3{
     margin:0;
-    font-size:20px;
+    color:#172033;
+    font-size:17px;
     font-weight:900;
     letter-spacing:-.03em;
-    color:#101827;
   }
 
-  .panel-title p{
+  .section-head p{
     margin:4px 0 0;
-    color:#64748b;
-    font-size:13px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.55;
   }
 
-  .brand-card{
-    background:
-      radial-gradient(520px 240px at 82% 0%, rgba(34,197,94,.18), transparent 70%),
-      linear-gradient(135deg,#06291b,#10364a);
-    color:#fff;
-    min-height:250px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-  }
-
-  .brand-card h2{
-    margin:0;
-    font-size:32px;
-    font-weight:900;
-    letter-spacing:-.05em;
-  }
-
-  .brand-card p{
-    color:rgba(255,255,255,.74);
-    margin:8px 0 0;
-    max-width:560px;
-  }
-
-  .chips{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:18px;
-  }
-
-  .mini-chip{
+  .btnx{
+    min-height:38px;
     display:inline-flex;
     align-items:center;
+    justify-content:center;
     gap:8px;
-    padding:9px 12px;
-    border-radius:999px;
-    background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.14);
-    color:rgba(255,255,255,.9);
+    padding:9px 14px;
+    border-radius:10px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
     font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .btnx:hover{color:#172033;background:#f8fbff;}
+
+  .btnx.success{
+    background:#16a34a;
+    border-color:#16a34a;
+    color:#fff;
+    box-shadow:0 14px 24px rgba(22,163,74,.16);
+  }
+
+  .btnx.soft{
+    background:#eef8f1;
+    border-color:#d3ebda;
+    color:#11623d;
+    box-shadow:none;
+  }
+
+  .btnx.danger{
+    background:#fff3f3;
+    border-color:#f1dada;
+    color:#b42318;
+    box-shadow:none;
+  }
+
+  .badge-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    min-height:28px;
+    padding:0 11px;
+    border-radius:999px;
+    background:#edf9f0;
+    border:1px solid #d8efdd;
+    color:#15803d;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .hero-card{
+    padding:16px 18px;
+    display:grid;
+    grid-template-columns:minmax(320px,1fr) minmax(520px,1.2fr);
+    gap:14px;
+    align-items:center;
+    background:#fff;
+  }
+
+  .hero-main{
+    display:grid;
+    grid-template-columns:56px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+  }
+
+  .hero-icon{
+    width:56px;
+    height:56px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    background:#eef8f1;
+    color:#16a34a;
+    font-size:22px;
+  }
+
+  .hero-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .hero-meta{
+    margin-top:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .hero-meta .dot{
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    background:#98a2b3;
+  }
+
+  .hero-note{
+    margin-top:6px;
+    color:#667085;
     font-size:12px;
   }
 
-  .plan-grid,
-  .stats-grid,
-  .profile-grid{
+  .hero-actions{
+    margin-top:12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .hero-stats{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+    border-left:1px solid #edf2ef;
+    padding-left:12px;
+  }
+
+  .hero-stat{
+    padding:9px 10px;
+    display:grid;
+    gap:4px;
+    align-items:center;
+    border:1px solid #e7efe9;
+    border-radius:12px;
+    background:#fff;
+  }
+
+  .hero-stat + .hero-stat{
+    border-left:0;
+  }
+
+  .hero-stat strong{
+    display:block;
+    color:#172033;
+    font-size:14px;
+    font-weight:900;
+    line-height:1.2;
+    white-space:nowrap;
+  }
+
+  .hero-stat span{
+    display:block;
+    margin-top:2px;
+    color:#667085;
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .trio-grid,
+  .ops-grid{
+    display:grid;
+    gap:12px;
+    align-items:start;
+  }
+
+  .trio-grid{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+
+  .ops-grid{
+    grid-template-columns:1.12fr 1.05fr .88fr;
+  }
+
+  .mini-grid{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:12px;
+    gap:10px;
   }
 
-  .stat,
-  .profile-card{
-    border:1px solid #e6eee9;
-    border-radius:20px;
-    padding:16px;
-    background:linear-gradient(180deg,#fff,#fbfdfc);
+  .mini-tile{
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fff;
   }
 
-  .stat span,
-  .profile-card span{
+  .mini-tile small{
     display:block;
-    color:#64748b;
-    font-size:12px;
+    color:#667085;
+    font-size:10px;
     font-weight:800;
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
   }
 
-  .stat b{
+  .mini-tile strong{
     display:block;
-    margin-top:8px;
-    font-size:26px;
-    color:#101827;
-    letter-spacing:-.04em;
-  }
-
-  .profile-card b{
-    display:block;
-    margin-top:7px;
-    color:#101827;
+    color:#172033;
     font-size:15px;
-    overflow-wrap:anywhere;
+    font-weight:900;
+    line-height:1.35;
   }
 
-  .limit-bar{
-    height:9px;
+  .mini-note{
     margin-top:12px;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#f8fcf9;
+    border:1px solid #ddf1e3;
+    color:#137a38;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .metric-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:8px;
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .progress{
+    height:8px;
     border-radius:999px;
     background:#edf5f0;
     overflow:hidden;
+    margin-top:8px;
   }
 
-  .limit-bar div{
+  .progress > div{
     height:100%;
     border-radius:999px;
     background:linear-gradient(135deg,#22c55e,#16a34a);
   }
 
-  .limit-warning{
-    margin-top:12px;
-    padding:12px 14px;
-    border-radius:16px;
-    border:1px solid #fed7aa;
-    background:#fff7ed;
-    color:#9a3412;
-    font-size:13px;
-    font-weight:800;
-  }
-
-  .feature-grid{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px;
-    margin-top:16px;
-  }
-
-  .feature{
-    padding:12px;
-    border-radius:16px;
-    border:1px solid #d8f0df;
-    background:#f0fbf4;
-    color:#14532d;
-    font-size:12px;
-    font-weight:900;
-  }
-
-  .feature.locked{
-    border-color:#e2e8f0;
-    background:#f8fafc;
-    color:#64748b;
-  }
-
-  .form-grid{
+  .field-grid{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:14px;
+    gap:10px;
   }
 
-  .full{ grid-column:1 / -1; }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .field.full{
+    grid-column:1 / -1;
+  }
 
   .field label{
-    display:block;
     color:#334155;
-    font-size:12px;
+    font-size:11px;
     font-weight:900;
-    margin-bottom:7px;
   }
 
   .field input,
   .field select{
     width:100%;
-    min-height:48px;
+    min-height:38px;
     border:1px solid #dfe7ef;
-    background:#f7fbff;
-    border-radius:15px;
-    padding:0 14px;
+    background:#fff;
+    border-radius:10px;
+    padding:0 13px;
     color:#101827;
     outline:none;
   }
@@ -219,51 +333,142 @@
     background:#fff;
   }
 
-  .btnx{
-    border:none;
-    border-radius:15px;
-    padding:12px 15px;
-    font-weight:900;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    text-decoration:none;
-    cursor:pointer;
-  }
-
-  .btnx.primary{
-    background:linear-gradient(135deg,#22c55e,#16a34a);
-    color:#052012;
-  }
-
-  .btnx.soft{
-    background:#eef8f1;
-    color:#11623d;
-    border:1px solid #ccebd8;
-  }
-
-  .btnx.danger{
-    background:#fff1f1;
-    color:#a01818;
-    border:1px solid #ffd1d1;
-  }
-
-  .btnx:disabled,
-  .field input:disabled,
-  .field select:disabled{
-    opacity:.55;
-    cursor:not-allowed;
-  }
-
-  .copy-row{
+  .inline-copy{
     display:grid;
-    grid-template-columns:1fr auto;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px;
+    align-items:center;
+    margin-top:14px;
+  }
+
+  .inline-copy input{
+    min-height:42px;
+    border:1px solid #dfe9e3;
+    border-radius:10px;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:700;
+    padding:0 14px;
+  }
+
+  .summary-strip{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
+  }
+
+  .summary-cell{
+    padding:12px 13px;
+  }
+
+  .summary-cell + .summary-cell{
+    border-left:1px solid #edf2ef;
+  }
+
+  .summary-cell small{
+    display:block;
+    color:#667085;
+    font-size:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:6px;
+  }
+
+  .summary-cell strong{
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .list-stack{
+    margin-top:12px;
+    display:grid;
     gap:10px;
   }
 
+  .list-item{
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fff;
+  }
+
+  .list-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .list-title{
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .list-meta{
+    margin-top:4px;
+    color:#667085;
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .list-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  details.compact-block{
+    margin-top:10px;
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    background:#fbfdfb;
+    overflow:hidden;
+  }
+
+  details.compact-block summary{
+    list-style:none;
+    cursor:pointer;
+    padding:12px 13px;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  details.compact-block summary::-webkit-details-marker{display:none;}
+
+  .compact-body{
+    padding:0 13px 13px;
+  }
+
+  .compact-form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin-top:6px;
+  }
+
+  .compact-form-grid .full{
+    grid-column:1 / -1;
+  }
+
   .table-wrap{
-    overflow:auto;
+    margin-top:12px;
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
   }
 
   table{
@@ -273,282 +478,332 @@
 
   th,
   td{
-    padding:15px 18px;
+    padding:10px 12px;
     border-top:1px solid #edf2ef;
     text-align:left;
     vertical-align:middle;
-    white-space:nowrap;
   }
 
   th{
-    color:#64748b;
-    font-size:12px;
+    color:#667085;
+    font-size:10px;
     text-transform:uppercase;
     letter-spacing:.06em;
+    font-weight:800;
+    background:#fbfdfb;
   }
 
   td{
-    color:#101827;
-    font-weight:750;
-  }
-
-  .sub{
-    color:#64748b;
+    color:#172033;
     font-size:12px;
     font-weight:700;
-    margin-top:3px;
   }
 
-  .badge-soft{
+  .status-pill{
     display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 9px;
     border-radius:999px;
-    padding:7px 10px;
-    background:#eef8f1;
-    color:#11623d;
-    font-size:12px;
-    font-weight:900;
+    background:#edf9f0;
+    color:#15803d;
+    font-size:10px;
+    font-weight:800;
+    border:1px solid #d8efdd;
   }
 
-  .two-col{
+  .mini-sub{
+    display:block;
+    margin-top:4px;
+    color:#667085;
+    font-size:10px;
+    line-height:1.45;
+  }
+
+  .workspace-card .workspace-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:0;
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
   }
 
-  @media (max-width:1050px){
-    .org-hero,
-    .two-col{ grid-template-columns:1fr; }
+  .workspace-cell{
+    padding:13px 14px;
   }
 
-  @media (max-width:680px){
-    .form-grid,
-    .plan-grid,
-    .stats-grid,
-    .profile-grid,
-    .feature-grid,
-    .copy-row{ grid-template-columns:1fr; }
+  .workspace-cell + .workspace-cell{
+    border-left:1px solid #edf2ef;
+  }
+
+  .workspace-cell small{
+    display:block;
+    color:#667085;
+    font-size:10px;
+    font-weight:800;
+    margin-bottom:7px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+
+  .workspace-cell strong{
+    display:block;
+    color:#172033;
+    font-size:13px;
+    font-weight:900;
+    line-height:1.45;
+  }
+
+  .workspace-actions{
+    margin-top:12px;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  @media (max-width: 1240px){
+    .hero-card,
+    .trio-grid,
+    .ops-grid{
+      grid-template-columns:1fr;
+    }
+
+    .hero-stats{
+      border-left:0;
+      border-top:1px solid #edf2ef;
+      padding-top:10px;
+      padding-left:0;
+    }
+
+    .hero-stat + .hero-stat{
+      border-left:0;
+    }
+  }
+
+  @media (max-width: 960px){
+    .hero-main,
+    .field-grid,
+    .mini-grid,
+    .compact-form-grid,
+    .workspace-card .workspace-grid{
+      grid-template-columns:1fr;
+    }
+
+    .hero-stats{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      border-top:0;
+    }
+
+    .hero-stat,
+    .hero-stat + .hero-stat{
+      border-left:0;
+      border-top:1px solid #edf2ef;
+    }
+
+    .summary-strip{
+      grid-template-columns:1fr;
+    }
+
+    .summary-cell + .summary-cell,
+    .workspace-cell + .workspace-cell{
+      border-left:0;
+      border-top:1px solid #edf2ef;
+    }
+
+    .inline-copy{
+      grid-template-columns:1fr;
+    }
   }
 </style>
 
-<div class="org-wrap">
-  <section class="org-hero">
-    <div class="panel pad brand-card">
-      <div>
+<div class="org-shell">
+  <section class="org-card hero-card">
+    <div class="hero-main">
+      <div class="hero-icon">
+        <i class="fa-solid fa-building"></i>
+      </div>
+      <div class="hero-copy">
         <h2>{{ organization.name|default:"Organization" }}</h2>
-        <p>Keep your workspace details, registration link, staff, and branch setup in one place.</p>
-        <div class="chips">
-          <span class="mini-chip"><i class="fa-solid fa-layer-group"></i> {{ plan.name|default:"No plan" }}</span>
-          <span class="mini-chip"><i class="fa-solid fa-users"></i> {{ organization.member_count|default:0 }} members</span>
-          <span class="mini-chip"><i class="fa-solid fa-user-shield"></i> {{ organization.staff_count|default:0 }} staff</span>
+        <div class="hero-meta">
+          <span>ID: ORG-{{ organization.id|default:"0000"|stringformat:"04d" }}</span>
+          <span class="dot"></span>
+          <span>Slug: {{ organization.slug|default:"not-set" }}</span>
+          <span class="badge-chip">{% if organization.is_active %}Active{% else %}Inactive{% endif %}</span>
         </div>
-      </div>
-      <div class="chips">
-        <span class="mini-chip"><i class="fa-solid fa-link"></i> {{ organization.slug|default:"setup-needed" }}</span>
-        <span class="mini-chip"><i class="fa-solid fa-circle-check"></i> Active workspace</span>
+        <div class="hero-note">Member since {{ organization.created_at|default:"not available" }}</div>
+        <div class="hero-actions">
+          {% if registration_url %}
+          <a class="btnx" href="{{ registration_url }}" target="_blank" rel="noopener">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            Open Join Page
+          </a>
+          {% else %}
+          <button class="btnx" type="button" onclick="navigator.clipboard.writeText(document.getElementById('registrationUrl').value)">
+            <i class="fa-regular fa-copy"></i>
+            Copy Join Link
+          </button>
+          {% endif %}
+        </div>
       </div>
     </div>
-
-    <div class="panel pad">
-      <div class="panel-title">
-        <h2>Plan Limits</h2>
-        <p>Feature access is based on the current plan.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-icon"><i class="fa-solid fa-building"></i></div>
+        <div><strong>{{ branches|length }}</strong><span>Branches</span></div>
       </div>
-      <div class="stats-grid" style="margin-top:16px;">
-        <div class="stat">
-          <span>Members</span>
-          <b>{{ member_limit.current|default:0 }} / {% if member_limit.is_limited %}{{ member_limit.limit }}{% else %}Unlimited{% endif %}</b>
-          {% if member_limit.is_limited %}<div class="limit-bar"><div style="width:{{ member_limit.percent }}%;"></div></div>{% endif %}
-        </div>
-        <div class="stat">
-          <span>Staff</span>
-          <b>{{ staff_limit.current|default:0 }} / {% if staff_limit.is_limited %}{{ staff_limit.limit }}{% else %}Unlimited{% endif %}</b>
-          {% if staff_limit.is_limited %}<div class="limit-bar"><div style="width:{{ staff_limit.percent }}%;"></div></div>{% endif %}
-        </div>
-        <div class="stat"><span>QR</span><b>{% if plan.allow_qr %}On{% else %}Off{% endif %}</b></div>
-        <div class="stat"><span>Face Recognition</span><b>{% if plan.allow_face_recognition %}On{% else %}Off{% endif %}</b></div>
+      <div class="hero-stat">
+        <div class="hero-stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div><strong>{{ staff|length }}</strong><span>Staff Users</span></div>
       </div>
-      {% if member_limit.is_reached or staff_limit.is_reached %}
-        <div class="limit-warning">
-          {% if member_limit.is_reached %}Member limit reached. {% endif %}
-          {% if staff_limit.is_reached %}Staff limit reached. {% endif %}
-          Upgrade to keep growing this workspace.
-          <a href="{% url 'upgrade_request' %}" style="margin-left:8px;color:#9a3412;font-weight:900;">Request upgrade</a>
-        </div>
-      {% endif %}
-      <div class="feature-grid">
-        {% for method in attendance_methods %}
-          <div class="feature {% if not method.allowed %}locked{% endif %}">
-            <i class="fa-solid {{ method.icon }}"></i>
-            {{ method.name }} {% if not method.allowed %}({{ method.plan }}+){% endif %}
-          </div>
-        {% endfor %}
+      <div class="hero-stat">
+        <div class="hero-stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div><strong>{{ plan.name|default:"No plan" }}</strong><span>Plan</span></div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-icon"><i class="fa-solid fa-id-badge"></i></div>
+        <div><strong>{{ organization.id|default:"-" }}</strong><span>Organization ID</span></div>
       </div>
     </div>
   </section>
 
-  <section class="two-col">
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">
-          <h2>Workspace Profile</h2>
-          <p>Useful account details for administrators.</p>
+  <section class="trio-grid">
+    <div class="org-card">
+    <div class="org-card-inner">
+        <div class="section-head">
+          <div>
+            <h3>Plan & Limits</h3>
+            <p>Your current plan and usage limits.</p>
+          </div>
         </div>
-        <span class="badge-soft">{% if organization.is_active %}Active{% else %}Inactive{% endif %}</span>
-      </div>
-      <div style="padding:20px 22px;">
-        <div class="profile-grid">
-          <div class="profile-card">
-            <span>Organization ID</span>
-            <b>{{ organization.id|default:"-" }}</b>
+        <div class="mini-grid">
+          <div class="mini-tile">
+            <small>Plan</small>
+            <strong>{{ plan.name|default:"No plan" }}</strong>
           </div>
-          <div class="profile-card">
-            <span>Workspace Slug</span>
-            <b>{{ organization.slug|default:"Not set" }}</b>
+          <div class="mini-tile">
+            <small>Status</small>
+            <strong>{% if organization.is_active %}Active{% else %}Inactive{% endif %}</strong>
           </div>
-          <div class="profile-card">
-            <span>Date Joined</span>
-            <b>{{ organization.created_at|default:"-" }}</b>
+          <div class="mini-tile">
+            <small>Members</small>
+            <strong>{{ member_limit.current|default:0 }} / {% if member_limit.is_limited %}{{ member_limit.limit }}{% else %}Unlimited{% endif %}</strong>
           </div>
-          <div class="profile-card">
-            <span>Current Admin</span>
-            <b>{{ staff_profile.full_name|default:request.session.attendance_desktop_name }}</b>
+          <div class="mini-tile">
+            <small>Staff</small>
+            <strong>{{ staff_limit.current|default:0 }} / {% if staff_limit.is_limited %}{{ staff_limit.limit }}{% else %}Unlimited{% endif %}</strong>
           </div>
-          <div class="profile-card">
-            <span>Admin Role</span>
-            <b>{{ staff_profile.role|default:"staff"|title }}</b>
-          </div>
-          <div class="profile-card">
-            <span>Plan Expiry</span>
-            <b>Not configured</b>
-          </div>
+        </div>
+        <div class="card-actions" style="margin-top:12px;">
+          <a class="btnx soft" href="{% url 'upgrade_request' %}">
+            <i class="fa-solid fa-crown"></i>
+            Upgrade Plan
+          </a>
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">
-          <h2>Subscription Snapshot</h2>
-          <p>What this workspace can use right now.</p>
+    <div class="org-card">
+    <div class="org-card-inner">
+        <div class="section-head">
+          <div>
+            <h3>Organization Details</h3>
+            <p>Basic information and contact details.</p>
+          </div>
         </div>
-        <a class="btnx soft" href="{% url 'upgrade_request' %}">
-          <i class="fa-solid fa-arrow-up-right-dots"></i> Upgrade
-        </a>
-      </div>
-      <div style="padding:20px 22px;">
-        <div class="profile-grid">
-          <div class="profile-card"><span>Plan</span><b>{{ plan.name|default:"No plan" }}</b></div>
-          <div class="profile-card"><span>Tier</span><b>{{ plan.tier|default:"-"|title }}</b></div>
-          <div class="profile-card"><span>Members Used</span><b>{{ member_limit.current|default:0 }}{% if member_limit.is_limited %} / {{ member_limit.limit }}{% else %} / Unlimited{% endif %}</b></div>
-          <div class="profile-card"><span>Staff Used</span><b>{{ staff_limit.current|default:0 }}{% if staff_limit.is_limited %} / {{ staff_limit.limit }}{% else %} / Unlimited{% endif %}</b></div>
-        </div>
+        <form method="post" id="organization-details">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_organization">
+          <div class="field-grid">
+            <div class="field full">
+              <label>Organization Name</label>
+              <input name="name" value="{{ organization.name }}" required>
+            </div>
+            <div class="field">
+              <label>Contact Email</label>
+              <input name="contact_email" type="email" value="{{ organization.contact_email }}">
+            </div>
+            <div class="field">
+              <label>Contact Phone</label>
+              <input name="contact_phone" value="{{ organization.contact_phone }}">
+            </div>
+          </div>
+          <div class="card-actions" style="margin-top:12px;">
+            <button class="btnx" type="submit"><i class="fa-regular fa-pen-to-square"></i> Edit Details</button>
+          </div>
+        </form>
       </div>
     </div>
-  </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <div class="panel-title">
-        <h2>Self-Registration Link</h2>
-        <p>Share this with members so they can submit their own profile for approval.</p>
-      </div>
-      {% if plan.allow_qr %}
-        <span class="badge-soft">Standard plan enabled</span>
-      {% else %}
-        <span class="badge-soft">Upgrade needed</span>
-      {% endif %}
-    </div>
-    <div style="padding:20px 22px;">
-      <div class="copy-row">
-        <div class="field">
+    <div class="org-card">
+    <div class="org-card-inner">
+        <div class="section-head">
+          <div>
+            <h3>Self-Registration Link</h3>
+            <p>Share this link with members to submit their own profile.</p>
+          </div>
+          <span class="badge-chip">{% if plan.allow_qr %}Standard plan enabled{% else %}Upgrade needed{% endif %}</span>
+        </div>
+        <div class="inline-copy">
           <input id="registrationUrl" value="{{ registration_url }}" readonly>
+          <button class="btnx soft" type="button" onclick="navigator.clipboard.writeText(document.getElementById('registrationUrl').value)">
+            <i class="fa-regular fa-copy"></i>
+            Copy Link
+          </button>
         </div>
-        <button class="btnx soft" type="button" onclick="navigator.clipboard.writeText(document.getElementById('registrationUrl').value)">
-          <i class="fa-regular fa-copy"></i> Copy
-        </button>
+        <div class="mini-note" style="margin-top:14px;">
+          <i class="fa-regular fa-shield-check" style="margin-right:8px;"></i>
+          Members can self-register for review using this link.
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="two-col">
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">
-          <h2>Organization Details</h2>
-          <p>Basic details used for records and communication.</p>
-        </div>
-      </div>
-      <form method="post" style="padding:20px 22px;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_organization">
-        <div class="form-grid">
-          <div class="field full">
-            <label>Organization Name</label>
-            <input name="name" value="{{ organization.name }}" required>
-          </div>
-          <div class="field">
-            <label>Contact Email</label>
-            <input name="contact_email" type="email" value="{{ organization.contact_email }}">
-          </div>
-          <div class="field">
-            <label>Contact Phone</label>
-            <input name="contact_phone" value="{{ organization.contact_phone }}">
+  <section class="ops-grid">
+    <div class="org-card">
+    <div class="org-card-inner">
+        <div class="section-head">
+          <div>
+            <h3>Branches & Locations</h3>
+            <p>Manage your branches and GeoTracking locations.</p>
           </div>
         </div>
-        <button class="btnx primary" style="margin-top:16px;" type="submit">
-          <i class="fa-solid fa-floppy-disk"></i> Save Details
-        </button>
-      </form>
-    </div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">
-          <h2>Branches & GeoTracking</h2>
-          <p>Set branch GPS coordinates and radius for the mobile app.</p>
+        <div class="summary-strip">
+          <div class="summary-cell"><small>Total Branches</small><strong>{{ branches|length }}</strong></div>
+          <div class="summary-cell"><small>Active</small><strong>{% for branch in branches %}{% if branch.is_active %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</strong></div>
+          <div class="summary-cell"><small>Inactive</small><strong>{% for branch in branches %}{% if not branch.is_active %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</strong></div>
         </div>
-      </div>
-      <form method="post" style="padding:20px 22px;border-bottom:1px solid #edf2ef;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_branch">
-        <div class="form-grid">
-          <div class="field">
-            <label>Branch Name</label>
-            <input name="branch_name" placeholder="Main Campus" required>
-          </div>
-          <div class="field">
-            <label>Address</label>
-            <input name="address" placeholder="Optional">
-          </div>
-          <div class="field">
-            <label>Latitude</label>
-            <input name="latitude" inputmode="decimal" placeholder="51.507351">
-          </div>
-          <div class="field">
-            <label>Longitude</label>
-            <input name="longitude" inputmode="decimal" placeholder="-0.127758">
-          </div>
-          <div class="field">
-            <label>Allowed Radius (meters)</label>
-            <input name="geofence_radius_meters" type="number" min="10" value="100">
-          </div>
-        </div>
-        <button class="btnx primary" style="margin-top:16px;" type="submit">
-          <i class="fa-solid fa-plus"></i> Add Branch
-        </button>
-      </form>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Branch</th><th>Status</th></tr></thead>
-          <tbody>
-            {% for branch in branches %}
-              <tr>
-                <td colspan="2">
+
+        <div class="list-stack">
+          {% for branch in branches %}
+            <div class="list-item">
+              <div class="list-top">
+                <div>
+                  <div class="list-title">{{ branch.name }}</div>
+                  <div class="list-meta">
+                    Latitude: {{ branch.latitude|default:"-" }} &nbsp;·&nbsp;
+                    Longitude: {{ branch.longitude|default:"-" }} &nbsp;·&nbsp;
+                    Radius: {{ branch.geofence_radius_meters|default:100 }}m
+                  </div>
+                </div>
+                <span class="status-pill">{% if branch.is_active %}Active{% else %}Inactive{% endif %}</span>
+              </div>
+
+              <details class="compact-block">
+                <summary>
+                  <span>Manage branch</span>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </summary>
+                <div class="compact-body">
                   <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="update_branch">
                     <input type="hidden" name="branch_id" value="{{ branch.id }}">
-                    <div class="form-grid">
+                    <div class="compact-form-grid">
                       <div class="field">
                         <label>Branch</label>
                         <input name="branch_name" value="{{ branch.name }}" required>
@@ -571,180 +826,182 @@
                       </div>
                       <div class="field">
                         <label>Status</label>
-                        <label style="display:flex;align-items:center;gap:8px;min-height:48px;margin:0;">
-                          <input name="is_active" type="checkbox" style="width:auto;min-height:auto;" {% if branch.is_active %}checked{% endif %}>
-                          Active
-                        </label>
+                        <select name="is_active_proxy" onchange="this.nextElementSibling.checked = this.value === 'on'">
+                          <option value="on" {% if branch.is_active %}selected{% endif %}>Active</option>
+                          <option value="off" {% if not branch.is_active %}selected{% endif %}>Inactive</option>
+                        </select>
+                        <input type="checkbox" name="is_active" {% if branch.is_active %}checked{% endif %} hidden>
                       </div>
                     </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+                    <div class="list-actions">
                       <button class="btnx soft" type="button" onclick="fillCurrentLocation(this)">
-                        <i class="fa-solid fa-location-crosshairs"></i> Use Current Location
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                        Use Current Location
                       </button>
-                      <button class="btnx primary" type="submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Branch
+                      <button class="btnx" type="submit">
+                        <i class="fa-regular fa-floppy-disk"></i>
+                        Save Branch
                       </button>
-                    </div>
-                    <div class="sub" style="margin-top:10px;">
-                      GeoTracking mobile check-ins for events linked to this branch are accepted within {{ branch.geofence_radius_meters|default:100 }}m.
                     </div>
                   </form>
-                </td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="2">No branches yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+                </div>
+              </details>
+            </div>
+          {% empty %}
+            <div class="list-item">
+              <div class="list-title">No branches yet</div>
+              <div class="list-meta">Create your first branch below.</div>
+            </div>
+          {% endfor %}
+        </div>
 
-  <section class="panel">
-    <div class="panel-head">
-      <div class="panel-title">
-        <h2>Event Branch Assignment</h2>
-        <p>GeoTracking validates against the branch attached to the event session.</p>
+        <details class="compact-block" {% if not branches %}open{% endif %}>
+          <summary>
+            <span><i class="fa-solid fa-plus" style="margin-right:8px;"></i>Add branch</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </summary>
+          <div class="compact-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_branch">
+              <div class="compact-form-grid">
+                <div class="field">
+                  <label>Branch Name</label>
+                  <input name="branch_name" placeholder="Main Campus" required>
+                </div>
+                <div class="field">
+                  <label>Address</label>
+                  <input name="address" placeholder="Optional">
+                </div>
+                <div class="field">
+                  <label>Latitude</label>
+                  <input name="latitude" inputmode="decimal" placeholder="51.507351">
+                </div>
+                <div class="field">
+                  <label>Longitude</label>
+                  <input name="longitude" inputmode="decimal" placeholder="-0.127758">
+                </div>
+                <div class="field full">
+                  <label>Allowed Radius (meters)</label>
+                  <input name="geofence_radius_meters" type="number" min="10" value="100">
+                </div>
+              </div>
+              <div class="list-actions">
+                <button class="btnx success" type="submit"><i class="fa-solid fa-plus"></i> Add Branch</button>
+              </div>
+            </form>
+          </div>
+        </details>
       </div>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Event</th><th>Branch</th><th>Action</th></tr></thead>
-        <tbody>
-          {% for event in events %}
-            <tr>
-              <td>{{ event.name }}<div class="sub">{{ event.branch_name|default:"No branch assigned" }}</div></td>
-              <td>
-                <form method="post" id="event-branch-{{ event.id }}">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="assign_event_branch">
-                  <input type="hidden" name="event_id" value="{{ event.id }}">
+
+    <div class="org-card">
+    <div class="org-card-inner">
+        <div class="section-head">
+          <div>
+            <h3>Staff Users</h3>
+            <p>Manage staff accounts and permissions.</p>
+          </div>
+          {% if can_manage_staff %}
+            <span class="badge-chip">Management enabled</span>
+          {% else %}
+            <span class="badge-chip">View only</span>
+          {% endif %}
+        </div>
+
+        <div class="summary-strip">
+          <div class="summary-cell"><small>Total Staff</small><strong>{{ staff|length }}</strong></div>
+          <div class="summary-cell"><small>Active</small><strong>{% for item in staff %}{% if item.is_active %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</strong></div>
+          <div class="summary-cell"><small>Inactive</small><strong>{% for item in staff %}{% if not item.is_active %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</strong></div>
+        </div>
+
+        {% if can_manage_staff %}
+          <details class="compact-block" {% if staff|length == 0 %}open{% endif %}>
+            <summary>
+              <span><i class="fa-solid fa-user-plus" style="margin-right:8px;"></i>Add staff</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </summary>
+            <div class="compact-body">
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_staff">
+                <div class="compact-form-grid">
                   <div class="field">
-                    <select name="branch_id">
+                    <label>Username</label>
+                    <input name="username" required {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                  <div class="field">
+                    <label>Email</label>
+                    <input name="email" type="email" {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                  <div class="field">
+                    <label>First Name</label>
+                    <input name="first_name" {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                  <div class="field">
+                    <label>Last Name</label>
+                    <input name="last_name" {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                  <div class="field">
+                    <label>Role</label>
+                    <select name="role" {% if staff_limit.is_reached %}disabled{% endif %}>
+                      <option value="staff">Staff</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Branch</label>
+                    <select name="branch" {% if staff_limit.is_reached %}disabled{% endif %}>
                       <option value="">No branch</option>
                       {% for branch in branches %}
-                        <option value="{{ branch.id }}" {% if event.branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                        <option value="{{ branch.id }}">{{ branch.name }}</option>
                       {% endfor %}
                     </select>
                   </div>
-                </form>
-              </td>
-              <td>
-                <button class="btnx soft" type="submit" form="event-branch-{{ event.id }}">
-                  <i class="fa-solid fa-link"></i> Save
-                </button>
-              </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="3">No events yet. Create events from Event Sessions.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head">
-      <div class="panel-title">
-        <h2>Staff Users</h2>
-        <p>Owners and admins can add staff accounts for this organization.</p>
-      </div>
-      {% if can_manage_staff %}
-        <span class="badge-soft">Management enabled</span>
-      {% else %}
-        <span class="badge-soft">View only</span>
-      {% endif %}
-    </div>
-
-    {% if can_manage_staff %}
-      <form method="post" style="padding:20px 22px;border-bottom:1px solid #edf2ef;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_staff">
-        <div class="form-grid">
-          <div class="field">
-            <label>Username</label>
-            <input name="username" required {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input name="email" type="email" {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-          <div class="field">
-            <label>First Name</label>
-            <input name="first_name" {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-          <div class="field">
-            <label>Last Name</label>
-            <input name="last_name" {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-          <div class="field">
-            <label>Role</label>
-            <select name="role" {% if staff_limit.is_reached %}disabled{% endif %}>
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Branch</label>
-            <select name="branch" {% if staff_limit.is_reached %}disabled{% endif %}>
-              <option value="">No branch</option>
-              {% for branch in branches %}
-                <option value="{{ branch.id }}">{{ branch.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input name="password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-          <div class="field">
-            <label>Confirm Password</label>
-            <input name="confirm_password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
-          </div>
-        </div>
-        {% if staff_limit.is_reached %}
-          <div class="limit-warning">Staff user limit reached for this plan. Upgrade before adding another staff account.</div>
-        {% endif %}
-        <button class="btnx primary" style="margin-top:16px;" type="submit" {% if staff_limit.is_reached %}disabled{% endif %}>
-          <i class="fa-solid fa-user-plus"></i> Add Staff
-        </button>
-      </form>
-    {% endif %}
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Staff</th><th>Role</th><th>Branch</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>
-          {% for item in staff %}
-            <tr>
-              <td>{{ item.full_name }}<div class="sub">{{ item.username }}{% if item.email %} · {{ item.email }}{% endif %}</div></td>
-              <td>{{ item.role|title }}</td>
-              <td>{{ item.branch_name|default:"-" }}</td>
-              <td>{{ item.created_at|default:"-" }}</td>
-              <td><span class="badge-soft">{% if item.is_active %}Active{% else %}Inactive{% endif %}</span></td>
-              <td>
-                {% if can_manage_staff %}
-                  <button class="btnx soft" type="button" data-bs-toggle="collapse" data-bs-target="#staffManage{{ item.id }}">
-                    <i class="fa-solid fa-sliders"></i> Manage
+                  <div class="field">
+                    <label>Password</label>
+                    <input name="password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                  <div class="field">
+                    <label>Confirm Password</label>
+                    <input name="confirm_password" type="password" required {% if staff_limit.is_reached %}disabled{% endif %}>
+                  </div>
+                </div>
+                <div class="list-actions">
+                  <button class="btnx success" type="submit" {% if staff_limit.is_reached %}disabled{% endif %}>
+                    <i class="fa-solid fa-user-plus"></i>
+                    Add Staff
                   </button>
-                {% else %}
-                  <span class="sub">No action</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% if can_manage_staff %}
-              <tr class="collapse" id="staffManage{{ item.id }}">
-                <td colspan="6">
-                  <div class="two-col">
-                    <form method="post" class="panel pad" style="box-shadow:none;">
+                </div>
+              </form>
+            </div>
+          </details>
+        {% endif %}
+
+        <div class="list-stack">
+          {% for item in staff %}
+            <div class="list-item">
+              <div class="list-top">
+                <div>
+                  <div class="list-title">{{ item.full_name }}</div>
+                  <div class="list-meta">{{ item.role|title }} &nbsp;·&nbsp; {{ item.branch_name|default:"No branch" }}</div>
+                  <span class="mini-sub">{{ item.username }}{% if item.email %} · {{ item.email }}{% endif %}</span>
+                </div>
+                <span class="status-pill">{% if item.is_active %}Active{% else %}Inactive{% endif %}</span>
+              </div>
+
+              {% if can_manage_staff %}
+                <details class="compact-block">
+                  <summary>
+                    <span>Manage staff</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </summary>
+                  <div class="compact-body">
+                    <form method="post">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="update_staff">
                       <input type="hidden" name="staff_id" value="{{ item.id }}">
-                      <div class="panel-title" style="margin-bottom:14px;">
-                        <h2 style="font-size:16px;">Edit Staff Profile</h2>
-                        <p>Update role, branch, contact details, or active status.</p>
-                      </div>
-                      <div class="form-grid">
+                      <div class="compact-form-grid">
                         <div class="field">
                           <label>First Name</label>
                           <input name="first_name" value="{{ item.first_name }}">
@@ -777,27 +1034,24 @@
                         </div>
                         <div class="field">
                           <label>Status</label>
-                          <label style="display:flex;align-items:center;gap:8px;min-height:48px;margin:0;">
-                            <input name="is_active" type="checkbox" style="width:auto;min-height:auto;" {% if item.is_active %}checked{% endif %} {% if item.role == "owner" %}disabled{% endif %}>
-                            Active
-                          </label>
+                          <select name="is_active_proxy" onchange="this.nextElementSibling.checked = this.value === 'on'">
+                            <option value="on" {% if item.is_active %}selected{% endif %}>Active</option>
+                            <option value="off" {% if not item.is_active %}selected{% endif %}>Inactive</option>
+                          </select>
+                          <input type="checkbox" name="is_active" {% if item.is_active %}checked{% endif %} {% if item.role == "owner" %}disabled{% endif %} hidden>
                           {% if item.role == "owner" %}<input type="hidden" name="is_active" value="on">{% endif %}
                         </div>
                       </div>
-                      <button class="btnx primary" style="margin-top:16px;" type="submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Staff
-                      </button>
+                      <div class="list-actions">
+                        <button class="btnx" type="submit"><i class="fa-regular fa-floppy-disk"></i> Save Staff</button>
+                      </div>
                     </form>
 
-                    <div class="panel pad" style="box-shadow:none;">
-                      <div class="panel-title" style="margin-bottom:14px;">
-                        <h2 style="font-size:16px;">Password & Access</h2>
-                        <p>Reset this staff member's password or deactivate access.</p>
-                      </div>
-                      <form method="post" class="form-grid">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="reset_staff_password">
-                        <input type="hidden" name="staff_id" value="{{ item.id }}">
+                    <form method="post" style="margin-top:10px;">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="reset_staff_password">
+                      <input type="hidden" name="staff_id" value="{{ item.id }}">
+                      <div class="compact-form-grid">
                         <div class="field">
                           <label>New Password</label>
                           <input name="password" type="password" minlength="8" required>
@@ -806,31 +1060,133 @@
                           <label>Confirm Password</label>
                           <input name="confirm_password" type="password" minlength="8" required>
                         </div>
-                        <button class="btnx soft" type="submit">
-                          <i class="fa-solid fa-key"></i> Reset Password
-                        </button>
-                      </form>
-                      {% if item.is_active and item.role != "owner" %}
-                        <form method="post" style="margin-top:12px;">
-                          {% csrf_token %}
-                          <input type="hidden" name="action" value="deactivate_staff">
+                      </div>
+                      <div class="list-actions">
+                        <button class="btnx soft" type="submit"><i class="fa-solid fa-key"></i> Reset Password</button>
+                        {% if item.is_active and item.role != "owner" %}
+                          <button class="btnx danger" formaction="" formmethod="post" name="action" value="deactivate_staff">
+                            <i class="fa-solid fa-user-slash"></i>
+                            Deactivate
+                          </button>
                           <input type="hidden" name="staff_id" value="{{ item.id }}">
-                          <button class="btnx danger" type="submit"><i class="fa-solid fa-user-slash"></i> Deactivate Staff</button>
-                        </form>
-                      {% endif %}
-                    </div>
+                        {% endif %}
+                      </div>
+                    </form>
                   </div>
-                </td>
-              </tr>
-            {% endif %}
+                </details>
+              {% endif %}
+            </div>
           {% empty %}
-            <tr><td colspan="6">No staff users yet.</td></tr>
+            <div class="list-item">
+              <div class="list-title">No staff users yet</div>
+              <div class="list-meta">Add your first administrator or staff user above.</div>
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="org-card">
+    <div class="org-card-inner">
+      <div class="section-head">
+          <div>
+            <h3>Event Branch Assignment</h3>
+            <p>Assign branches to events for GeoTracking validation.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Assigned Branch</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in events %}
+                <tr>
+                  <td>{{ event.name }}</td>
+                  <td>
+                    <form method="post" id="event-branch-{{ event.id }}">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="assign_event_branch">
+                      <input type="hidden" name="event_id" value="{{ event.id }}">
+                      <select name="branch_id">
+                        <option value="">No branch</option>
+                        {% for branch in branches %}
+                          <option value="{{ branch.id }}" {% if event.branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </form>
+                  </td>
+                  <td>
+                    <button class="btnx soft" type="submit" form="event-branch-{{ event.id }}">
+                      <i class="fa-regular fa-floppy-disk"></i>
+                      Save
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="3">No events yet. Create events from Event Sessions.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-actions" style="margin-top:12px;">
+          <a class="btnx" href="{% url 'attendance_sessions' %}">
+            <i class="fa-solid fa-arrow-right"></i>
+            Manage Event Assignments
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="org-card workspace-card">
+    <div class="org-card-inner">
+      <div class="section-head">
+        <div>
+          <h3>Workspace Profile</h3>
+          <p>Important details about your organization workspace.</p>
+        </div>
+      </div>
+      <div class="workspace-grid">
+        <div class="workspace-cell">
+          <small>Organization ID</small>
+          <strong>{{ organization.id|default:"-" }}</strong>
+        </div>
+        <div class="workspace-cell">
+          <small>Workspace Slug</small>
+          <strong>{{ organization.slug|default:"-" }}</strong>
+        </div>
+        <div class="workspace-cell">
+          <small>Date Joined</small>
+          <strong>{{ organization.created_at|default:"-" }}</strong>
+        </div>
+        <div class="workspace-cell">
+          <small>Current Admin</small>
+          <strong>{{ staff_profile.full_name|default:request.session.attendance_desktop_name }}</strong>
+        </div>
+        <div class="workspace-cell">
+          <small>Admin Role</small>
+          <strong>{{ staff_profile.role|default:"staff"|title }}</strong>
+        </div>
+        <div class="workspace-cell">
+          <small>Plan Expiry</small>
+          <strong>Not configured</strong>
+        </div>
+      </div>
+      <div class="workspace-actions">
+        <a class="btnx soft" href="#organization-details">
+          <i class="fa-regular fa-pen-to-square"></i>
+          Edit Workspace Profile
+        </a>
+      </div>
     </div>
   </section>
 </div>
+
 <script>
   function fillCurrentLocation(button){
     const form = button.closest("form");

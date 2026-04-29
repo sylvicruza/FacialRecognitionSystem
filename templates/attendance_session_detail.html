@@ -6,9 +6,9 @@
 
 {% block content %}
 <style>
-  .session-mgmt{max-width:1240px;margin:0 auto;display:grid;gap:18px}
-  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
-  .hero{padding:20px;display:grid;gap:16px}
+  .session-mgmt{max-width:1140px;margin:0 auto;display:grid;gap:16px}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:18px;box-shadow:0 14px 32px rgba(15,23,42,.05)}
+  .hero{padding:16px 18px;display:grid;gap:14px}
   .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .hero-copy{display:grid;gap:6px}
   .hero-copy h2{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
@@ -24,56 +24,45 @@
   .tab-btn{min-height:38px;padding:9px 14px;border:0;border-radius:12px;background:transparent;color:#667085;font-size:12px;font-weight:700;cursor:pointer}
   .tab-btn.active{background:#f3fbf6;color:#16a34a;box-shadow:inset 0 -2px 0 #16a34a}
 
-  .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
-  .main-stack,.side-stack{display:grid;gap:18px}
-  .stats-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-  .stat-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:10px}
+  .content-grid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+  .main-stack,.side-stack{display:grid;gap:16px}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .stat-card{padding:14px;border:1px solid #e2ebe5;border-radius:14px;background:#fff;display:grid;gap:6px}
   .stat-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:16px}
   .stat-card:nth-child(3) .stat-icon{background:#fff2f2;color:#ef4444}
   .stat-card:nth-child(4) .stat-icon{background:#fff8eb;color:#f59e0b}
   .stat-label{color:#475467;font-size:12px;font-weight:700}
-  .stat-value{color:#172033;font-size:30px;font-weight:800;line-height:1}
+  .stat-value{color:#172033;font-size:26px;font-weight:800;line-height:1}
   .stat-meta{color:var(--muted);font-size:11px;line-height:1.4}
-  .rate-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:12px}
-  .rate-card h4,.summary-card h4,.quick-card h4,.activity-card h4,.methods-card h4,.section-card h3{margin:0;color:#172033;font-size:15px;font-weight:800}
-  .progress-ring{width:88px;height:88px;border-radius:999px;border:8px solid #eef2ef;display:grid;place-items:center;color:#172033;font-size:18px;font-weight:800;margin:4px auto}
-  .rate-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;text-align:center;color:#667085;font-size:11px}
-  .rate-meta strong{display:block;color:#172033;font-size:18px;font-weight:800}
+  .quick-card h4,.activity-card h4,.section-card h3{margin:0;color:#172033;font-size:15px;font-weight:800}
 
-  .overview-grid{display:grid;grid-template-columns:1.4fr .95fr .85fr;gap:14px}
-  .panel-card{padding:16px;border:1px solid #e2ebe5;border-radius:18px;background:#fff;display:grid;gap:12px}
+  .overview-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:14px}
+  .panel-card{padding:14px;border:1px solid #e2ebe5;border-radius:14px;background:#fff;display:grid;gap:10px}
   .panel-card h4{margin:0;color:#172033;font-size:15px;font-weight:800}
-  .big-progress{min-height:180px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .big-ring-wrap{display:grid;place-items:center;border-right:1px solid #edf2ef}
-  .big-ring{width:150px;height:150px;border-radius:999px;border:10px solid #eef2ef;display:grid;place-items:center;text-align:center}
-  .big-ring strong{display:block;color:#172033;font-size:34px;font-weight:800;line-height:1}
-  .big-ring span{display:block;color:#667085;font-size:12px;margin-top:4px}
+  .big-progress{display:grid;grid-template-columns:1fr 180px;gap:14px}
   .method-list{display:grid;gap:10px}
   .method-line{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#344054;font-size:12px}
   .method-line span:first-child{display:inline-flex;align-items:center;gap:8px}
-  .live-note{padding:14px;border:1px solid #dcecdf;border-radius:16px;background:linear-gradient(135deg,#f5fbf7,#fbfefc);display:grid;gap:12px;align-content:start}
+  .live-note{padding:12px;border:1px solid #dcecdf;border-radius:14px;background:#f7fcf8;display:grid;gap:10px;align-content:start}
   .live-note strong{color:#16a34a;font-size:13px;font-weight:800}
   .live-note p{margin:0;color:#315946;font-size:12px;line-height:1.45}
   .duration{display:grid;gap:4px}
   .duration label{color:#667085;font-size:11px}
   .duration strong{color:#172033;font-size:18px;font-weight:800}
 
-  .summary-card,.quick-card,.activity-card,.methods-card{padding:16px;display:grid;gap:12px}
-  .summary-list,.quick-list,.activity-list,.method-status-list{display:grid;gap:10px}
-  .summary-item,.quick-item,.activity-item,.method-status-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;color:#344054;font-size:12px}
-  .summary-item i,.quick-item i,.activity-item i,.method-status-item i{color:#667085;margin-top:2px}
-  .summary-item strong,.quick-item strong,.activity-item strong,.method-status-item strong{display:block;color:#172033;font-size:12px;font-weight:700}
-  .summary-item span,.quick-item span,.activity-item span,.method-status-item span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
+  .quick-card,.activity-card{padding:14px;display:grid;gap:12px}
+  .summary-list,.quick-list,.activity-list{display:grid;gap:10px}
+  .summary-item,.quick-item,.activity-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;color:#344054;font-size:12px}
+  .summary-item i,.quick-item i,.activity-item i{color:#667085;margin-top:2px}
+  .summary-item strong,.quick-item strong,.activity-item strong{display:block;color:#172033;font-size:12px;font-weight:700}
+  .summary-item span,.quick-item span,.activity-item span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
   .quick-action-btn{width:100%;justify-content:flex-start}
-  .method-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .method-status-tag{padding:4px 9px;border-radius:999px;background:#eef8f1;color:#16a34a;font-size:10px;font-weight:800}
-  .method-status-tag.off{background:#f3f4f6;color:#667085}
 
-  .section-card{padding:18px;display:grid;gap:14px}
+  .section-card{padding:16px;display:grid;gap:14px}
   .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .section-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
 
-  .session-inline-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;padding:12px 14px;border:1px solid #e2ebe5;border-radius:16px;background:#fff}
+  .session-inline-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px;border:1px solid #e2ebe5;border-radius:14px;background:#fff}
   .session-inline-cell{display:grid;gap:3px}
   .session-inline-cell label{color:#667085;font-size:11px}
   .session-inline-cell strong{color:#172033;font-size:12px;font-weight:700}
@@ -136,22 +125,15 @@
   .info-strip i{color:#16a34a;margin-top:2px}
 
   .tools-row{display:flex;gap:8px;flex-wrap:wrap}
-  .table-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .search-row{display:flex;gap:8px;flex-wrap:wrap}
-  .search-input{min-width:260px}
-  .table-tabs{display:flex;gap:10px;flex-wrap:wrap}
-  .table-tab{padding:8px 10px;border:0;border-radius:10px;background:#fff;color:#667085;font-size:12px;font-weight:700}
-  .table-tab.active{color:#16a34a;box-shadow:inset 0 -2px 0 #16a34a}
   .table-shell{overflow:auto;border:1px solid #e2ebe5;border-radius:16px;background:#fff}
-  table{width:100%;border-collapse:collapse;min-width:900px}
+  table{width:100%;border-collapse:collapse;min-width:820px}
   th,td{padding:13px 14px;text-align:left;border-bottom:1px solid #edf2ef;vertical-align:middle}
   th{color:#667085;font-size:11px;text-transform:uppercase;letter-spacing:.08em;background:#fbfdfc}
   td{color:#202939;font-size:13px}
   tr:last-child td{border-bottom:0}
-  .member-cell{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:center}
-  .member-avatar{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:#f1e4ff;color:#7c3aed;font-size:12px;font-weight:800}
+  .member-cell{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;align-items:center}
   .member-name{font-weight:700}
-  .member-meta{margin-top:2px;color:#667085;font-size:11px}
+  .member-meta{margin-top:0;color:#667085;font-size:11px}
   .state{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800}
   .state.present{color:#0f6b3a;background:#eaf8ef}
   .state.absent{color:#b42318;background:#fff1f1}
@@ -160,9 +142,7 @@
   .tiny-btn{min-height:30px;padding:7px 10px;border-radius:10px;border:1px solid #d9e3dd;background:#fff;color:#344054;font-size:11px;font-weight:700}
   .tiny-btn.present{color:#0f6b3a;background:#effbf3;border-color:#d6efdd}
   .tiny-btn.absent{color:#ef4444;background:#fff4f3;border-color:#f3d0cc}
-  .table-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#667085;font-size:11px}
-  .pager{display:flex;gap:6px}
-  .pager-btn{width:32px;height:32px;border:1px solid #d9e3dd;border-radius:10px;background:#fff;color:#667085;display:grid;place-items:center}
+  .table-footer{display:flex;align-items:center;justify-content:flex-start;gap:12px;color:#667085;font-size:11px}
 
   [data-tab-panel]{display:none}
   [data-tab-panel].active{display:grid}
@@ -173,13 +153,12 @@
     .timing-window-grid,.self-check-panel,.methods-grid,.basics-grid{grid-template-columns:1fr}
   }
   @media (max-width:760px){
-    .hero-top,.table-tools{align-items:stretch}
-    .hero-actions,.tools-row,.search-row,.table-tabs,.session-row .actions,.row-actions{justify-content:flex-start}
+    .hero-top{align-items:stretch}
+    .hero-actions,.tools-row,.session-row .actions,.row-actions{justify-content:flex-start}
     .stats-grid,.timing-grid,.feature-grid,.rules-grid,.session-row{grid-template-columns:1fr}
     .timing-head{align-items:stretch}
     .overview-grid{grid-template-columns:1fr}
     .big-progress{grid-template-columns:1fr}
-    .big-ring-wrap{border-right:0;border-bottom:1px solid #edf2ef;padding-bottom:12px}
   }
 </style>
 
@@ -263,85 +242,48 @@
           <strong class="stat-value">{{ pending_count }}</strong>
           <span class="stat-meta">Not checked in</span>
         </div>
-        <div class="rate-card surface">
-          <h4>Check-in Rate</h4>
-          <div class="progress-ring">{{ present_percent|default:"0" }}%</div>
-          <div class="rate-meta">
-            <div><strong>{{ present_percent|default:"0" }}%</strong><span>Current</span></div>
-            <div><strong>100%</strong><span>Goal</span></div>
-          </div>
-        </div>
       </section>
 
       <div class="main-stack" data-tab-panel="overview">
         <section class="overview-grid">
-          <div class="panel-card surface" style="grid-column:span 2;">
+          <div class="panel-card surface">
             <div class="big-progress">
-              <div class="big-ring-wrap">
-                <div class="big-ring">
-                  <div>
-                    <strong>{{ present_percent|default:"0" }}%</strong>
-                    <span>Checked in</span>
-                  </div>
+              <div>
+                <h4>Check-in Methods</h4>
+                <div class="method-list">
+                  {% if method_cards %}
+                    {% for method in method_cards %}
+                      <div class="method-line">
+                        <span><i class="fa-solid fa-check"></i> {{ method.label }}</span>
+                        <strong>{{ method.count }}</strong>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="method-line"><span><i class="fa-solid fa-circle-info"></i> No attendance yet</span><strong>0</strong></div>
+                  {% endif %}
                 </div>
               </div>
-              <div style="display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:14px;">
-                <div>
-                  <h4>Check-in Methods</h4>
-                  <div class="method-list">
-                    {% if method_cards %}
-                      {% for method in method_cards %}
-                        <div class="method-line">
-                          <span><i class="fa-solid fa-check"></i> {{ method.label }}</span>
-                          <strong>{{ method.count }}</strong>
-                        </div>
-                      {% endfor %}
-                    {% else %}
-                      <div class="method-line"><span><i class="fa-solid fa-circle-info"></i> No attendance yet</span><strong>0</strong></div>
-                    {% endif %}
-                  </div>
-                </div>
-                <div class="live-note">
-                  <strong>Session is live</strong>
-                  <p>Members can now check in using the enabled methods.</p>
-                  <div class="duration">
-                    <label>Session Duration</label>
-                    <strong>{% if session.starts_at %}In progress{% else %}Not started{% endif %}</strong>
-                  </div>
+              <div class="live-note">
+                <strong>{{ present_percent|default:"0" }}% checked in</strong>
+                <p>Members can use the enabled methods while this session is active.</p>
+                <div class="duration">
+                  <label>Session Duration</label>
+                  <strong>{% if session.starts_at %}In progress{% else %}Not started{% endif %}</strong>
                 </div>
               </div>
             </div>
           </div>
 
-          <aside class="summary-card surface">
+          <aside class="panel-card surface">
             <h4>Session Summary</h4>
             <div class="summary-list">
               <div class="summary-item"><i class="fa-solid fa-tag"></i><div><strong>Event</strong><span>{{ session.event_name|default:"-" }}</span></div></div>
-              <div class="summary-item"><i class="fa-regular fa-calendar"></i><div><strong>Session</strong><span>{{ session.session_name|default:session.event_name }}</span></div></div>
               <div class="summary-item"><i class="fa-regular fa-clock"></i><div><strong>Time</strong><span>{{ session.starts_at|default:"-" }}{% if session.ends_at %} - {{ session.ends_at }}{% endif %}</span></div></div>
               <div class="summary-item"><i class="fa-solid fa-circle-play"></i><div><strong>Status</strong><span>{{ session.status|default:"Open"|title }}</span></div></div>
-              <div class="summary-item"><i class="fa-regular fa-clock"></i><div><strong>Check-in Window</strong><span>{% if session.check_in_opens_at or session.check_in_closes_at %}{{ session.check_in_opens_at|default:"-" }} - {{ session.check_in_closes_at|default:"-" }}{% else %}Session time{% endif %}</span></div></div>
               <div class="summary-item"><i class="fa-solid fa-user-clock"></i><div><strong>Late Check-in</strong><span>{{ session_edit.late_check_in_grace_minutes|default:"0" }} mins</span></div></div>
               <div class="summary-item"><i class="fa-solid fa-users"></i><div><strong>Max Capacity</strong><span>{{ session_edit.max_capacity|default:"Unlimited" }}</span></div></div>
             </div>
           </aside>
-        </section>
-
-        <section class="section-card surface">
-          <div class="section-head">
-            <div>
-              <h3>Edit Session</h3>
-              <p>Update session details and settings without leaving this page.</p>
-            </div>
-            <button class="btn" type="button" data-open-tab="settings">Edit Details</button>
-          </div>
-          <div class="session-inline-summary">
-            <div class="session-inline-cell"><label>Session Name</label><strong>{{ session.session_name|default:session.event_name }}</strong></div>
-            <div class="session-inline-cell"><label>Status</label><strong>{{ session.status|default:"Open"|title }}</strong></div>
-            <div class="session-inline-cell"><label>Check-in Window</label><strong>{% if session.check_in_opens_at or session.check_in_closes_at %}Custom{% else %}Session time{% endif %}</strong></div>
-            <div class="session-inline-cell"><label>Late Check-in</label><strong>{{ session_edit.late_check_in_grace_minutes|default:"0" }} mins</strong></div>
-            <button class="btn" type="button" data-open-tab="settings">Advanced Settings <i class="fa-solid fa-arrow-right"></i></button>
-          </div>
         </section>
       </div>
 
@@ -358,24 +300,10 @@
           </div>
         </div>
 
-        <div class="table-tools">
-          <div class="search-row">
-            <input class="field search-input" style="min-height:40px;padding:10px 12px;border:1px solid #d9e3dd;border-radius:12px;background:#fff;color:#172033;font:inherit;font-size:13px;" placeholder="Search member...">
-            <button class="btn" type="button"><i class="fa-solid fa-filter"></i> Filter</button>
-          </div>
-          <div class="table-tabs">
-            <button class="table-tab active" type="button">All ({{ total_members }})</button>
-            <button class="table-tab" type="button">Present ({{ present_count }})</button>
-            <button class="table-tab" type="button">Absent ({{ absent_count }})</button>
-            <button class="table-tab" type="button">Pending ({{ pending_count }})</button>
-          </div>
-        </div>
-
         <div class="table-shell">
           <table>
             <thead>
               <tr>
-                <th></th>
                 <th>Member</th>
                 <th>Status</th>
                 <th>Method</th>
@@ -386,10 +314,8 @@
             <tbody>
               {% for row in rows %}
                 <tr>
-                  <td><input type="checkbox"></td>
                   <td>
                     <div class="member-cell">
-                      <div class="member-avatar">{{ row.person.name|slice:":1"|upper }}</div>
                       <div>
                         <div class="member-name">{{ row.person.name }}</div>
                         <div class="member-meta">{{ row.person.member_code|default:row.person.portal_id|default:"No member code" }}</div>
@@ -420,7 +346,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6">No authorized members are available yet.</td>
+                  <td colspan="5">No authorized members are available yet.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -429,11 +355,6 @@
 
         <div class="table-footer">
           <span>Showing {{ rows|length }} of {{ total_members }} member{{ total_members|pluralize }}</span>
-          <div class="pager">
-            <button class="pager-btn" type="button"><i class="fa-solid fa-chevron-left"></i></button>
-            <button class="pager-btn" type="button">1</button>
-            <button class="pager-btn" type="button"><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
         </div>
       </section>
 
@@ -754,36 +675,6 @@
         </div>
       </section>
 
-      <section class="surface methods-card">
-        <h4>Check-in Methods (Active)</h4>
-        <div class="method-status-list">
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-mobile-screen-button"></i><div><strong>Mobile Self Check-in</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.self %}off{% endif %}">{% if session_methods.self %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-hand-pointer"></i><div><strong>Swipe Check-in</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.swipe %}off{% endif %}">{% if session_methods.swipe %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-qrcode"></i><div><strong>QR Code Check-in</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.qr %}off{% endif %}">{% if session_methods.qr %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-id-card-clip"></i><div><strong>NFC Check-in</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.nfc %}off{% endif %}">{% if session_methods.nfc %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-face-smile"></i><div><strong>Face Recognition</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.face %}off{% endif %}">{% if session_methods.face %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-          <div class="method-status-row">
-            <div class="method-status-item"><i class="fa-solid fa-location-dot"></i><div><strong>GeoTracking Check-in</strong></div></div>
-            <span class="method-status-tag {% if not session_methods.geo %}off{% endif %}">{% if session_methods.geo %}Active{% else %}Inactive{% endif %}</span>
-          </div>
-        </div>
-        <button class="btn" type="button" data-open-tab="settings">Manage Methods</button>
-      </section>
     </aside>
   </div>
 </div>

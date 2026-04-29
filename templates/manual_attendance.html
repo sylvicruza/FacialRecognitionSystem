@@ -6,156 +6,723 @@
 
 {% block content %}
 <style>
-  .manual-page{max-width:1180px;margin:0 auto;display:grid;gap:18px;}
-  .panel{background:var(--paper);border:1px solid var(--line);border-radius:24px;box-shadow:0 22px 54px rgba(15,23,42,.075);overflow:hidden;}
-  .session-bar{padding:22px;display:flex;justify-content:space-between;gap:14px;align-items:center;background:linear-gradient(135deg,#fff,#f3fbf6);}
-  .session-bar h2{margin:0;font-size:22px;font-weight:900;letter-spacing:-.045em;}
-  .session-bar p{margin:6px 0 0;color:var(--muted);}
-  .session-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-  .stat{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;background:#eaf8ef;color:#0f6b3a;border:1px solid #d6efdd;font-size:12px;font-weight:900;}
-  .btn{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#263244;font-weight:900;font-size:13px;text-decoration:none;cursor:pointer;}
-  .btn.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 16px 32px rgba(22,163,74,.18);}
-  .btn.danger{color:#b42318;background:#fff7f7;border-color:#ffd6d6;}
-  .toolbar{padding:16px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);}
-  .search{min-width:280px;display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;}
-  .search input{border:none;outline:none;background:transparent;width:260px;font:inherit;}
-  .table-wrap{overflow:auto;}
-  table{width:100%;border-collapse:collapse;min-width:760px;}
-  th{background:#0f172a;color:#fff;text-align:left;padding:14px;font-size:12px;letter-spacing:.03em;}
-  td{padding:14px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  .person{display:flex;align-items:center;gap:12px;}
-  .avatar{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;background:#eaf8ef;color:#0f7a38;font-weight:900;}
-  .person b{display:block;color:#172033;}
-  .person span{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
-  .status{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line);background:#f8fafc;}
-  .status.present{color:#0f6b3a;background:#eaf8ef;border-color:#d6efdd;}
-  .status.absent{color:#991b1b;background:#fff1f1;border-color:#ffd6d6;}
-  .actions{display:flex;gap:8px;flex-wrap:wrap;}
-  .quick-actions{display:flex;gap:8px;flex-wrap:wrap;}
-  .quick-actions form{display:inline-flex;}
-  tr.is-marked{background:#fbfffc;}
-  .btn[disabled]{opacity:.55;cursor:not-allowed;}
-  .empty{padding:34px;text-align:center;color:var(--muted);}
-  @media(max-width:720px){.session-bar{align-items:flex-start;flex-direction:column}.search{min-width:100%;}.search input{width:100%;}}
+  .manual-shell{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    gap:16px;
+    padding:8px 0 40px;
+  }
+
+  .cardx{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:22px;
+    box-shadow:0 18px 44px rgba(15,23,42,.06);
+  }
+
+  .summary-card{
+    padding:18px;
+    display:grid;
+    gap:16px;
+  }
+
+  .summary-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .summary-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .summary-copy p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .summary-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .stat-card{
+    min-height:74px;
+    padding:12px 14px;
+    border:1px solid #e4ece7;
+    border-radius:16px;
+    background:#fff;
+    display:grid;
+    gap:6px;
+  }
+
+  .stat-card strong{
+    font-size:18px;
+    font-weight:900;
+    line-height:1;
+  }
+
+  .stat-card span{
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .stat-card.present strong{color:#15803d;}
+  .stat-card.absent strong{color:#dc2626;}
+  .stat-card.pending strong{color:#d97706;}
+
+  .toolbar-card{
+    padding:18px;
+    display:grid;
+    gap:14px;
+  }
+
+  .toolbar-row{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+
+  .search-form,
+  .bulk-actions,
+  .selection-bar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .search-box,
+  .select-wrap{
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+    border:1px solid #dfe9e3;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .search-box{
+    min-width:320px;
+  }
+
+  .search-box i{color:#98a2b3;}
+
+  .search-box input,
+  .select-box{
+    border:none;
+    outline:none;
+    background:transparent;
+    color:#172033;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .search-box input{width:100%;}
+
+  .btnx{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .btnx:hover{color:#172033;background:#f8fbff;}
+
+  .btnx.primary{
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 14px 28px rgba(22,163,74,.16);
+  }
+
+  .btnx.danger{
+    color:#dc2626;
+    border-color:#fecaca;
+  }
+
+  .selection-bar{
+    display:none;
+    padding-top:4px;
+  }
+
+  .selection-bar.active{
+    display:flex;
+  }
+
+  .selection-count{
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    padding:0 2px;
+  }
+
+  .members-card{
+    overflow:hidden;
+  }
+
+  .members-head{
+    padding:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    flex-wrap:wrap;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .members-head h2{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .members-head p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+  }
+
+  .table-wrap{
+    width:100%;
+    overflow:auto;
+  }
+
+  table.manual-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    min-width:920px;
+  }
+
+  table.manual-table thead th{
+    padding:14px 16px;
+    color:#667085;
+    font-size:12px;
+    font-weight:800;
+    border-bottom:1px solid #edf2ef;
+    background:#fff;
+    text-align:left;
+  }
+
+  table.manual-table tbody td{
+    padding:16px;
+    border-bottom:1px solid #edf2ef;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    vertical-align:middle;
+  }
+
+  table.manual-table tbody tr:hover td{
+    background:#fbfefd;
+  }
+
+  .check-col{
+    width:44px;
+    text-align:center;
+  }
+
+  .check-input{
+    width:18px;
+    height:18px;
+    accent-color:#16a34a;
+    cursor:pointer;
+  }
+
+  .member-cell{
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .avatar{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:#eaf8ef;
+    color:#15803d;
+    font-size:18px;
+    font-weight:900;
+    border:1px solid #d7ece0;
+  }
+
+  .member-meta{
+    min-width:0;
+    display:grid;
+    gap:4px;
+  }
+
+  .member-name{
+    color:#172033;
+    font-size:14px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .member-sub{
+    color:#667085;
+    font-size:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .data-pill,
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 11px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    width:max-content;
+    max-width:100%;
+    border:1px solid #e5ede8;
+    background:#fff;
+    color:#172033;
+  }
+
+  .status-pill.present{
+    background:#ecfdf3;
+    color:#087533;
+    border-color:#d9f4e3;
+  }
+
+  .status-pill.absent{
+    background:#fff3f3;
+    color:#b42318;
+    border-color:#ffd6d6;
+  }
+
+  .status-pill.pending{
+    background:#f8fafc;
+    color:#64748b;
+    border-color:#e2e8f0;
+  }
+
+  .status-time{
+    margin-top:6px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .mark-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .mini-btn{
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:12px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .mini-btn.present{
+    background:#f3fcf6;
+    border-color:#bde8cb;
+    color:#15803d;
+  }
+
+  .mini-btn.absent{
+    background:#fff7f7;
+    border-color:#fecaca;
+    color:#dc2626;
+  }
+
+  .mini-btn[disabled]{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  .action-btn{
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:12px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+  }
+
+  .table-footer{
+    padding:16px 18px 18px;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .empty{
+    padding:42px 24px;
+    text-align:center;
+    color:#667085;
+  }
+
+  .empty i{
+    display:block;
+    font-size:26px;
+    margin-bottom:10px;
+    color:#98a2b3;
+  }
+
+  @media (max-width:900px){
+    .summary-top,
+    .summary-actions,
+    .toolbar-row,
+    .search-form,
+    .bulk-actions,
+    .selection-bar{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .search-box{
+      min-width:100%;
+    }
+
+    .stats-grid{
+      grid-template-columns:1fr;
+    }
+  }
 </style>
 
-<div class="manual-page">
-  <section class="panel">
-    <div class="session-bar">
-      <div>
+<div class="manual-shell">
+  <section class="cardx summary-card">
+    <div class="summary-top">
+      <div class="summary-copy">
         <h2>{{ active_session.session_name|default:active_session.event_name }}</h2>
-        <p>Manual attendance for {{ active_session.event_name }}.</p>
-        <div class="session-stats">
-          <span class="stat"><i class="fa-solid fa-user-check"></i> {{ method_counts.present }} present</span>
-          <span class="stat"><i class="fa-solid fa-user-xmark"></i> {{ method_counts.absent }} absent</span>
-          <span class="stat"><i class="fa-solid fa-hourglass-half"></i> {{ method_counts.pending }} pending</span>
-        </div>
+        <p>{{ active_session.event_name }}{% if session_time_label %} | {{ session_time_label }}{% if session_end_label %} - {{ session_end_label }}{% endif %}{% endif %}</p>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a class="btn" href="{% url 'attendance_sessions' %}"><i class="fa-solid fa-calendar-check"></i> Change Session</a>
-        <a class="btn" href="{{ session_report_url }}"><i class="fa-solid fa-chart-simple"></i> Report</a>
+      <div class="summary-actions">
+        <a class="btnx" href="{% url 'attendance_sessions' %}">
+          <i class="fa-regular fa-calendar"></i> Change Session
+        </a>
+        <a class="btnx" href="{{ session_report_url }}">
+          <i class="fa-solid fa-chart-column"></i> Report
+        </a>
       </div>
     </div>
 
-    <div class="toolbar">
-      <form class="search" method="get" id="manualSearch">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input name="search" value="{{ search_query }}" placeholder="Search member" autofocus>
+    <div class="stats-grid">
+      <div class="stat-card present">
+        <strong>{{ method_counts.present }}</strong>
+        <span>Present</span>
+      </div>
+      <div class="stat-card absent">
+        <strong>{{ method_counts.absent }}</strong>
+        <span>Absent</span>
+      </div>
+      <div class="stat-card pending">
+        <strong>{{ method_counts.pending }}</strong>
+        <span>Pending</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cardx toolbar-card">
+    <div class="toolbar-row">
+      <form class="search-form" method="get" id="manualSearch">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input name="search" value="{{ search_query }}" placeholder="Search by name, email or member code..." autofocus>
+        </div>
+        <div class="select-wrap">
+          <select class="select-box" name="status" onchange="this.form.submit()">
+            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+            <option value="present" {% if status_filter == 'present' %}selected{% endif %}>Present</option>
+            <option value="absent" {% if status_filter == 'absent' %}selected{% endif %}>Absent</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          </select>
+        </div>
+        <div class="select-wrap">
+          <select class="select-box" name="method" onchange="this.form.submit()">
+            <option value="all" {% if method_filter == 'all' %}selected{% endif %}>All Methods</option>
+            <option value="manual" {% if method_filter == 'manual' %}selected{% endif %}>Manual</option>
+            <option value="swipe" {% if method_filter == 'swipe' %}selected{% endif %}>Swipe</option>
+            <option value="qr" {% if method_filter == 'qr' %}selected{% endif %}>QR</option>
+            <option value="nfc" {% if method_filter == 'nfc' %}selected{% endif %}>NFC</option>
+            <option value="face" {% if method_filter == 'face' %}selected{% endif %}>Face</option>
+            <option value="member_self" {% if method_filter == 'member_self' %}selected{% endif %}>Self Check-in</option>
+            <option value="geotracking" {% if method_filter == 'geotracking' %}selected{% endif %}>GeoTracking</option>
+          </select>
+        </div>
       </form>
-      <div class="quick-actions">
+
+      <div class="bulk-actions">
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="action" value="mark_pending">
           <input type="hidden" name="status" value="present">
           <input type="hidden" name="search" value="{{ search_query }}">
-          <button class="btn primary" type="submit"><i class="fa-solid fa-bolt"></i> Mark Pending Present</button>
+          <input type="hidden" name="filter_status" value="{{ status_filter }}">
+          <input type="hidden" name="method" value="{{ method_filter }}">
+          <button class="btnx primary" type="submit">
+            <i class="fa-solid fa-bolt"></i> Mark Pending Present
+          </button>
         </form>
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="action" value="mark_all">
           <input type="hidden" name="status" value="absent">
           <input type="hidden" name="search" value="{{ search_query }}">
-          <button class="btn danger" type="submit"><i class="fa-solid fa-user-xmark"></i> Mark Filtered Absent</button>
+          <input type="hidden" name="filter_status" value="{{ status_filter }}">
+          <input type="hidden" name="method" value="{{ method_filter }}">
+          <button class="btnx danger" type="submit">
+            <i class="fa-solid fa-user-xmark"></i> Mark Filtered Absent
+          </button>
         </form>
-        <div style="color:var(--muted);font-weight:800;align-self:center;">{{ rows|length }} member{{ rows|length|pluralize }}</div>
       </div>
     </div>
+
+    <form method="post" id="selectedActionForm" class="selection-bar">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="mark_selected">
+      <input type="hidden" name="search" value="{{ search_query }}">
+      <input type="hidden" name="filter_status" value="{{ status_filter }}">
+      <input type="hidden" name="method" value="{{ method_filter }}">
+      <div id="selectedIdsContainer"></div>
+      <span class="selection-count" id="selectedCountLabel">0 selected</span>
+      <button class="btnx primary" type="submit" name="status" value="present">
+        <i class="fa-solid fa-check"></i> Mark Selected Present
+      </button>
+      <button class="btnx danger" type="submit" name="status" value="absent">
+        <i class="fa-solid fa-xmark"></i> Mark Selected Absent
+      </button>
+      <button class="btnx" type="button" id="clearSelectionBtn">
+        <i class="fa-solid fa-broom"></i> Clear
+      </button>
+    </form>
   </section>
 
-  <section class="panel">
+  <section class="cardx members-card">
+    <div class="members-head">
+      <div>
+        <h2>Members ({{ row_count }})</h2>
+        <p>Manage attendance for the current session.</p>
+      </div>
+      <div class="summary-actions">
+        <a class="btnx" href="{% url 'member_import' %}">
+          <i class="fa-solid fa-file-import"></i> Import CSV
+        </a>
+        <a class="btnx primary" href="{% url 'register_user' %}">
+          <i class="fa-solid fa-plus"></i> Add Member
+        </a>
+      </div>
+    </div>
+
     <div class="table-wrap">
-      <table>
+      <table class="manual-table">
         <thead>
           <tr>
+            <th class="check-col"><input class="check-input" type="checkbox" id="selectAllRows" aria-label="Select all rows"></th>
             <th>Member</th>
-            <th>Current Status</th>
+            <th>Code</th>
             <th>Method</th>
-            <th>Action</th>
+            <th>Status</th>
+            <th>Mark</th>
+            <th>View</th>
           </tr>
         </thead>
         <tbody>
           {% for row in rows %}
-            <tr class="{% if row.record %}is-marked{% endif %}">
+            <tr>
+              <td class="check-col"><input class="check-input row-check" type="checkbox" value="{{ row.person.id }}" aria-label="Select {{ row.person.name }}"></td>
               <td>
-                <div class="person">
+                <div class="member-cell">
                   <div class="avatar">{{ row.person.name|default:"?"|slice:":1"|upper }}</div>
-                  <div>
-                    <b>{{ row.person.name }}</b>
-                    <span>Member Code: {{ row.person.member_code|default:row.person.portal_id|default:"-" }}</span>
+                  <div class="member-meta">
+                    <div class="member-name">{{ row.person.name }}</div>
+                    <div class="member-sub">{{ row.person.email|default:"No email added yet" }}</div>
                   </div>
                 </div>
               </td>
               <td>
-                {% if row.record.status == "absent" %}
-                  <span class="status absent"><i class="fa-solid fa-xmark"></i> Absent</span>
-                {% elif row.record %}
-                  <span class="status present"><i class="fa-solid fa-check"></i> Present</span>
-                {% else %}
-                  <span class="status"><i class="fa-regular fa-circle"></i> Not marked</span>
+                <span class="data-pill">{{ row.person.member_code|default:row.person.portal_id|default:"-" }}</span>
+              </td>
+              <td>
+                <span class="data-pill">{{ row.method_label }}</span>
+              </td>
+              <td>
+                <span class="status-pill {{ row.status_key }}">
+                  {% if row.status_key == "present" %}
+                    <i class="fa-solid fa-check"></i>
+                  {% elif row.status_key == "absent" %}
+                    <i class="fa-solid fa-xmark"></i>
+                  {% else %}
+                    <i class="fa-regular fa-circle"></i>
+                  {% endif %}
+                  {{ row.status_label }}
+                </span>
+                {% if row.attendance_time %}
+                  <div class="status-time">{{ row.attendance_time }}</div>
                 {% endif %}
               </td>
-              <td>{{ row.record.method|default:"-"|title }}</td>
               <td>
-                <div class="actions">
-                  <form method="post">
+                <div class="mark-actions">
+                  <form method="post" id="presentForm{{ row.person.id }}">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="mark">
                     <input type="hidden" name="person_id" value="{{ row.person.id }}">
                     <input type="hidden" name="status" value="present">
-                    <button class="btn primary" type="submit" {% if row.record and row.record.status != "absent" %}disabled{% endif %}><i class="fa-solid fa-check"></i> Present</button>
+                    <input type="hidden" name="search" value="{{ search_query }}">
+                    <input type="hidden" name="filter_status" value="{{ status_filter }}">
+                    <input type="hidden" name="method" value="{{ method_filter }}">
+                    <button class="mini-btn present" type="submit" {% if row.status_key == "present" %}disabled{% endif %}>
+                      <i class="fa-solid fa-check"></i> Present
+                    </button>
                   </form>
-                  <form method="post">
+                  <form method="post" id="absentForm{{ row.person.id }}">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="mark">
                     <input type="hidden" name="person_id" value="{{ row.person.id }}">
                     <input type="hidden" name="status" value="absent">
-                    <button class="btn danger" type="submit" {% if row.record.status == "absent" %}disabled{% endif %}><i class="fa-solid fa-xmark"></i> Absent</button>
+                    <input type="hidden" name="search" value="{{ search_query }}">
+                    <input type="hidden" name="filter_status" value="{{ status_filter }}">
+                    <input type="hidden" name="method" value="{{ method_filter }}">
+                    <button class="mini-btn absent" type="submit" {% if row.status_key == "absent" %}disabled{% endif %}>
+                      <i class="fa-solid fa-xmark"></i> Absent
+                    </button>
                   </form>
                 </div>
+              </td>
+              <td>
+                <a class="action-btn" href="{% url 'person_detail' pk=row.person.pk %}">
+                  <i class="fa-solid fa-eye"></i> View
+                </a>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4"><div class="empty">No members found.</div></td>
+              <td colspan="7">
+                <div class="empty">
+                  <i class="fa-solid fa-users"></i>
+                  No members found for this filter.
+                </div>
+              </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    <div class="table-footer">Rows shown: {{ row_count }}</div>
   </section>
 </div>
+
 <script>
   const searchInput = document.querySelector('#manualSearch input[name="search"]');
+  const selectAllRows = document.getElementById('selectAllRows');
+  const rowChecks = Array.from(document.querySelectorAll('.row-check'));
+  const selectedActionForm = document.getElementById('selectedActionForm');
+  const selectedIdsContainer = document.getElementById('selectedIdsContainer');
+  const selectedCountLabel = document.getElementById('selectedCountLabel');
+  const clearSelectionBtn = document.getElementById('clearSelectionBtn');
   let searchTimer;
+
   searchInput?.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => document.getElementById('manualSearch').submit(), 450);
   });
+
   document.addEventListener('keydown', (event) => {
-    if(event.key === '/' && document.activeElement !== searchInput){
+    if (event.key === '/' && document.activeElement !== searchInput) {
       event.preventDefault();
       searchInput?.focus();
     }
   });
+
+  function syncSelectionState() {
+    const selected = rowChecks.filter(input => input.checked).map(input => input.value);
+    if (selectedIdsContainer) {
+      selectedIdsContainer.innerHTML = selected.map((id) => `<input type="hidden" name="person_ids" value="${id}">`).join('');
+    }
+    if (selectedCountLabel) {
+      selectedCountLabel.textContent = `${selected.length} selected`;
+    }
+    selectedActionForm?.classList.toggle('active', selected.length > 0);
+    if (selectAllRows) {
+      selectAllRows.checked = rowChecks.length > 0 && selected.length === rowChecks.length;
+      selectAllRows.indeterminate = selected.length > 0 && selected.length < rowChecks.length;
+    }
+  }
+
+  selectAllRows?.addEventListener('change', () => {
+    rowChecks.forEach((input) => {
+      input.checked = selectAllRows.checked;
+    });
+    syncSelectionState();
+  });
+
+  rowChecks.forEach((input) => {
+    input.addEventListener('change', syncSelectionState);
+  });
+
+  clearSelectionBtn?.addEventListener('click', () => {
+    rowChecks.forEach((input) => {
+      input.checked = false;
+    });
+    syncSelectionState();
+  });
+
+  syncSelectionState();
 </script>
 {% endblock %}

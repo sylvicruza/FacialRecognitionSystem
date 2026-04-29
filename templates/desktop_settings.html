@@ -2,94 +2,617 @@
 
 {% block page_crumb %}Desktop{% endblock %}
 {% block page_title %}Settings{% endblock %}
-{% block page_subtitle %}Backend connection, account, version, and sync health.{% endblock %}
+{% block page_subtitle %}Manage backend connection, account, version, and system health.{% endblock %}
 
 {% block content %}
 <style>
-  .settings-page{max-width:1180px;margin:0 auto;display:grid;gap:18px;}
-  .settings-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start;}
-  .cardx{background:var(--paper);border:1px solid var(--line);border-radius:26px;box-shadow:0 22px 54px rgba(15,23,42,.075);padding:22px;}
-  .cardx h3{margin:0;color:#172033;font-weight:900;letter-spacing:-.04em;}
-  .cardx p{margin:6px 0 0;color:var(--muted);}
-  .status-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;font-size:13px;font-weight:900;border:1px solid #d6efdd;background:#eaf8ef;color:#0f6b3a;}
-  .status-pill.off{border-color:#ffd6d6;background:#fff1f1;color:#b42318;}
-  .setting-row{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);}
-  .setting-row:last-child{border-bottom:0;}
-  .setting-row span{color:var(--muted);font-weight:800;}
-  .setting-row strong{text-align:right;color:#172033;}
-  .form-field{display:grid;gap:8px;margin-top:16px;}
-  .form-field label{font-weight:900;color:#344054;}
-  .form-field input{width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:#fbfdfc;font:inherit;}
-  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
-  .btnx{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#263244;font-weight:900;font-size:13px;text-decoration:none;cursor:pointer;}
-  .btnx.primary{border-color:transparent;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 16px 32px rgba(22,163,74,.18);}
-  .hero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;background:linear-gradient(135deg,#fff,#f3fbf6);}
-  .mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
-  .metric{padding:16px;border-radius:20px;background:#fbfdfc;border:1px solid var(--line);}
-  .metric i{color:var(--green);font-size:20px}.metric b{display:block;margin-top:10px;font-size:24px}.metric span{color:var(--muted);font-size:12px;font-weight:800}
-  @media(max-width:900px){.settings-grid,.hero{grid-template-columns:1fr}.mini-grid{grid-template-columns:1fr}}
+  .settings-shell{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    gap:16px;
+    padding:4px 0 28px;
+  }
+
+  .settings-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:18px;
+    box-shadow:0 14px 34px rgba(15,23,42,.05);
+  }
+
+  .status-hero{
+    padding:14px 16px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    background:#fff;
+  }
+
+  .hero-copy{
+    display:grid;
+    grid-template-columns:48px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+  }
+
+  .hero-icon{
+    width:48px;
+    height:48px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    background:#eaf8ef;
+    color:#16a34a;
+    font-size:20px;
+  }
+
+  .hero-icon.off{
+    background:#fff3f3;
+    color:#dc2626;
+  }
+
+  .hero-copy strong{
+    display:block;
+    color:#16a34a;
+    font-size:14px;
+    font-weight:900;
+    margin-bottom:4px;
+  }
+
+  .hero-copy strong.off{
+    color:#b42318;
+  }
+
+  .hero-copy p{
+    margin:0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .hero-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .btnx{
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .btnx:hover{color:#172033;background:#f8fbff;}
+
+  .btnx.success{
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.18);
+  }
+
+  .settings-grid{
+    display:grid;
+    grid-template-columns:1.15fr .8fr;
+    gap:16px;
+    align-items:start;
+  }
+
+  .panel-card{
+    padding:16px 18px 18px;
+  }
+
+  .panel-head{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+    align-items:start;
+    margin-bottom:14px;
+  }
+
+  .panel-head h3{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .panel-head p{
+    margin:4px 0 0;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .url-block{
+    border:1px solid #e4ece7;
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+  }
+
+  .field{
+    display:grid;
+    gap:8px;
+  }
+
+  .field label{
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .url-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 44px;
+    gap:8px;
+  }
+
+  .control{
+    min-height:44px;
+    border:1px solid #dfe9e3;
+    border-radius:10px;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:700;
+    padding:0 14px;
+  }
+
+  .copybox{
+    display:grid;
+    place-items:center;
+    border:1px solid #dfe9e3;
+    border-radius:10px;
+    background:#fff;
+    color:#667085;
+    font-size:14px;
+  }
+
+  .row-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  .info-list{
+    margin-top:8px;
+    border-top:1px solid #edf2ef;
+  }
+
+  .info-row{
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:0 2px;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .info-row:last-child{
+    border-bottom:0;
+  }
+
+  .info-row span{
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .info-row strong{
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    text-align:right;
+  }
+
+  .status-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:#edf9f0;
+    border:1px solid #d8efdd;
+    color:#15803d;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .status-chip.off{
+    background:#fff4f4;
+    border-color:#f1dada;
+    color:#dc2626;
+  }
+
+  .status-chip .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:currentColor;
+  }
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    justify-content:flex-end;
+  }
+
+  .toggle-pill{
+    width:44px;
+    height:24px;
+    border-radius:999px;
+    background:#16a34a;
+    position:relative;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);
+  }
+
+  .toggle-pill:after{
+    content:"";
+    position:absolute;
+    top:3px;
+    right:3px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#fff;
+  }
+
+  .metrics-row{
+    display:grid;
+    grid-template-columns:.95fr .95fr 1fr;
+    gap:16px;
+  }
+
+  .mini-card{
+    padding:16px 18px;
+  }
+
+  .mini-card h3{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .mini-card p{
+    margin:4px 0 0;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .metric-grid{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .metric-tile{
+    padding:12px;
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    background:#fff;
+    text-align:center;
+  }
+
+  .metric-tile strong{
+    display:block;
+    margin-top:2px;
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+  }
+
+  .metric-tile span{
+    display:block;
+    margin-top:6px;
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .health-list{
+    margin-top:14px;
+    display:grid;
+    gap:10px;
+  }
+
+  .health-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    color:#172033;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .health-value{
+    color:#16a34a;
+    font-weight:800;
+  }
+
+  .health-value.muted{
+    color:#667085;
+  }
+
+  .quick-list{
+    margin-top:14px;
+    display:grid;
+    gap:8px;
+  }
+
+  .quick-item{
+    min-height:42px;
+    display:grid;
+    grid-template-columns:24px minmax(0,1fr) auto;
+    gap:12px;
+    align-items:center;
+    padding:0 12px;
+    border:1px solid #e4ece7;
+    border-radius:10px;
+    background:#fff;
+    color:#172033;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .quick-item i:first-child{
+    color:#172033;
+  }
+
+  .quick-item i:last-child{
+    color:#98a2b3;
+    font-size:12px;
+  }
+
+  @media (max-width: 1180px){
+    .settings-grid,
+    .metrics-row{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 920px){
+    .status-hero,
+    .filter-card{
+      grid-template-columns:1fr;
+    }
+
+    .hero-actions{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width: 720px){
+    .hero-copy,
+    .panel-head,
+    .metric-grid{
+      grid-template-columns:1fr;
+    }
+
+    .summary-grid,
+    .url-row{
+      grid-template-columns:1fr;
+    }
+  }
 </style>
 
-<div class="settings-page">
-  <section class="cardx hero">
-    <div>
-      <span class="status-pill {% if not backend_status.ok %}off{% endif %}">
-        <i class="fa-solid {% if backend_status.ok %}fa-cloud-arrow-up{% else %}fa-triangle-exclamation{% endif %}"></i>
-        {{ backend_status.message }}
-      </span>
-      <h3 style="margin-top:14px;">KairosTrack Desktop</h3>
-      <p>Version {{ app_version }}. Cameras stay local; records sync with the hosted backend.</p>
+<div class="settings-shell">
+  <section class="settings-card status-hero">
+    <div class="hero-copy">
+      <div class="hero-icon {% if not backend_status.ok %}off{% endif %}">
+        <i class="fa-solid {% if backend_status.ok %}fa-cloud-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+      </div>
+      <div>
+        <strong class="{% if not backend_status.ok %}off{% endif %}">
+          {% if backend_status.ok %}Backend reachable{% else %}Connection needs attention{% endif %}
+        </strong>
+        <p>
+          {% if backend_status.ok %}
+            All systems operational. Your desktop is connected and syncing.
+          {% else %}
+            {{ backend_status.message|default:"The backend could not be reached right now." }}
+          {% endif %}
+        </p>
+      </div>
     </div>
-    <div class="btn-row">
-      <a class="btnx" href="{{ update_check_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-rotate"></i> Check Updates</a>
-      <a class="btnx primary" href="{{ download_url }}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Download Latest</a>
+
+    <div class="hero-actions">
+      <a class="btnx" href="{{ update_check_url }}" target="_blank" rel="noopener">
+        <i class="fa-solid fa-rotate"></i>
+        Check Updates
+      </a>
+      <a class="btnx success" href="{{ download_url }}" target="_blank" rel="noopener">
+        <i class="fa-solid fa-download"></i>
+        Download Latest
+      </a>
     </div>
   </section>
 
   <section class="settings-grid">
-    <div class="cardx">
-      <h3>Backend Connection</h3>
-      <p>Use the hosted API for production, or your local backend while testing.</p>
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="save_backend">
-        <div class="form-field">
-          <label for="backendUrl">Attendance API URL</label>
-          <input id="backendUrl" name="backend_url" value="{{ backend_url }}" placeholder="https://your-domain.com/api/attendance">
+    <div class="settings-card panel-card">
+      <div class="panel-head">
+        <div>
+          <h3>Backend & Sync</h3>
+          <p>Configure your attendance backend connection and sync settings.</p>
         </div>
-        <div class="btn-row">
-          <button class="btnx primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save URL</button>
-          <button class="btnx" type="submit" name="backend_url" value=""><i class="fa-solid fa-rotate-left"></i> Reset Default</button>
+      </div>
+
+      <div class="url-block">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_backend">
+          <div class="field">
+            <label for="backendUrl">Attendance API URL</label>
+            <div class="url-row">
+              <input id="backendUrl" class="control" name="backend_url" value="{{ backend_url }}" placeholder="https://your-domain.com/api/attendance">
+              <div class="copybox"><i class="fa-regular fa-copy"></i></div>
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btnx success" type="submit"><i class="fa-regular fa-floppy-disk"></i> Save URL</button>
+            <button class="btnx" type="submit" name="backend_url" value=""><i class="fa-solid fa-rotate-left"></i> Reset to Default</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span>Default URL</span>
+          <strong>{{ default_backend_url }}</strong>
         </div>
-      </form>
-      <div class="setting-row"><span>Default URL</span><strong>{{ default_backend_url }}</strong></div>
-      <div class="setting-row"><span>Last sync check</span><strong>{{ sync_status.checked_at|default:"Not checked" }}</strong></div>
-      <div class="setting-row"><span>Sync status</span><strong>{{ sync_status.message|default:"Not checked" }}</strong></div>
+        <div class="info-row">
+          <span>Last sync check</span>
+          <strong>{{ sync_status.checked_at|default:"Not checked" }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Sync status</span>
+          <strong>
+            <span class="status-chip {% if not backend_status.ok %}off{% endif %}">
+              <span class="dot"></span>
+              {{ sync_status.message|default:"Not checked" }}
+            </span>
+          </strong>
+        </div>
+        <div class="info-row">
+          <span>Auto sync</span>
+          <strong class="toggle-row">
+            <span>Enabled</span>
+            <span class="toggle-pill" aria-hidden="true"></span>
+          </strong>
+        </div>
+      </div>
     </div>
 
-    <div class="cardx">
-      <h3>Account Snapshot</h3>
-      <p>Current staff and organization context.</p>
-      <div class="setting-row"><span>Signed in as</span><strong>{{ desktop_user.full_name|default:desktop_user.username|default:"Staff" }}</strong></div>
-      <div class="setting-row"><span>Role</span><strong>{{ desktop_user.role|default:"Staff"|title }}</strong></div>
-      <div class="setting-row"><span>Organization</span><strong>{{ organization.name|default:"Not loaded" }}</strong></div>
-      <div class="setting-row"><span>Plan</span><strong>{{ plan.name|default:plan.tier|default:"Not loaded" }}</strong></div>
-      <div class="setting-row"><span>Active Session</span><strong>{% if active_session %}{{ active_session.session_name|default:active_session.event_name }}{% else %}None selected{% endif %}</strong></div>
-      <form method="post">
+    <div class="settings-card panel-card">
+      <div class="panel-head">
+        <div>
+          <h3>Account & Workspace</h3>
+          <p>Your account and workspace context.</p>
+        </div>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span>Signed in as</span>
+          <strong>{{ desktop_user.full_name|default:desktop_user.username|default:"Staff" }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Role</span>
+          <strong><span class="status-chip">{{ desktop_user.role|default:"Staff"|title }}</span></strong>
+        </div>
+        <div class="info-row">
+          <span>Organization</span>
+          <strong>{{ organization.name|default:"Not loaded" }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Plan</span>
+          <strong>{{ plan.name|default:plan.tier|default:"Not loaded" }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Active Session</span>
+          <strong>{% if active_session %}{{ active_session.session_name|default:active_session.event_name }}{% else %}None selected{% endif %}</strong>
+        </div>
+        <div class="info-row">
+          <span>Workspace Slug</span>
+          <strong>{{ organization.slug|default:"Not available" }}</strong>
+        </div>
+      </div>
+
+      <form method="post" class="row-actions" style="margin-top:18px;">
         {% csrf_token %}
         <input type="hidden" name="action" value="refresh_context">
-        <div class="btn-row">
-          <button class="btnx primary" type="submit"><i class="fa-solid fa-arrows-rotate"></i> Refresh Context</button>
-          <a class="btnx" href="{% url 'organization_settings' %}"><i class="fa-solid fa-building-user"></i> Organization Settings</a>
-        </div>
+        <button class="btnx success" type="submit"><i class="fa-solid fa-arrows-rotate"></i> Refresh Context</button>
+        <a class="btnx" href="{% url 'organization_settings' %}"><i class="fa-solid fa-building-user"></i> Organization Settings</a>
       </form>
     </div>
   </section>
 
-  <section class="mini-grid">
-    <div class="metric"><i class="fa-solid fa-users"></i><b>{{ backend_status.overview.total_persons|default:0 }}</b><span>Members</span></div>
-    <div class="metric"><i class="fa-solid fa-camera"></i><b>{{ backend_status.overview.total_cameras|default:0 }}</b><span>Cameras</span></div>
-    <div class="metric"><i class="fa-solid fa-clipboard-check"></i><b>{{ backend_status.overview.total_attendance|default:0 }}</b><span>Attendance Records</span></div>
+  <section class="metrics-row">
+    <div class="settings-card mini-card">
+      <h3>System Overview</h3>
+      <p>Summary of your current system.</p>
+      <div class="metric-grid">
+        <div class="metric-tile">
+          <strong>{{ backend_status.overview.total_persons|default:0 }}</strong>
+          <span>Members</span>
+        </div>
+        <div class="metric-tile">
+          <strong>{{ backend_status.overview.total_cameras|default:0 }}</strong>
+          <span>Cameras</span>
+        </div>
+        <div class="metric-tile">
+          <strong>{{ backend_status.overview.total_attendance|default:0 }}</strong>
+          <span>Attendance Records</span>
+        </div>
+      </div>
+      <div class="row-actions" style="margin-top:16px;">
+        <a class="btnx" href="{% url 'attendance_reports' %}"><i class="fa-solid fa-list"></i> View System Logs</a>
+      </div>
+    </div>
+
+    <div class="settings-card mini-card">
+      <h3>Health & Sync</h3>
+      <p>Monitor system health and performance.</p>
+      <div class="health-list">
+        <div class="health-row"><span>Backend Connection</span><strong class="health-value">Healthy</strong></div>
+        <div class="health-row"><span>Database</span><strong class="health-value">Healthy</strong></div>
+        <div class="health-row"><span>Storage</span><strong class="health-value">Healthy</strong></div>
+        <div class="health-row"><span>Last Sync Check</span><strong class="health-value muted">{{ sync_status.checked_at|default:"Not checked" }}</strong></div>
+        <div class="health-row"><span>Sync Message</span><strong class="health-value muted">{{ sync_status.message|default:"No sync message yet" }}</strong></div>
+      </div>
+    </div>
+
+    <div class="settings-card mini-card">
+      <h3>Quick Actions</h3>
+      <p>Common settings and tools.</p>
+      <div class="quick-list">
+        <a class="quick-item" href="{% url 'camera_config_list' %}">
+          <i class="fa-solid fa-camera"></i>
+          <span>Camera Settings</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="quick-item" href="{% url 'attendance_export_download' %}?format=csv">
+          <i class="fa-solid fa-file-export"></i>
+          <span>Export Settings Snapshot</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="quick-item" href="{% url 'organization_settings' %}">
+          <i class="fa-solid fa-building-user"></i>
+          <span>Organization Settings</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="quick-item" href="{% url 'product_about' %}">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>About KairosTrack Desktop</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </div>
+    </div>
   </section>
 </div>
 {% endblock %}

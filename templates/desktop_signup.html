@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -665,7 +665,7 @@
                 <select id="plan_tier" name="plan_tier">
                   {% for plan in plans %}
                     <option value="{{ plan.tier }}" {% if form.plan_tier == plan.tier or not form.plan_tier and plan.tier == "starter" %}selected{% endif %}>
-                      {{ plan.name }} - GBP {{ plan.monthly_price_gbp|default:"0.00" }}
+                      {{ plan.name }} - £{{ plan.monthly_price_gbp|default:"0.00" }}
                     </option>
                   {% endfor %}
                 </select>
@@ -737,3 +737,4 @@
   </main>
 </body>
 </html>
+

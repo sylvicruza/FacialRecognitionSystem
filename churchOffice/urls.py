@@ -25,6 +25,7 @@ urlpatterns = [
     path('members/import/', views.member_import, name='member_import'),
     path('members/import/template/', views.member_import_template, name='member_import_template'),
     path('persons/<int:pk>/', views.person_detail, name='person_detail'),
+    path('persons/<int:pk>/update/', views.person_update, name='person_update'),
     path('persons/<int:pk>/authorize/', views.person_authorize, name='person_authorize'),
     path('persons/<int:pk>/nfc/', views.person_nfc_update, name='person_nfc_update'),
     path('persons/<int:pk>/delete/', views.person_delete, name='person_delete'),
@@ -56,6 +57,7 @@ urlpatterns = [
     path('stream/<int:cam_id>/', views.camera_stream, name='camera_stream'),
     path('video_feed/<int:cam_id>/', views.video_feed, name='video_feed'),
     path('camera_preview/<int:cam_id>/', views.camera_preview_feed, name='camera_preview_feed'),
+    path('camera-config/preview-source/', views.camera_preview_source, name='camera_preview_source'),
     path('stream/all/', views.stream_all_cameras, name='stream_all_cameras'),
 
     # NFC API

@@ -5,192 +5,104 @@
 {% block content %}
 
 <style>
-  :root{
-    --brandA:#0b3c5d;
-    --brandB:#1c5874;
-    --gold:#fddb3a;
-
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-
-    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
-    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
-
-    --ok:#16a34a;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-
-    --radius: 20px;
+  .logs-shell{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    gap:14px;
+    padding:4px 0 28px;
   }
 
-  .page-wrap{
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 10px 0 40px;
+  .logs-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(15,23,42,.04);
   }
 
-  .hero{
-    border-radius: 24px;
-    padding: 18px 18px 16px;
-    background:
-      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.16), transparent 55%),
-      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.16), transparent 55%),
-      linear-gradient(180deg, var(--brandA), var(--brandB));
-    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
-    color: rgba(255,255,255,.94);
-    position:relative;
-    overflow:hidden;
-    animation: reveal .35s ease-out both;
-  }
-
-  @keyframes reveal{
-    from{opacity:0;transform:translateY(10px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  .hero-top{
+  .summary-card{
+    padding:14px 16px;
     display:flex;
+    align-items:center;
     justify-content:space-between;
-    align-items:flex-start;
-    gap: 12px;
+    gap:14px;
     flex-wrap:wrap;
   }
 
-  .title{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    min-width: 280px;
-  }
-
-  .avatar{
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+  .summary-session{
     display:grid;
-    place-items:center;
-    font-weight: 900;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.10);
-    color: var(--gold);
-    flex: 0 0 auto;
+    gap:6px;
+    min-width:0;
   }
 
-  .title h1{
+  .summary-copy h2{
     margin:0;
-    font-size: 18px;
-    line-height:1.15;
-    font-weight: 800;
-    letter-spacing:-0.02em;
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+    letter-spacing:-.03em;
   }
 
-  .title p{
-    margin:4px 0 0;
-    font-size: 12px;
-    line-height:1.45;
-    color: rgba(255,255,255,.72);
+  .summary-copy p{
+    margin:0;
+    color:#667085;
+    font-size:12px;
+    font-weight:600;
+    line-height:1.5;
   }
 
-  .chip-link{
-    display:inline-flex;
+  .summary-stats{
+    display:flex;
     align-items:center;
     gap:8px;
-    padding: 10px 13px;
-    border-radius: 999px;
-    color: rgba(255,255,255,.92);
-    text-decoration:none;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.20);
-    backdrop-filter: blur(10px);
-    transition: transform .06s ease, background .2s ease, border-color .2s ease;
-    user-select:none;
-    white-space:nowrap;
-    font-weight:700;
-  }
-
-  .chip-link:hover{
-    background: rgba(255,255,255,.14);
-    border-color: rgba(255,255,255,.24);
-  }
-
-  .chip-link:active{
-    transform: scale(.98);
-  }
-
-  .cardx{
-    margin-top: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    animation: reveal2 .38s ease-out both;
-  }
-
-  @keyframes reveal2{
-    from{opacity:0;transform:translateY(12px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  .cardx-head{
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
     flex-wrap:wrap;
+    justify-content:flex-end;
+    min-width:0;
   }
 
-  .cardx-head .h{
-    font-size:15px;
-    font-weight: 800;
-    letter-spacing:-0.02em;
-    color: var(--text);
+  .summary-stat{
+    min-height:34px;
+    padding:0 10px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid #e4ece7;
+    border-radius:12px;
+    background:#fff;
   }
 
-  .cardx-head .s{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
+  .summary-stat strong{
+    display:inline;
+    color:#172033;
+    font-size:13px;
+    font-weight:900;
   }
 
-  .controls{
-    padding: 16px;
+  .summary-stat span{
+    display:inline;
+    color:#667085;
+    font-size:11px;
+  }
+
+  .filter-card{
+    padding:14px;
     display:grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  @media (min-width: 992px){
-    .controls{
-      grid-template-columns: 1.35fr .65fr;
-      align-items:start;
-    }
+    gap:12px;
   }
 
   .filter-grid{
     display:grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns:1.25fr .85fr .75fr .75fr;
+    gap:8px;
+    align-items:end;
   }
 
-  @media (min-width: 768px){
-    .filter-grid{
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items:end;
-    }
-  }
-
-  @media (min-width: 1100px){
-    .filter-grid{
-      grid-template-columns: 1.2fr .8fr .95fr .95fr auto;
-    }
+  .filter-row-two{
+    grid-column:1 / -1;
+    display:grid;
+    grid-template-columns:.8fr .8fr auto auto auto;
+    gap:8px;
+    align-items:end;
   }
 
   .fgroup{
@@ -199,525 +111,476 @@
     gap:6px;
   }
 
-  .fgroup label{
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--text);
-    display:flex;
-    align-items:center;
-    gap:8px;
+  .fgroup label,
+  .export-title{
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
   }
 
-  .soft{
-    border-radius: 16px !important;
-    border: 1px solid var(--border) !important;
-    padding: 12px 12px !important;
-    background:#fff !important;
-    box-shadow: var(--softShadow);
-    min-height: 46px;
+  .control{
+    min-height:42px;
+    border:1px solid #dfe9e3;
+    border-radius:10px;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:700;
+    padding:0 14px;
+  }
+
+  input.control{
+    width:100%;
+  }
+
+  .search-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .search-wrap i{
+    color:#98a2b3;
+    margin-left:14px;
+  }
+
+  .search-wrap input{
+    border:0;
+    box-shadow:none;
+    padding-left:0;
+    background:transparent;
   }
 
   .btnx{
+    min-height:42px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    height: 44px;
-    padding: 0 16px;
-    border-radius: 16px;
-    font-weight: 800;
-    font-size: 13px;
-    text-decoration:none;
-    border: 1px solid var(--border);
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid #dfe9e3;
     background:#fff;
-    color:#0f172a;
-    box-shadow: var(--softShadow);
-    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
-    user-select:none;
-    white-space: nowrap;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    white-space:nowrap;
   }
 
-  .btnx:hover{ background: rgba(2,6,23,.02); }
-  .btnx:active{ transform: scale(.98); }
-
-  .btnx.primary{
-    border: none;
-    background: linear-gradient(135deg, #0ea5e9, #2563eb);
-    color: #061225;
-    box-shadow: 0 20px 40px rgba(37,99,235,.18);
-  }
+  .btnx:hover{color:#172033;background:#f8fbff;}
 
   .btnx.success{
-    border: none;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #052012;
-    box-shadow: 0 20px 40px rgba(34,197,94,.18);
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.18);
   }
 
   .btnx.ghost{
-    background: #f8fafc;
+    background:#f8fafc;
   }
 
-  .btn-stack{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:flex-end;
-  }
-
-  @media (max-width: 767.98px){
-    .btn-stack{ justify-content:flex-start; }
-  }
-
-  .export-panel{
-    border: 1px solid rgba(226,232,240,.95);
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(248,250,252,.92), rgba(255,255,255,.98));
-    box-shadow: var(--softShadow);
-    padding: 14px;
-    display:flex;
-    flex-direction:column;
-    gap: 12px;
-  }
-
-  .export-panel .head .t{
-    font-weight: 800;
-    letter-spacing:-0.02em;
-    color: var(--text);
-  }
-
-  .export-panel .head .d{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .export-row{
+  .export-pills{
     display:grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .export-row .form-select{
-    height:44px;
-    border-radius:14px;
-    border:1px solid var(--border);
-    box-shadow: var(--softShadow);
-    font-weight: 800;
+    gap:6px;
   }
 
   .export-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:auto auto;
+    gap:8px;
+    justify-content:start;
   }
 
-  .export-actions .btnx{
-    flex:1 1 0;
-    min-width: 150px;
+  .table-card{
+    padding:14px;
   }
 
   .table-shell{
-    border-radius: 18px;
-    overflow: hidden;
-    margin: 0 16px 16px;
-    border: 1px solid rgba(226,232,240,.95);
+    border:1px solid #e4ece7;
+    border-radius:14px;
+    overflow:hidden;
+    background:#fff;
   }
 
-  table.table{
-    margin:0;
+  table.logs-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
   }
 
-  .table thead th{
-    background: linear-gradient(135deg, rgba(11,60,93,1), rgba(28,88,116,1)) !important;
-    color: rgba(255,255,255,.95) !important;
-    font-weight: 800;
-    border-color: rgba(255,255,255,.12) !important;
-    text-align: center;
-    vertical-align: middle;
-    white-space: nowrap;
-    font-size: 12px;
-    letter-spacing: .02em;
+  .logs-table thead th{
+    padding:10px 9px;
+    text-align:left;
+    color:#667085;
+    font-size:11px;
+    font-weight:800;
+    border-bottom:1px solid #edf2ef;
+    background:#fbfdfb;
+    white-space:nowrap;
   }
 
-  .table tbody td{
-    text-align:center;
-    vertical-align: middle;
-    color: var(--text);
-    border-color: rgba(226,232,240,.85);
+  .logs-table tbody td{
+    padding:10px 9px;
+    border-bottom:1px solid #edf2ef;
+    vertical-align:middle;
+    color:#172033;
+    font-size:13px;
   }
 
-  .table tbody tr:hover{
-    background: rgba(14,165,233,.06);
+  .logs-table tbody tr:last-child td{
+    border-bottom:0;
   }
 
   .member-cell{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
     min-width:0;
-    text-align:left;
   }
 
-  .pimg{
-    width: 46px;
-    height: 46px;
-    border-radius: 999px;
-    object-fit: cover;
-    border: 2px solid rgba(226,232,240,.95);
-    box-shadow: 0 12px 30px rgba(2,6,23,.10);
-    flex: 0 0 auto;
+  .member-avatar,
+  .member-avatar img{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    flex:0 0 auto;
   }
 
-  .pimg-ph{
-    width: 46px;
-    height: 46px;
-    border-radius: 999px;
+  .member-avatar-fallback{
+    width:34px;
+    height:34px;
+    border-radius:50%;
     display:grid;
     place-items:center;
-    font-weight: 900;
-    color: rgba(15,23,42,.75);
-    background: rgba(148,163,184,.20);
-    border: 2px solid rgba(226,232,240,.95);
-    flex: 0 0 auto;
+    background:#eaf8ef;
+    color:#137a38;
+    font-weight:900;
+    flex:0 0 auto;
   }
 
   .member-meta{
     min-width:0;
   }
 
-  .member-meta .name{
+  .member-meta strong{
+    display:block;
+    color:#172033;
+    font-size:14px;
     font-weight:800;
-    letter-spacing:-0.01em;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 260px;
   }
 
-  .member-meta .sub{
-    font-size:12px;
-    color: var(--muted);
-    margin-top:2px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width: 260px;
+  .member-meta span{
+    display:block;
+    margin-top:3px;
+    color:#667085;
+    font-size:11px;
   }
 
-  .badge-pill{
-    border-radius: 999px;
-    padding: 9px 12px;
-    font-weight: 800;
-    font-size: 12px;
+  .status-pill,
+  .method-pill{
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    white-space: nowrap;
-    line-height:1;
+    gap:6px;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
   }
 
-  .badge-ok{
-    background: rgba(22,163,74,.12);
-    border:1px solid rgba(22,163,74,.25);
-    color:#065f46;
+  .status-pill.present{
+    background:#edf9f0;
+    border:1px solid #d8efdd;
+    color:#15803d;
   }
 
-  .badge-warn{
-    background: rgba(245,158,11,.12);
-    border:1px solid rgba(245,158,11,.25);
-    color:#92400e;
+  .status-pill.absent{
+    background:#fff4f4;
+    border:1px solid #f3dddd;
+    color:#dc2626;
   }
 
-  .dot{
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background: var(--warn);
-    flex: 0 0 auto;
+  .status-pill.pending{
+    background:#fff8ea;
+    border:1px solid #f5e7bc;
+    color:#c27b12;
   }
 
-  .badge-ok .dot{ background: var(--ok); }
-  .badge-warn .dot{ background: var(--warn); }
+  .method-pill{
+    background:#f8fafc;
+    border:1px solid #e4ece7;
+    color:#344054;
+  }
 
-  .row-actions{
+  .action-row{
     display:flex;
-    gap:8px;
-    justify-content:center;
-    flex-wrap:wrap;
-  }
-
-  .iconbtn{
-    display:inline-flex;
     align-items:center;
-    justify-content:center;
     gap:8px;
-    height: 40px;
-    padding: 0 14px;
-    border-radius: 999px;
-    font-weight: 800;
-    font-size: 12px;
-    border: 1px solid rgba(226,232,240,.95);
+    justify-content:flex-start;
+  }
+
+  .action-icon{
+    width:32px;
+    height:32px;
+    border-radius:9px;
+    border:1px solid #dfe9e3;
     background:#fff;
-    box-shadow: var(--softShadow);
-    transition: transform .06s ease, background .2s ease;
-    user-select:none;
-    white-space: nowrap;
-  }
-
-  .iconbtn:active{ transform: scale(.98); }
-
-  .iconbtn.danger{
-    border-color: rgba(239,68,68,.30);
-    background: rgba(239,68,68,.08);
-    color: #991b1b;
-  }
-
-  .iconbtn.danger:hover{
-    background: rgba(239,68,68,.12);
-  }
-
-  .empty{
-    padding: 28px 16px 16px;
-    text-align:center;
-    color: var(--muted);
-  }
-
-  .empty .ic{
-    width: 52px;
-    height: 52px;
-    border-radius: 20px;
-    margin: 0 auto 10px;
+    color:#344054;
     display:grid;
     place-items:center;
-    background: rgba(148,163,184,.16);
-    border: 1px solid rgba(226,232,240,.95);
-    box-shadow: var(--softShadow);
+    text-decoration:none;
   }
 
-  .empty h3{
-    margin: 6px 0 4px;
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--text);
+  .action-icon.danger{
+    color:#dc2626;
+    background:#fff7f7;
+    border-color:#f1dada;
   }
 
-  .empty p{
-    margin:0;
-    font-size: 13px;
-  }
-
-  .pager{
-    padding: 0 16px 16px;
+  .table-footer{
+    padding:12px 4px 0;
     display:flex;
-    justify-content:space-between;
     align-items:center;
+    justify-content:space-between;
     gap:12px;
     flex-wrap:wrap;
   }
 
-  .pager .meta{
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 700;
+  .footer-meta{
+    color:#667085;
+    font-size:11px;
+    font-weight:700;
   }
 
-  .pills{
+  .pager{
     display:flex;
     gap:8px;
     flex-wrap:wrap;
     align-items:center;
   }
 
-  .pill{
-    height: 40px;
-    padding: 0 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #fff;
-    box-shadow: var(--softShadow);
-    font-weight: 800;
-    font-size: 12px;
-    color: var(--text);
+  .page-pill{
+    min-height:32px;
+    padding:0 10px;
+    border-radius:9px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#344054;
+    font-size:11px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
     text-decoration:none;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    white-space:nowrap;
   }
 
-  .pill:hover{
-    background: rgba(2,6,23,.02);
+  .page-pill.current{
+    background:#edf9f0;
+    border-color:#d8efdd;
+    color:#15803d;
   }
 
-  .pill.disabled{
+  .page-pill.disabled{
+    opacity:.5;
     pointer-events:none;
-    opacity:.55;
   }
 
-  .modal .btn{
-    border-radius: 14px;
-    font-weight: 800;
-    height: 42px;
-    padding: 0 16px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
+  .empty-state{
+    padding:38px 20px;
+    text-align:center;
+  }
+
+  .empty-state i{
+    width:56px;
+    height:56px;
+    margin:0 auto 12px;
+    border-radius:20px;
+    display:grid;
+    place-items:center;
+    background:#eef4f0;
+    color:#667085;
+    font-size:22px;
+  }
+
+  .empty-state strong{
+    display:block;
+    color:#172033;
+    font-size:17px;
+    font-weight:800;
+  }
+
+  .empty-state p{
+    margin:8px 0 0;
+    color:#667085;
+    font-size:13px;
+  }
+
+  @media (max-width: 1024px){
+    .summary-card{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 840px){
+    .filter-grid,
+    .filter-row-two,
+    .export-actions{
+      grid-template-columns:1fr;
+    }
   }
 </style>
 
-<div class="page-wrap">
-
-  <div class="cardx">
-    <div class="cardx-head">
-      <div>
-        <div class="h">Filters & Export</div>
-        <div class="s">Use the current filters for download or email.</div>
+<div class="logs-shell">
+  <section class="logs-card summary-card">
+    <div class="summary-session">
+      <div class="summary-copy">
+        <h2>{{ active_session.session_name|default:"Attendance Overview" }}</h2>
+        <p>
+          {{ active_session.event_name|default:"Filtered attendance records" }}
+          {% if date_filter %} | {{ date_filter }}{% else %} | Current filtered view{% endif %}
+        </p>
       </div>
     </div>
 
-    <div class="controls">
-      <div>
-        <form method="get" id="filterForm">
-          <div class="filter-grid">
-
-            <div class="fgroup">
-              <label for="search">
-                <i class="fa-solid fa-user"></i> Member
-              </label>
-              <input
-                id="search"
-                type="text"
-                name="search"
-                value="{{ search_query }}"
-                class="form-control soft"
-                placeholder="Search by name"
-              >
-            </div>
-
-            <div class="fgroup">
-              <label for="attendance_date">
-                <i class="fa-solid fa-calendar-day"></i> Date
-              </label>
-              <input
-                id="attendance_date"
-                type="date"
-                name="attendance_date"
-                value="{{ date_filter }}"
-                class="form-control soft"
-              >
-            </div>
-
-            <div class="fgroup">
-              <label for="event_id">
-                <i class="fa-solid fa-calendar-check"></i> Event
-              </label>
-              <select id="event_id" name="event_id" class="form-select soft">
-                <option value="">All events</option>
-                {% for event in events %}
-                  <option value="{{ event.id }}" {% if event_filter == event.id|stringformat:"s" %}selected{% endif %}>
-                    {{ event.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="fgroup">
-              <label for="attendance_session_id">
-                <i class="fa-solid fa-clock"></i> Session
-              </label>
-              <select id="attendance_session_id" name="attendance_session_id" class="form-select soft">
-                <option value="">All sessions</option>
-                {% for session in sessions %}
-                  <option value="{{ session.id }}" {% if session_filter == session.id|stringformat:"s" %}selected{% endif %}>
-                    {{ session.session_name|default:session.event_name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="btn-stack">
-              <button type="submit" class="btnx primary" title="Apply filters">
-                <i class="fa-solid fa-filter"></i> Apply
-              </button>
-
-              <a class="btnx ghost" href="{% url 'person_attendance_list' %}" title="Clear filters">
-                <i class="fa-solid fa-rotate-left"></i> Clear
-              </a>
-            </div>
-
-          </div>
-        </form>
+    <div class="summary-stats">
+      <div class="summary-stat">
+        <div><strong>{{ present_count }}</strong><span>Present</span></div>
       </div>
+      <div class="summary-stat">
+        <div><strong>{{ absent_count }}</strong><span>Absent</span></div>
+      </div>
+      <div class="summary-stat">
+        <div><strong>{{ pending_count }}</strong><span>Pending</span></div>
+      </div>
+      <div class="summary-stat">
+        <div><strong>{{ total_count }}</strong><span>Total</span></div>
+      </div>
+    </div>
+  </section>
 
-      <div class="export-panel">
-        <div class="head">
-          <div>
-            <div class="t">Export</div>
-            <div class="d">Download or send the filtered result.</div>
+  <section class="logs-card filter-card">
+    <div>
+      <form method="get" id="filterForm">
+        <div class="filter-grid">
+          <div class="fgroup">
+            <label for="search">Search</label>
+            <div class="control search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="search" class="control" type="text" name="search" value="{{ search_query }}" placeholder="Search member by name or code...">
+            </div>
           </div>
-        </div>
 
-        <div class="export-row">
-          <form method="get" action="{% url 'attendance_export_download' %}" class="w-100 d-flex flex-column gap-2">
-            <input type="hidden" name="search" value="{{ search_query }}">
-            <input type="hidden" name="attendance_date" value="{{ date_filter }}">
-            <input type="hidden" name="event_id" value="{{ event_filter }}">
-            <input type="hidden" name="attendance_session_id" value="{{ session_filter }}">
+          <div class="fgroup">
+            <label for="attendance_date">Date</label>
+            <input id="attendance_date" class="control" type="date" name="attendance_date" value="{{ date_filter }}">
+          </div>
 
-            <select name="format" class="form-select" aria-label="Export format">
-              <option value="csv">CSV</option>
-              <option value="xlsx">Excel (XLSX)</option>
-              <option value="pdf">PDF</option>
+          <div class="fgroup">
+            <label for="event_id">Event</label>
+            <select id="event_id" name="event_id" class="control">
+              <option value="">All events</option>
+              {% for event in events %}
+                <option value="{{ event.id }}" {% if event_filter == event.id|stringformat:"s" %}selected{% endif %}>{{ event.name }}</option>
+              {% endfor %}
             </select>
+          </div>
+
+          <div class="fgroup">
+            <label for="attendance_session_id">Session</label>
+            <select id="attendance_session_id" name="attendance_session_id" class="control">
+              <option value="">All sessions</option>
+              {% for session in sessions %}
+                <option value="{{ session.id }}" {% if session_filter == session.id|stringformat:"s" %}selected{% endif %}>{{ session.session_name|default:session.event_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-row-two">
+            <div class="fgroup">
+              <label for="status">Status</label>
+              <select id="status" name="status" class="control">
+                <option value="all" {% if status_filter == "all" %}selected{% endif %}>All status</option>
+                <option value="present" {% if status_filter == "present" %}selected{% endif %}>Present</option>
+                <option value="absent" {% if status_filter == "absent" %}selected{% endif %}>Absent</option>
+                <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>Pending</option>
+              </select>
+            </div>
+
+            <div class="fgroup">
+              <label for="method">Method</label>
+              <select id="method" name="method" class="control">
+                {% for value, label in method_options %}
+                  <option value="{{ value }}" {% if method_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <button type="submit" class="btnx success">
+              <i class="fa-solid fa-filter"></i>
+              Apply Filters
+            </button>
+
+            <a class="btnx ghost" href="{% url 'person_attendance_list' %}">
+              <i class="fa-solid fa-rotate-left"></i>
+              Reset
+            </a>
+            <label class="fgroup" for="downloadFormat">
+              <span class="export-title">Format</span>
+              <select form="downloadForm" name="format" class="control" id="downloadFormat">
+                <option value="csv">CSV</option>
+                <option value="xlsx">Excel</option>
+                <option value="pdf">PDF</option>
+              </select>
+            </label>
 
             <div class="export-actions">
-              <button type="submit" class="btnx">
-                <i class="fa-solid fa-download"></i> Download
+              <button form="downloadForm" type="submit" class="btnx">
+                <i class="fa-solid fa-download"></i>
+                Download
               </button>
-
               <button type="button" class="btnx success" data-bs-toggle="modal" data-bs-target="#emailModal">
-                <i class="fa-solid fa-envelope"></i> Email
+                <i class="fa-regular fa-envelope"></i>
+                Email Report
               </button>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
+      </form>
+
+      <form method="get" id="downloadForm" action="{% url 'attendance_export_download' %}">
+        <input type="hidden" name="search" value="{{ search_query }}">
+        <input type="hidden" name="attendance_date" value="{{ date_filter }}">
+        <input type="hidden" name="event_id" value="{{ event_filter }}">
+        <input type="hidden" name="attendance_session_id" value="{{ session_filter }}">
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        <input type="hidden" name="method" value="{{ method_filter }}">
+      </form>
     </div>
-  </div>
+  </section>
 
-  <div class="cardx">
-    <div class="cardx-head">
-      <div>
-        <div class="h">Records</div>
-        <div class="s">Newest first.</div>
-      </div>
-
-      <div class="d-flex gap-2 flex-wrap">
-        <span class="badge-pill badge-ok"><span class="dot"></span> Completed</span>
-        <span class="badge-pill badge-warn"><span class="dot"></span> Open</span>
-      </div>
-    </div>
-
+  <section class="logs-card table-card">
     <div class="table-shell table-responsive">
-      <table class="table table-bordered table-hover align-middle">
+      <table class="logs-table">
         <thead>
           <tr>
-            <th style="min-width:280px;">Member</th>
-            <th style="min-width:180px;">Event</th>
-            <th style="min-width:190px;">Session</th>
-            <th style="width:120px;">Status</th>
-            <th style="width:120px;">Method</th>
-            <th style="width:140px;">Date</th>
-            <th style="width:150px;">Check-In</th>
-            <th style="width:150px;">Check-Out</th>
-            <th style="width:170px;">Duration</th>
-            <th style="width:150px;">Action</th>
+            <th style="min-width:260px;">Member</th>
+            <th style="min-width:150px;">Session</th>
+            <th style="min-width:110px;">Status</th>
+            <th style="min-width:120px;">Method</th>
+            <th style="min-width:110px;">Date</th>
+            <th style="min-width:100px;">Check-In</th>
+            <th style="min-width:100px;">Check-Out</th>
+            <th style="min-width:140px;">Duration</th>
+            <th style="min-width:110px;">Actions</th>
           </tr>
         </thead>
-
         <tbody>
           {% if attendance_page and attendance_page.object_list %}
             {% for attendance in attendance_page.object_list %}
@@ -725,67 +588,56 @@
                 <td>
                   <div class="member-cell">
                     {% if attendance.person and attendance.person.image %}
-                      <img class="pimg" src="{{ attendance.person.image.url }}" alt="{{ attendance.person.name }}">
+                      <span class="member-avatar"><img src="{{ attendance.person.image.url }}" alt="{{ attendance.person.name }}"></span>
                     {% else %}
-                      <div class="pimg-ph" title="No image">
-                        {{ attendance.person.name|default:"?"|slice:":1"|upper }}
-                      </div>
+                      <div class="member-avatar-fallback">{{ attendance.person.name|default:"?"|slice:":1"|upper }}</div>
                     {% endif %}
-
                     <div class="member-meta">
-                      <div class="name">{{ attendance.person.name|default:"Unknown" }}</div>
-                      <div class="sub">Member Code: {{ attendance.person.member_code|default:attendance.person.portal_id|default:"-" }}</div>
+                      <strong>{{ attendance.person.name|default:"Unknown" }}</strong>
+                      <span>{{ attendance.person.member_code|default:attendance.person.portal_id|default:"-" }}</span>
                     </div>
                   </div>
                 </td>
-
-                <td>{{ attendance.event_name|default:"General" }}</td>
                 <td>{{ attendance.session_name|default:"-" }}</td>
                 <td>
-                  {% if attendance.status == "absent" %}
-                    <span class="badge-pill badge-warn"><span class="dot"></span> Absent</span>
-                  {% else %}
-                    <span class="badge-pill badge-ok"><span class="dot"></span> {{ attendance.status|default:"Present"|title }}</span>
-                  {% endif %}
+                  <span class="status-pill {{ attendance.status_css }}">
+                    {% if attendance.status == "absent" %}
+                      <i class="fa-solid fa-xmark"></i> Absent
+                    {% elif attendance.status == "pending" %}
+                      <i class="fa-solid fa-hourglass-half"></i> Pending
+                    {% else %}
+                      <i class="fa-solid fa-check"></i> {{ attendance.status|default:"Present"|title }}
+                    {% endif %}
+                  </span>
                 </td>
-                <td>{{ attendance.method|default:"-"|title }}</td>
+                <td>
+                  <span class="method-pill">{{ attendance.method_label|default:"-" }}</span>
+                </td>
                 <td>{{ attendance.date }}</td>
-
-                <td>
-                  {% if attendance.check_in_time %}
-                    {{ attendance.check_in_time|date:"h:i:s A" }}
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </td>
-
-                <td>
-                  {% if attendance.check_out_time %}
-                    {{ attendance.check_out_time|date:"h:i:s A" }}
-                  {% else %}
-                    <span class="text-muted">—</span>
-                  {% endif %}
-                </td>
-
+                <td>{% if attendance.check_in_time %}{{ attendance.check_in_time|date:"h:i A" }}{% else %}-{% endif %}</td>
+                <td>{% if attendance.check_out_time %}{{ attendance.check_out_time|date:"h:i A" }}{% else %}-{% endif %}</td>
                 <td>
                   {% if attendance.check_in_time and attendance.check_out_time %}
-                    <span class="badge-pill badge-ok">
-                      <span class="dot"></span> {{ attendance.calculate_duration }}
-                    </span>
+                    {{ attendance.calculate_duration }}
                   {% else %}
-                    <span class="badge-pill badge-warn">
-                      <span class="dot"></span> Not Checked Out
-                    </span>
+                    Not Checked Out
                   {% endif %}
                 </td>
-
                 <td>
-                  <div class="row-actions">
-                    <button type="button"
-                            class="iconbtn danger"
-                            data-bs-toggle="modal"
-                            data-bs-target="#delModal-{{ attendance.id }}">
-                      <i class="fa-solid fa-trash"></i> Delete
+                  <div class="action-row">
+                    {% if attendance.person %}
+                      <a class="action-icon" href="{% url 'person_detail' attendance.person.id %}" title="View member">
+                        <i class="fa-regular fa-eye"></i>
+                      </a>
+                    {% endif %}
+                    <button
+                      type="button"
+                      class="action-icon danger"
+                      data-bs-toggle="modal"
+                      data-bs-target="#delModal-{{ attendance.id }}"
+                      title="Delete record"
+                    >
+                      <i class="fa-solid fa-trash"></i>
                     </button>
                   </div>
                 </td>
@@ -793,10 +645,10 @@
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="10">
-                <div class="empty">
-                  <div class="ic"><i class="fa-solid fa-circle-info"></i></div>
-                  <h3>No records found</h3>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <strong>No records found</strong>
                   <p>Try another search or clear the filters.</p>
                 </div>
               </td>
@@ -807,47 +659,35 @@
     </div>
 
     {% if attendance_page %}
-      <div class="pager">
-        <div class="meta">
-          Showing <strong>{{ attendance_page.start_index }}</strong> – <strong>{{ attendance_page.end_index }}</strong>
-          of <strong>{{ attendance_page.paginator.count }}</strong>
+      <div class="table-footer">
+        <div class="footer-meta">
+          Showing {{ attendance_page.start_index }} to {{ attendance_page.end_index }} of {{ attendance_page.paginator.count }} records
         </div>
 
-        <div class="pills">
-          {% with sp=search_query|urlencode df=date_filter|urlencode ps=page_size %}
+        <div class="pager">
+          {% with sp=search_query|urlencode df=date_filter|urlencode ef=event_filter|urlencode sf=session_filter|urlencode st=status_filter|urlencode mf=method_filter|urlencode ps=page_size %}
             {% if attendance_page.has_previous %}
-              <a class="pill" href="?page=1&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
-                <i class="fa-solid fa-angles-left"></i> First
-              </a>
-              <a class="pill" href="?page={{ attendance_page.previous_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
-                <i class="fa-solid fa-chevron-left"></i> Prev
-              </a>
+              <a class="page-pill" href="?page=1&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ ef }}&attendance_session_id={{ sf }}&status={{ st }}&method={{ mf }}">First</a>
+              <a class="page-pill" href="?page={{ attendance_page.previous_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ ef }}&attendance_session_id={{ sf }}&status={{ st }}&method={{ mf }}">Prev</a>
             {% else %}
-              <span class="pill disabled"><i class="fa-solid fa-angles-left"></i> First</span>
-              <span class="pill disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
+              <span class="page-pill disabled">First</span>
+              <span class="page-pill disabled">Prev</span>
             {% endif %}
 
-            <span class="pill" style="background:#f8fafc;">
-              Page <strong>{{ attendance_page.number }}</strong> of <strong>{{ attendance_page.paginator.num_pages }}</strong>
-            </span>
+            <span class="page-pill current">{{ attendance_page.number }}</span>
 
             {% if attendance_page.has_next %}
-              <a class="pill" href="?page={{ attendance_page.next_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
-                Next <i class="fa-solid fa-chevron-right"></i>
-              </a>
-              <a class="pill" href="?page={{ attendance_page.paginator.num_pages }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ event_filter|urlencode }}&attendance_session_id={{ session_filter|urlencode }}">
-                Last <i class="fa-solid fa-angles-right"></i>
-              </a>
+              <a class="page-pill" href="?page={{ attendance_page.next_page_number }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ ef }}&attendance_session_id={{ sf }}&status={{ st }}&method={{ mf }}">Next</a>
+              <a class="page-pill" href="?page={{ attendance_page.paginator.num_pages }}&page_size={{ ps }}&search={{ sp }}&attendance_date={{ df }}&event_id={{ ef }}&attendance_session_id={{ sf }}&status={{ st }}&method={{ mf }}">Last</a>
             {% else %}
-              <span class="pill disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
-              <span class="pill disabled">Last <i class="fa-solid fa-angles-right"></i></span>
+              <span class="page-pill disabled">Next</span>
+              <span class="page-pill disabled">Last</span>
             {% endif %}
           {% endwith %}
         </div>
       </div>
     {% endif %}
-  </div>
-
+  </section>
 </div>
 
 <div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
@@ -872,7 +712,7 @@
 
           <div class="mb-3">
             <label class="form-label fw-bold">Format</label>
-            <select name="format" class="form-select">
+            <select name="format" class="form-select" id="emailFormat">
               <option value="csv">CSV</option>
               <option value="xlsx">Excel (XLSX)</option>
               <option value="pdf">PDF</option>
@@ -883,6 +723,8 @@
           <input type="hidden" name="attendance_date" value="{{ date_filter }}">
           <input type="hidden" name="event_id" value="{{ event_filter }}">
           <input type="hidden" name="attendance_session_id" value="{{ session_filter }}">
+          <input type="hidden" name="status" value="{{ status_filter }}">
+          <input type="hidden" name="method" value="{{ method_filter }}">
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
         </div>
 
@@ -916,8 +758,8 @@
               <div class="fw-bold">{{ attendance.person.name|default:"Unknown" }}</div>
               <div class="text-muted" style="font-size: 0.9rem;">
                 Date: {{ attendance.date }}
-                {% if attendance.check_in_time %} • In: {{ attendance.check_in_time|date:"h:i:s A" }}{% endif %}
-                {% if attendance.check_out_time %} • Out: {{ attendance.check_out_time|date:"h:i:s A" }}{% endif %}
+                {% if attendance.check_in_time %} | In: {{ attendance.check_in_time|date:"h:i:s A" }}{% endif %}
+                {% if attendance.check_out_time %} | Out: {{ attendance.check_out_time|date:"h:i:s A" }}{% endif %}
               </div>
             </div>
             <div class="mt-3 text-muted" style="font-size:0.9rem;">This action cannot be undone.</div>
@@ -933,7 +775,6 @@
               </button>
             </form>
           </div>
-
         </div>
       </div>
     </div>

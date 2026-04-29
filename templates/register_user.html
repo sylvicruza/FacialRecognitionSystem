@@ -7,10 +7,10 @@
 {% block content %}
 <style>
   .member-flow{
-    max-width:1240px;
+    max-width:1120px;
     margin:0 auto;
     display:grid;
-    gap:18px;
+    gap:16px;
   }
 
   .entry-panel,
@@ -24,32 +24,30 @@
   }
 
   .entry-panel{
-    padding:18px 18px 20px;
+    padding:14px 16px 16px;
     display:grid;
-    gap:14px;
+    gap:12px;
   }
 
   .section-label{
-    color:#172033;
-    font-size:14px;
-    font-weight:800;
+    display:none;
   }
 
   .entry-cards{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:14px;
+    gap:10px;
   }
 
   .entry-card{
-    min-height:108px;
+    min-height:88px;
     display:grid;
-    grid-template-columns:58px minmax(0,1fr) 20px;
-    gap:14px;
+    grid-template-columns:48px minmax(0,1fr);
+    gap:12px;
     align-items:center;
-    padding:18px;
+    padding:14px;
     border:1px solid #dfe9e3;
-    border-radius:18px;
+    border-radius:16px;
     background:#fff;
     text-decoration:none;
     color:inherit;
@@ -66,14 +64,14 @@
   }
 
   .entry-icon{
-    width:58px;
-    height:58px;
-    border-radius:18px;
+    width:48px;
+    height:48px;
+    border-radius:16px;
     display:grid;
     place-items:center;
     color:#fff;
     background:linear-gradient(135deg,#22c55e,#16a34a);
-    font-size:22px;
+    font-size:18px;
   }
 
   .entry-card.blue .entry-icon{ background:linear-gradient(135deg,#3b82f6,#2563eb); }
@@ -88,28 +86,18 @@
 
   .entry-copy span{
     display:block;
-    margin-top:6px;
+    margin-top:4px;
     color:#667085;
     font-size:12px;
     line-height:1.5;
   }
 
   .entry-copy small{
-    display:inline-flex;
-    align-items:center;
-    margin-top:10px;
-    padding:4px 8px;
-    border-radius:999px;
-    background:#eaf8ef;
-    color:#15803d;
-    font-size:10px;
-    font-weight:900;
+    display:none;
   }
 
   .entry-arrow{
-    color:#16a34a;
-    font-size:18px;
-    justify-self:end;
+    display:none;
   }
 
   .wizard-panel{
@@ -118,10 +106,8 @@
 
   .wizard-top{
     display:grid;
-    grid-template-columns:220px minmax(0,1fr);
-    gap:18px;
-    align-items:center;
-    padding:18px 20px;
+    gap:14px;
+    padding:16px 18px;
     border-bottom:1px solid #edf2ef;
   }
 
@@ -135,10 +121,7 @@
   }
 
   .wizard-title p{
-    margin:8px 0 0;
-    color:#667085;
-    font-size:12px;
-    line-height:1.5;
+    display:none;
   }
 
   .step-track{
@@ -200,17 +183,13 @@
   }
 
   .step-text span{
-    display:block;
-    margin-top:3px;
-    color:#98a2b3;
-    font-size:11px;
-    line-height:1.4;
+    display:none;
   }
 
   .wizard-body{
-    padding:18px;
+    padding:16px;
     display:grid;
-    gap:16px;
+    gap:14px;
   }
 
   .wizard-step{
@@ -223,8 +202,8 @@
 
   .step-layout{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 380px;
-    gap:18px;
+    grid-template-columns:minmax(0,1fr);
+    gap:14px;
     align-items:start;
   }
 
@@ -306,7 +285,7 @@
     padding:11px 12px;
     border:1px solid #dcefe3;
     border-radius:14px;
-    background:linear-gradient(135deg,#f7fcf8,#ffffff);
+    background:#f7fcf8;
     color:#4b6358;
     font-size:12px;
     line-height:1.5;
@@ -391,9 +370,7 @@
   }
 
   .side-card{
-    padding:16px;
-    display:grid;
-    gap:14px;
+    display:none;
   }
 
   .side-card h4{
@@ -470,28 +447,31 @@
   }
 
   .art-box{
-    margin-top:6px;
-    border-top:1px solid #edf2ef;
-    padding-top:16px;
-    text-align:right;
-    color:#22c55e;
-    font-size:72px;
-    line-height:1;
+    display:none;
   }
 
   .camera-grid{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 250px;
-    gap:16px;
+    grid-template-columns:minmax(0,1fr);
+    gap:14px;
     align-items:start;
+  }
+
+  .camera-grid > div{
+    width:100%;
+    max-width:540px;
+    margin:0 auto;
   }
 
   .stage{
     position:relative;
     background:#07101d;
     border-radius:20px;
-    aspect-ratio:16/11;
+    aspect-ratio:4/3.2;
     overflow:hidden;
+    width:100%;
+    max-width:500px;
+    margin:0 auto;
   }
 
   .stage video,
@@ -724,6 +704,9 @@
     display:grid;
     gap:12px;
     margin-top:14px;
+    max-width:500px;
+    margin-left:auto;
+    margin-right:auto;
   }
 
   .upload-label{
@@ -757,16 +740,27 @@
     padding:10px;
     display:grid;
     place-items:center;
-    min-height:180px;
+    min-height:110px;
+    width:100%;
+    max-width:360px;
+    margin:0 auto;
     overflow:hidden;
     position:relative;
   }
 
   .preview img{
     width:100%;
+    max-height:190px;
+    object-fit:contain;
     border-radius:14px;
     display:none;
     transition:filter .2s ease;
+  }
+
+  .preview-tools{
+    width:100%;
+    max-width:360px;
+    margin:10px auto 0;
   }
 
   .preview.blur img{ filter:blur(14px); }
@@ -782,7 +776,6 @@
     display:flex;
     gap:10px;
     flex-wrap:wrap;
-    margin-top:10px;
   }
 
   .pillbtn{
@@ -813,8 +806,8 @@
 
   .review-grid{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 260px;
-    gap:16px;
+    grid-template-columns:minmax(0,1fr);
+    gap:14px;
   }
 
   .review-card{
@@ -822,6 +815,12 @@
     border-radius:18px;
     background:#fff;
     padding:16px;
+  }
+
+  .review-card.photo-card{
+    max-width:520px;
+    margin:0 auto;
+    width:100%;
   }
 
   .review-card h3{
@@ -855,10 +854,14 @@
     overflow:hidden;
     border:1px solid #e5ede8;
     background:#f8fafc;
+    max-width:420px;
+    margin:0 auto;
   }
 
   .review-photo img{
     width:100%;
+    max-height:280px;
+    object-fit:contain;
     display:block;
   }
 
@@ -878,10 +881,10 @@
   .wizard-footer{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-end;
     gap:12px;
     flex-wrap:wrap;
-    margin-top:2px;
+    margin-top:4px;
   }
 
   .wizard-actions{
@@ -891,10 +894,10 @@
   }
 
   .success-card{
-    padding:34px 26px;
+    padding:28px 22px;
     text-align:center;
     display:grid;
-    gap:20px;
+    gap:16px;
     justify-items:center;
   }
 
@@ -913,7 +916,7 @@
   .success-card h2{
     margin:0;
     color:#172033;
-    font-size:28px;
+    font-size:24px;
     font-weight:900;
     letter-spacing:-.04em;
   }
@@ -929,8 +932,8 @@
   .success-actions{
     width:100%;
     display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:12px;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
   }
 
   .success-action{
@@ -1005,6 +1008,10 @@
     }
 
     .wizard-top{
+      grid-template-columns:1fr;
+    }
+
+    .success-actions{
       grid-template-columns:1fr;
     }
   }
@@ -1410,7 +1417,7 @@
                 </div>
               </div>
 
-              <div class="review-card">
+              <div class="review-card photo-card">
                 <h3>Photo Preview</h3>
                 <div class="review-photo">
                   <img id="reviewPhoto" src="" alt="Member photo preview">

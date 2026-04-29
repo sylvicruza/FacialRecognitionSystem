@@ -6,21 +6,21 @@
 
 {% block content %}
 <style>
-  .sessions-page{max-width:1160px;margin:0 auto;display:grid;gap:18px}
-  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:20px;box-shadow:0 16px 36px rgba(15,23,42,.05)}
-  .hero{padding:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-  .hero-copy{display:grid;gap:5px}
-  .hero-copy h2,.section-head h3,.active-card h3{margin:0;color:#172033;font-size:18px;font-weight:800;letter-spacing:-.02em}
+  .sessions-page{max-width:1120px;margin:0 auto;display:grid;gap:16px}
+  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:18px;box-shadow:0 14px 32px rgba(15,23,42,.05)}
+  .hero{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .hero-copy{display:grid;gap:4px}
+  .hero-copy h2,.section-head h3,.active-card h3{margin:0;color:#172033;font-size:17px;font-weight:800;letter-spacing:-.02em}
   .hero-copy p,.section-head p,.active-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
   .primary-btn,.light-btn,.danger-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
   .primary-btn{color:#fff;border-color:transparent;background:linear-gradient(135deg,#16a34a,#12853d);box-shadow:0 14px 28px rgba(15,143,61,.16)}
   .danger-btn{color:#b42318;background:#fff5f5;border-color:#f4cccc}
-  .layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
-  .main-stack,.side-stack{display:grid;gap:18px}
-  .list-card,.active-card{padding:18px;display:grid;gap:14px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+  .main-stack,.side-stack{display:grid;gap:16px}
+  .list-card,.active-card{padding:16px;display:grid;gap:12px}
   .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .session-list{display:grid;gap:12px}
-  .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:14px 16px;border:1px solid #e5ede8;border-radius:18px;background:#fff}
+  .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #e5ede8;border-radius:14px;background:#fff}
   .session-row-main{display:grid;gap:5px}
   .session-row-main b{display:block;color:#172033;font-size:14px;font-weight:700}
   .session-row-main span{display:block;color:var(--muted);font-size:12px;line-height:1.45}
@@ -33,10 +33,6 @@
   .active-meta{display:grid;gap:10px}
   .active-meta span{display:inline-flex;align-items:center;gap:9px;color:#344054;font-size:12px}
   .active-meta i{color:#667085}
-  .tip-list{display:grid;gap:12px}
-  .tip-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px}
-  .tip-item i{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:#eef8f1;color:#16a34a;font-size:13px}
-  .tip-item span{color:#344054;font-size:11px;line-height:1.5}
   .confirm-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.36);backdrop-filter:blur(6px);z-index:1200}
   .confirm-overlay.show{display:flex}
   .confirm-dialog{width:min(100%,420px);padding:20px;border:1px solid #dce8e0;border-radius:20px;background:#fff;box-shadow:0 28px 60px rgba(15,23,42,.18);display:grid;gap:14px}
@@ -57,11 +53,11 @@
 <div class="sessions-page">
   <section class="surface hero">
     <div class="hero-copy">
-      <h2>Session List</h2>
-      <p>Start from the list, then open a dedicated screen to create or edit a session.</p>
+      <h2>Sessions</h2>
+      <p>Create, open, activate, or remove attendance sessions.</p>
     </div>
     <a class="primary-btn" href="{% url 'attendance_session_create' %}">
-      <i class="fa-solid fa-plus"></i> Create New Session
+      <i class="fa-solid fa-plus"></i> New Session
     </a>
   </section>
 
@@ -70,8 +66,8 @@
       <section class="surface list-card">
         <div class="section-head">
           <div>
-            <h3>Existing Sessions</h3>
-            <p>Edit opens the full session management screen. Make Active switches attendance to that session.</p>
+            <h3>All Sessions</h3>
+            <p>Use `Open` to manage a session or switch the active one here.</p>
           </div>
         </div>
 
@@ -93,7 +89,7 @@
                 </span>
 
                 <div class="session-row-actions">
-                  <a class="light-btn" href="{% url 'attendance_session_detail' session.id %}">Edit</a>
+                  <a class="light-btn" href="{% url 'attendance_session_detail' session.id %}">Open</a>
                   {% if active_session and active_session.id == session.id %}
                     <span class="row-active-pill">Active Now</span>
                     <form method="post">
@@ -148,24 +144,6 @@
         {% else %}
           <p>No active session selected.</p>
         {% endif %}
-      </section>
-
-      <section class="surface active-card">
-        <h3>How it works</h3>
-        <div class="tip-list">
-          <div class="tip-item">
-            <i class="fa-solid fa-list"></i>
-            <span>Use this page to manage the full list of saved sessions.</span>
-          </div>
-          <div class="tip-item">
-            <i class="fa-solid fa-plus"></i>
-            <span>Create opens a dedicated session setup screen and returns you here when finished.</span>
-          </div>
-          <div class="tip-item">
-            <i class="fa-solid fa-pen"></i>
-            <span>Edit opens the session management page where you can update settings and methods.</span>
-          </div>
-        </div>
       </section>
     </aside>
   </div>

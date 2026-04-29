@@ -5,348 +5,312 @@
 {% block content %}
 
 <style>
-  :root{
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-
-    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
-    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
-
-    --brandA:#0b3c5d;
-    --brandB:#1c5874;
-    --gold:#fddb3a;
-
-    --ok:#16a34a;
-    --bad:#ef4444;
-
-    --radius: 20px;
-  }
-
-  .page-wrap{
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 10px 0 40px;
-  }
-
-  .hero{
-    border-radius: 24px;
-    padding: 18px 18px 16px;
-    background:
-      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.14), transparent 55%),
-      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.14), transparent 55%),
-      linear-gradient(180deg, var(--brandA), var(--brandB));
-    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
-    color: rgba(255,255,255,.94);
-    position:relative;
-    overflow:hidden;
-    animation: reveal .35s ease-out both;
-  }
-
-  @keyframes reveal{
-    from{opacity:0;transform:translateY(10px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  .hero-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap: 12px;
-    flex-wrap:wrap;
-  }
-
-  .title{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    min-width: 280px;
-  }
-
-  .avatar{
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+  .member-detail-shell{
+    max-width:1140px;
+    margin:0 auto;
     display:grid;
-    place-items:center;
-    font-weight: 900;
-    letter-spacing:-0.03em;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.10);
-    color: var(--gold);
-    flex: 0 0 auto;
+    gap:16px;
+    padding:4px 0 32px;
   }
 
-  .title-copy h1{
-    margin:0;
-    font-size: 18px;
-    line-height:1.15;
-    font-weight: 800;
-    letter-spacing:-0.02em;
+  .hero-card,
+  .profile-card,
+  .access-card,
+  .header-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:20px;
+    box-shadow:0 14px 34px rgba(15,23,42,.05);
   }
 
-  .title-copy p{
-    margin:4px 0 0;
-    font-size: 12px;
-    line-height:1.45;
-    color: rgba(255,255,255,.72);
-  }
-
-  .chip-link{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding: 10px 13px;
-    border-radius: 999px;
-    color: rgba(255,255,255,.92);
-    text-decoration:none;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.20);
-    backdrop-filter: blur(10px);
-    transition: transform .06s ease, background .2s ease, border-color .2s ease;
-    user-select:none;
-    white-space:nowrap;
-    font-weight:700;
-  }
-
-  .chip-link:hover{
-    background: rgba(255,255,255,.14);
-    border-color: rgba(255,255,255,.24);
-  }
-
-  .chip-link:active{
-    transform: scale(.98);
-  }
-
-  .chips{
-    margin-top: 12px;
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  .chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-    font-size: 12px;
-    color: rgba(255,255,255,.90);
-  }
-
-  .chip strong{
-    font-weight:800;
-  }
-
-  .status{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding: 10px 12px;
-    border-radius: 999px;
-    font-weight: 800;
-    font-size: 12px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-  }
-
-  .dot{
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background: rgba(148,163,184,1);
-  }
-
-  .status.ok .dot{ background: var(--ok); }
-  .status.no .dot{ background: rgba(148,163,184,1); }
-
-  .layout{
-    display:grid;
-    grid-template-columns: 1.25fr .75fr;
-    gap: 16px;
-    margin-top: 16px;
-    align-items:start;
-  }
-
-  @media (max-width: 980px){
-    .layout{ grid-template-columns: 1fr; }
-  }
-
-  .cardx{
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow:hidden;
-    animation: reveal2 .38s ease-out both;
-  }
-
-  @keyframes reveal2{
-    from{opacity:0;transform:translateY(12px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  .cardx-head{
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
+  .header-card,
+  .hero-card{
+    padding:18px 20px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    gap:10px;
+    gap:16px;
     flex-wrap:wrap;
   }
 
-  .cardx-head .h{
-    font-size:15px;
-    font-weight: 800;
-    letter-spacing:-0.02em;
-    color: var(--text);
-  }
-
-  .cardx-head .s{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .grid{
+  .header-main,
+  .hero-main{
     display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  @media (max-width: 880px){
-    .grid{ grid-template-columns: 1fr; }
-  }
-
-  .field{
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 12px;
-    background: #fff;
-    box-shadow: var(--softShadow);
+    gap:8px;
+    align-items:center;
     min-width:0;
   }
 
-  .field .lab{
-    font-size: 12px;
-    font-weight: 800;
-    color: #0f172a;
+  .header-line,
+  .hero-line{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:12px;
+    flex-wrap:wrap;
   }
 
-  .field .val{
-    margin-top: 6px;
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.45;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+  .header-main h2,
+  .hero-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:20px;
+    font-weight:900;
+    letter-spacing:-.04em;
   }
 
-  .field .meta{
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height:1.45;
-  }
-
-  .copy{
-    margin-left:auto;
-    border: 1px solid var(--border);
-    background: #f8fafc;
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 800;
-    cursor:pointer;
+  .status-pill{
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    transition: transform .06s ease, background .2s ease;
-    user-select:none;
+    gap:7px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    border:1px solid #d9f4e3;
+    background:#ecfdf3;
+    color:#087533;
   }
 
-  .copy:hover{
-    background: rgba(34,197,94,.08);
+  .status-pill.no{
+    border-color:#e2e8f0;
+    background:#f8fafc;
+    color:#64748b;
   }
 
-  .copy:active{
-    transform: scale(.98);
-  }
-
-  .actions{
-    padding: 16px;
-    border-top: 1px solid var(--border);
+  .header-meta,
+  .hero-copy p{
     display:flex;
-    gap: 10px;
-    flex-wrap:wrap;
-    justify-content:space-between;
     align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    color:#667085;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .meta-divider{
+    color:#cbd5e1;
+  }
+
+  .header-meta p,
+  .hero-copy p{
+    margin:0;
+  }
+
+  .header-actions,
+  .hero-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .inline-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
   }
 
   .btnx{
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .btnx:hover{ color:#172033; background:#f8fbff; }
+
+  .btnx.primary{
+    border-color:transparent;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#fff;
+    box-shadow:0 14px 28px rgba(22,163,74,.16);
+  }
+
+  .btnx.primary:hover{ color:#fff; }
+
+  .btnx.danger{
+    border-color:#fecaca;
+    background:#fff;
+    color:#dc2626;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.6fr) minmax(320px,.95fr);
+    gap:16px;
+    align-items:start;
+  }
+
+  .card-head{
+    padding:16px 18px 12px;
+    border-bottom:1px solid #edf2ef;
+  }
+
+  .card-head h3{
+    margin:0;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:-.03em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .card-head p{
+    margin:7px 0 0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .info-grid{
+    padding:16px 18px 18px;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .info-tile{
+    border:1px solid #e5ede8;
+    border-radius:14px;
+    background:#fcfefd;
+    padding:13px 14px;
+    display:grid;
+    gap:6px;
+    align-items:start;
+    min-width:0;
+  }
+
+  .info-copy{
+    min-width:0;
+  }
+
+  .info-copy label{
+    display:block;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .info-value{
+    margin-top:2px;
+    color:#172033;
+    font-size:14px;
+    line-height:1.5;
+    word-break:break-word;
+  }
+
+  .info-meta{
+    margin-top:4px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .value-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .copy-chip{
+    margin-left:auto;
+    min-height:30px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    font-weight: 800;
-    font-size: 13px;
-    text-decoration:none;
-    border: 1px solid var(--border);
+    padding:5px 9px;
+    border-radius:999px;
+    border:1px solid #dfe9e3;
+    background:#f8fafc;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .nfc-form{
+    margin-top:10px;
+    display:grid;
+    gap:8px;
+  }
+
+  .nfc-form input{
+    width:100%;
+    min-height:42px;
+    padding:10px 12px;
+    border:1px solid #dfe9e3;
+    border-radius:12px;
     background:#fff;
-    color:#0f172a;
-    box-shadow: var(--softShadow);
-    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
-    user-select:none;
+    color:#172033;
+    font-size:13px;
   }
 
-  .btnx:hover{
-    background: rgba(2,6,23,.02);
+  .qr-card{
+    margin:0 18px 18px;
+    border:1px solid #e5ede8;
+    border-radius:14px;
+    overflow:hidden;
   }
 
-  .btnx:active{
-    transform: scale(.98);
+  .qr-head{
+    padding:16px 18px 12px;
+    border-bottom:1px solid #edf2ef;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
   }
 
-  .btnx.primary{
-    border: none;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #052012;
-    box-shadow: 0 20px 40px rgba(34,197,94,.18);
+  .qr-head h4{
+    margin:0;
+    color:#172033;
+    font-size:14px;
+    font-weight:900;
+    display:flex;
+    align-items:center;
+    gap:10px;
   }
 
-  .btnx.danger{
-    border: none;
-    background: linear-gradient(135deg, #ef4444, #c2410c);
-    color: #1b0b0b;
-    box-shadow: 0 20px 40px rgba(239,68,68,.16);
+  .qr-body{
+    padding:14px 18px 16px;
   }
 
-  .btnx.soft{
-    background: #f8fafc;
+  .qr-payload{
+    width:100%;
+    min-height:48px;
+    padding:12px 14px;
+    border:1px solid #dfe9e3;
+    border-radius:14px;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    line-height:1.55;
+    word-break:break-all;
   }
 
-  .auth-panel{
-    padding: 16px;
+  .side-body{
+    padding:16px 18px 18px;
+    display:grid;
+    gap:14px;
   }
 
-  .auth-row{
+  .access-row{
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -354,36 +318,26 @@
     flex-wrap:wrap;
   }
 
-  .auth-copy{
-    min-width:220px;
-  }
-
-  .auth-copy .title{
+  .access-copy strong{
     display:block;
-    min-width:auto;
-    gap:0;
-  }
-
-  .auth-copy .title strong{
-    display:block;
+    color:#172033;
     font-size:14px;
     font-weight:800;
-    letter-spacing:-0.01em;
-    color: var(--text);
   }
 
-  .auth-copy .desc{
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 4px;
-    line-height:1.45;
+  .access-copy span{
+    display:block;
+    margin-top:5px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
   }
 
   .switch{
-    position: relative;
-    width: 54px;
-    height: 32px;
-    flex: 0 0 auto;
+    position:relative;
+    width:54px;
+    height:32px;
+    flex:0 0 auto;
   }
 
   .switch input{
@@ -396,262 +350,303 @@
     position:absolute;
     inset:0;
     cursor:pointer;
-    background: rgba(148,163,184,.45);
-    border: 1px solid rgba(148,163,184,.45);
-    transition: .2s ease;
-    border-radius: 999px;
+    background:rgba(148,163,184,.45);
+    border:1px solid rgba(148,163,184,.45);
+    transition:.2s ease;
+    border-radius:999px;
   }
 
   .slider:before{
     content:"";
     position:absolute;
-    height: 26px;
-    width: 26px;
-    left: 3px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #fff;
-    border-radius: 999px;
-    transition: .2s ease;
-    box-shadow: 0 10px 22px rgba(2,6,23,.12);
+    height:26px;
+    width:26px;
+    left:3px;
+    top:50%;
+    transform:translateY(-50%);
+    background:#fff;
+    border-radius:999px;
+    transition:.2s ease;
+    box-shadow:0 10px 22px rgba(2,6,23,.12);
   }
 
   .switch input:checked + .slider{
-    background: rgba(34,197,94,.22);
-    border-color: rgba(34,197,94,.35);
+    background:rgba(34,197,94,.22);
+    border-color:rgba(34,197,94,.35);
   }
 
   .switch input:checked + .slider:before{
-    transform: translate(22px, -50%);
+    transform:translate(22px,-50%);
   }
 
   .hintbox{
-    margin-top: 12px;
-    border-radius: 16px;
-    border: 1px solid rgba(226,232,240,.95);
-    background: rgba(241,245,249,.85);
-    padding: 12px;
-    color:#0f172a;
-    font-size: 12px;
-    line-height:1.45;
+    border-radius:14px;
+    border:1px solid #e6eef7;
+    background:#fbfdff;
+    padding:10px 12px;
+    color:#526581;
+    font-size:12px;
+    line-height:1.55;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
   }
 
-  .auth-footer{
+  .timeline-card{
+    border:1px solid #e5ede8;
+    border-radius:14px;
+    overflow:hidden;
+  }
+
+  .timeline-row{
+    padding:12px 14px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:6px;
+    align-items:start;
+    background:#fff;
+  }
+
+  .timeline-row + .timeline-row{
+    border-top:1px solid #edf2ef;
+  }
+
+  .timeline-copy strong{
+    display:block;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .timeline-copy span{
+    display:block;
+    margin-top:5px;
+    color:#667085;
+    font-size:12px;
+    line-height:1.5;
+    word-break:break-word;
+  }
+
+  .side-actions{
     display:flex;
     gap:10px;
     flex-wrap:wrap;
-    margin-top: 14px;
-    justify-content:flex-end;
   }
 
   .toastx{
-    position: fixed;
-    bottom: 18px;
-    right: 18px;
-    background: rgba(15,23,42,.92);
-    color: rgba(255,255,255,.95);
-    border: 1px solid rgba(255,255,255,.12);
-    padding: 12px 14px;
-    border-radius: 16px;
-    box-shadow: 0 25px 60px rgba(2,6,23,.25);
+    position:fixed;
+    bottom:18px;
+    right:18px;
+    background:rgba(15,23,42,.92);
+    color:rgba(255,255,255,.95);
+    border:1px solid rgba(255,255,255,.12);
+    padding:12px 14px;
+    border-radius:16px;
+    box-shadow:0 25px 60px rgba(2,6,23,.25);
     display:none;
     align-items:center;
     gap:10px;
-    z-index: 9999;
-    backdrop-filter: blur(10px);
+    z-index:9999;
+    backdrop-filter:blur(10px);
   }
 
   .toastx.show{
     display:flex;
-    animation: toastIn .25s ease-out;
-  }
-
-  @keyframes toastIn{
-    from{ opacity:0; transform: translateY(10px);}
-    to{opacity:1; transform: translateY(0);}
   }
 
   .modal-content{
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 30px 80px rgba(2,6,23,.20);
+    border:none;
+    border-radius:20px;
+    box-shadow:0 30px 80px rgba(2,6,23,.20);
     overflow:hidden;
   }
 
   .modal-header{
-    background: linear-gradient(180deg, rgba(248,250,252,.98), rgba(255,255,255,.92));
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-title{
-    font-weight: 800;
-    letter-spacing:-0.02em;
+    background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(255,255,255,.92));
+    border-bottom:1px solid #dfe9e3;
   }
 
   .modal-footer{
-    border-top: 1px solid var(--border);
+    border-top:1px solid #dfe9e3;
+  }
+
+  @media (max-width:980px){
+    .layout{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width:900px){
+    .header-card,
+    .header-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .info-grid{
+      grid-template-columns:1fr;
+    }
   }
 </style>
 
-<div class="page-wrap">
-  <div class="hero">
-    <div class="chips">
-      <div class="chip">
-        <i class="fa-solid fa-user"></i>
-        <strong>{{ person.name }}</strong>
-      </div>
-
-      <div class="chip">
-        <i class="fa-solid fa-id-card-clip"></i>
-        <span>{{ person.member_code|default:person.portal_id }}</span>
-      </div>
-
-      {% if person.authorized %}
-        <div class="status ok" id="heroStatus">
-          <span class="dot"></span> Authorized
+<div class="member-detail-shell">
+  <section class="header-card">
+    <div class="header-main">
+      <div class="header-line">
+          <h2>{{ person.name }}</h2>
+          {% if person.authorized %}
+            <span class="status-pill" id="heroStatus"><i class="fa-solid fa-check"></i> Authorized</span>
+          {% else %}
+            <span class="status-pill no" id="heroStatus"><i class="fa-solid fa-clock"></i> Not Authorized</span>
+          {% endif %}
         </div>
-      {% else %}
-        <div class="status no" id="heroStatus">
-          <span class="dot"></span> Not Authorized
-        </div>
-      {% endif %}
+        <p>Member Code: {{ person.member_code|default:person.portal_id|default:"—" }}</p>
     </div>
-  </div>
 
-  <div class="layout">
-    <div class="cardx">
-      <div class="cardx-head">
-        <div>
-          <div class="h">Profile</div>
-          <div class="s">KairosTrack member record.</div>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-user"></i> Name</div>
-          <div class="val">{{ person.name }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab">
-            <i class="fa-solid fa-id-card-clip"></i> Member Code
-            <button type="button" class="copy" id="copyPortalBtn" title="Copy Member Code">
-              <i class="fa-regular fa-copy"></i> Copy
-            </button>
-          </div>
-          <div class="val" id="portalIdValue">{{ person.member_code|default:person.portal_id }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-link"></i> External ID</div>
-          <div class="val">{{ person.external_id|default:person.portal_id|default:"-" }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-location-dot"></i> Address</div>
-          <div class="val">{{ user_data.Address|default:"—" }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-envelope"></i> Email</div>
-          <div class="val">{{ user_data.Email|default:"—" }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-phone"></i> Phone</div>
-          <div class="val">{{ user_data.CellPhone|default:"—" }}</div>
-        </div>
-
-        <div class="field">
-          <div class="lab"><i class="fa-solid fa-shield-halved"></i> Access</div>
-          <div class="val">
-            {% if person.authorized %}
-              <span class="badge bg-success" style="border-radius:999px;padding:10px 12px;font-weight:800;">
-                <i class="fa-solid fa-circle-check"></i> Authorized
-              </span>
-            {% else %}
-              <span class="badge bg-secondary" style="border-radius:999px;padding:10px 12px;font-weight:800;">
-                <i class="fa-solid fa-circle-xmark"></i> Not Authorized
-              </span>
-            {% endif %}
-          </div>
-          <div class="meta">
-            Authorized members can be used for attendance.
-          </div>
-        </div>
-
-        {% if request.session.attendance_desktop_plan.allow_nfc %}
-          <div class="field">
-            <div class="lab"><i class="fa-solid fa-wifi"></i> NFC Tag UID</div>
-            <div class="val">{{ person.nfc_uid|default:"No NFC tag assigned" }}</div>
-            <form method="post" action="{% url 'person_nfc_update' pk=person.pk %}" style="margin-top:12px;display:grid;gap:10px;">
-              {% csrf_token %}
-              <input
-                type="text"
-                name="nfc_uid"
-                value="{{ person.nfc_uid|default:'' }}"
-                class="form-control"
-                placeholder="Scan or paste card UID"
-                style="border-radius:14px;min-height:44px;"
-              >
-              <button type="submit" class="btnx primary" style="width:100%;">
-                <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
-              </button>
-            </form>
-            <div class="meta">
-              This UID is used by the NFC check-in screen.
-            </div>
-          </div>
-        {% endif %}
-
+    <div class="header-actions">
+      <a class="btnx" href="{% url 'person_list' %}">
+        <i class="fa-solid fa-arrow-left"></i> Back to Members
+      </a>
+      <div class="inline-actions">
+        <button type="button" class="btnx" data-bs-toggle="modal" data-bs-target="#editMemberModal">
+          <i class="fa-solid fa-pen"></i> Edit
+        </button>
+        <button type="button" class="btnx" id="copyMemberCodeMenuBtn">
+          <i class="fa-regular fa-copy"></i> Copy Code
+        </button>
         {% if person.member_qr_payload %}
-          <div class="field">
-            <div class="lab">
-              <i class="fa-solid fa-qrcode"></i> Member QR Payload
-              <button type="button" class="copy" id="copyQrBtn" title="Copy Member QR Payload">
-                <i class="fa-regular fa-copy"></i> Copy
-              </button>
-            </div>
-            <div class="val" id="qrPayloadValue">{{ person.member_qr_payload }}</div>
-            <div class="meta">
-              Staff mobile QR check-in uses this signed member payload.
-            </div>
-          </div>
+          <button type="button" class="btnx" id="copyQrMenuBtn">
+            <i class="fa-solid fa-qrcode"></i> Copy QR
+          </button>
         {% endif %}
-      </div>
-
-      <div class="actions">
-        <a href="{% url 'person_list' %}" class="btnx">
-          <i class="fa-solid fa-arrow-left"></i> Back to List
-        </a>
-
         <button type="button" class="btnx danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
           <i class="fa-solid fa-trash"></i> Delete
         </button>
       </div>
     </div>
+  </section>
 
-    <div class="cardx">
-      <div class="cardx-head">
-        <div>
-          <div class="h">Access</div>
-          <div class="s">Allow or block attendance use.</div>
-        </div>
+  <div class="layout">
+    <section class="profile-card">
+      <div class="card-head">
+        <h3><i class="fa-solid fa-user"></i> Member Information</h3>
       </div>
 
-      <div class="auth-panel">
+      <div class="info-grid">
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Full Name</label>
+            <div class="info-value">{{ person.name }}</div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Member Code</label>
+            <div class="value-row">
+              <div class="info-value" id="portalIdValue">{{ person.member_code|default:person.portal_id|default:"—" }}</div>
+              <button type="button" class="copy-chip" id="copyPortalBtn">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>External ID</label>
+            <div class="info-value">{{ person.external_id|default:person.portal_id|default:"—" }}</div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Address</label>
+            <div class="info-value">{{ user_data.Address|default:"—" }}</div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Email</label>
+            <div class="info-value">{{ user_data.Email|default:"—" }}</div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Phone</label>
+            <div class="info-value">{{ user_data.CellPhone|default:"—" }}</div>
+          </div>
+        </div>
+
+        <div class="info-tile">
+          <div class="info-copy">
+            <label>Access Status</label>
+            <div class="info-value">
+              {% if person.authorized %}
+                <span class="status-pill"><i class="fa-solid fa-check"></i> Authorized</span>
+              {% else %}
+                <span class="status-pill no"><i class="fa-solid fa-clock"></i> Not Authorized</span>
+              {% endif %}
+            </div>
+            <div class="info-meta">Authorized members can be used for attendance.</div>
+          </div>
+        </div>
+
+        {% if request.session.attendance_desktop_plan.allow_nfc %}
+          <div class="info-tile">
+            <div class="info-copy">
+              <label>NFC Tag UID</label>
+              <div class="info-value">{{ person.nfc_uid|default:"No NFC tag assigned" }}</div>
+              <form method="post" action="{% url 'person_nfc_update' pk=person.pk %}" class="nfc-form">
+                {% csrf_token %}
+                <input
+                  type="text"
+                  name="nfc_uid"
+                  value="{{ person.nfc_uid|default:'' }}"
+                  placeholder="Scan or paste card UID"
+                >
+                <button type="submit" class="btnx primary" style="width:100%;">
+                  <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
+                </button>
+              </form>
+              <div class="info-meta">This UID is used by the NFC check-in screen.</div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if person.member_qr_payload %}
+        <div class="qr-card">
+          <div class="qr-head">
+            <h4><i class="fa-solid fa-qrcode"></i> Member QR Payload</h4>
+            <button type="button" class="copy-chip" id="copyQrBtn">
+              <i class="fa-regular fa-copy"></i> Copy
+            </button>
+          </div>
+          <div class="qr-body">
+            <div class="qr-payload" id="qrPayloadValue">{{ person.member_qr_payload }}</div>
+            <div class="info-meta" style="margin-top:12px;">Staff mobile QR check-in uses this signed member payload.</div>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+
+    <aside class="access-card">
+      <div class="card-head">
+        <h3><i class="fa-solid fa-lock"></i> Attendance Access</h3>
+        <p>Allow or block attendance use for this member.</p>
+      </div>
+
+      <div class="side-body">
         <form method="post" action="{% url 'person_authorize' pk=person.pk %}" id="authForm">
           {% csrf_token %}
-
-          <div class="auth-row">
-            <div class="auth-copy">
-              <div class="title">
-                <strong>Attendance Access</strong>
-              </div>
-              <div class="desc">
-                Turn this on to allow attendance check-in and check-out.
-              </div>
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <div class="access-row">
+            <div class="access-copy">
+              <strong>Attendance Access</strong>
+              <span>Allow this member to check in and check out.</span>
             </div>
 
             <label class="switch" title="Toggle authorization">
@@ -662,22 +657,37 @@
 
           <div class="hintbox">
             <i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i>
-            Only authorize members after capturing a clear face photo.
-          </div>
-
-          <div class="auth-footer">
-            <button type="button" class="btnx soft" id="resetAuthBtn">
-              <i class="fa-solid fa-rotate-left"></i> Reset
-            </button>
-
-            <button type="button" class="btnx primary" id="saveAuthBtn">
-              <i class="fa-solid fa-floppy-disk"></i> Save Changes
-            </button>
+            <span>Only authorize members after capturing a clear face photo. Unauthorized members will not be able to check in.</span>
           </div>
         </form>
+
+        <div class="timeline-card">
+        <div class="timeline-row">
+          <div class="timeline-copy">
+              <strong>Created On</strong>
+              <span>{{ created_label }}</span>
+            </div>
+          </div>
+        <div class="timeline-row">
+            <div class="timeline-copy">
+              <strong>Last Updated</strong>
+              <span>{{ updated_label }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-actions">
+          <button type="button" class="btnx" id="resetAuthBtn">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </button>
+          <button type="button" class="btnx primary" id="saveAuthBtn">
+            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+          </button>
+        </div>
       </div>
-    </div>
+    </aside>
   </div>
+
 </div>
 
 <div class="toastx" id="toastx">
@@ -701,6 +711,42 @@
           <i class="fa-solid fa-check"></i> Continue
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-pen"></i> Edit Member</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="post" action="{% url 'person_update' pk=person.pk %}">
+        {% csrf_token %}
+        <div class="modal-body" style="display:grid;gap:14px;">
+          <div>
+            <label class="form-label" style="font-weight:800;font-size:12px;color:#344054;">Full Name</label>
+            <input class="form-control" name="name" value="{{ person.name }}" style="min-height:46px;border-radius:12px;">
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:800;font-size:12px;color:#344054;">Email</label>
+            <input class="form-control" name="email" value="{{ user_data.Email|default:person.email|default:'' }}" style="min-height:46px;border-radius:12px;">
+          </div>
+          <div>
+            <label class="form-label" style="font-weight:800;font-size:12px;color:#344054;">Phone</label>
+            <input class="form-control" name="phone" value="{{ user_data.CellPhone|default:person.phone|default:'' }}" style="min-height:46px;border-radius:12px;">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">
+            <i class="fa-solid fa-floppy-disk"></i> Save Member
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -736,7 +782,7 @@
     setTimeout(() => t.classList.remove("show"), 1200);
   }
 
-  async function copyText(text, message = "Copied Member Code"){
+  async function copyText(text, message = "Copied"){
     try{
       await navigator.clipboard.writeText(text);
       showToast(message);
@@ -753,13 +799,20 @@
 
   document.getElementById("copyPortalBtn")?.addEventListener("click", () => {
     const val = document.getElementById("portalIdValue")?.innerText?.trim() || "";
-    if(val) copyText(val);
+    if(val) copyText(val, "Copied Member Code");
+  });
+  document.getElementById("copyMemberCodeMenuBtn")?.addEventListener("click", () => {
+    const val = document.getElementById("portalIdValue")?.innerText?.trim() || "";
+    if(val) copyText(val, "Copied Member Code");
   });
 
-  document.getElementById("copyQrBtn")?.addEventListener("click", () => {
+  function copyQrPayload(){
     const val = document.getElementById("qrPayloadValue")?.innerText?.trim() || "";
     if(val) copyText(val, "Copied Member QR");
-  });
+  }
+
+  document.getElementById("copyQrBtn")?.addEventListener("click", copyQrPayload);
+  document.getElementById("copyQrMenuBtn")?.addEventListener("click", copyQrPayload);
 
   const authCheckbox = document.getElementById("authorized");
   const saveAuthBtn = document.getElementById("saveAuthBtn");
@@ -774,50 +827,35 @@
     saveAuthBtn.style.pointerEvents = changed ? "auto" : "none";
   }
 
+  function syncHeroStatus(checked){
+    const heroStatus = document.getElementById("heroStatus");
+    if(!heroStatus) return;
+    if(checked){
+      heroStatus.classList.remove("no");
+      heroStatus.innerHTML = `<i class="fa-solid fa-check"></i> Authorized`;
+    }else{
+      heroStatus.classList.add("no");
+      heroStatus.innerHTML = `<i class="fa-solid fa-clock"></i> Not Authorized`;
+    }
+  }
+
   resetAuthBtn?.addEventListener("click", () => {
     if(!authCheckbox) return;
     authCheckbox.checked = initialAuth;
+    syncHeroStatus(initialAuth);
     setSaveEnabled();
-
-    const heroStatus = document.getElementById("heroStatus");
-    if(heroStatus){
-      if(initialAuth){
-        heroStatus.classList.remove("no");
-        heroStatus.classList.add("ok");
-        heroStatus.innerHTML = `<span class="dot"></span> Authorized`;
-      }else{
-        heroStatus.classList.remove("ok");
-        heroStatus.classList.add("no");
-        heroStatus.innerHTML = `<span class="dot"></span> Not Authorized`;
-      }
-    }
-
     showToast("Reset changes");
   });
 
   authCheckbox?.addEventListener("change", () => {
+    syncHeroStatus(authCheckbox.checked);
     setSaveEnabled();
-
-    const heroStatus = document.getElementById("heroStatus");
-    if(heroStatus){
-      if(authCheckbox.checked){
-        heroStatus.classList.remove("no");
-        heroStatus.classList.add("ok");
-        heroStatus.innerHTML = `<span class="dot"></span> Authorized`;
-      }else{
-        heroStatus.classList.remove("ok");
-        heroStatus.classList.add("no");
-        heroStatus.innerHTML = `<span class="dot"></span> Not Authorized`;
-      }
-    }
   });
 
   saveAuthBtn?.addEventListener("click", () => {
     if(!authCheckbox || !authForm) return;
-
     const on = authCheckbox.checked;
     const body = document.getElementById("authConfirmBody");
-
     body.innerHTML = on
       ? `Allow <b>{{ person.name }}</b> to be used for attendance?`
       : `Remove attendance access for <b>{{ person.name }}</b>?`;

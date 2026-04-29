@@ -6,17 +6,17 @@
 
 <style>
   .members-shell{
-    max-width:1240px;
+    max-width:1140px;
     margin:0 auto;
     display:grid;
-    gap:18px;
-    padding:8px 0 40px;
+    gap:16px;
+    padding:4px 0 32px;
   }
 
   .members-overview{
     display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:16px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
   }
 
   .metric-card,
@@ -24,32 +24,17 @@
   .members-table-card{
     background:#fff;
     border:1px solid #dfe9e3;
-    border-radius:24px;
-    box-shadow:0 18px 44px rgba(15,23,42,.06);
+    border-radius:20px;
+    box-shadow:0 14px 34px rgba(15,23,42,.05);
   }
 
   .metric-card{
-    min-height:132px;
-    padding:20px;
+    min-height:0;
+    padding:16px;
     display:grid;
-    grid-template-columns:56px minmax(0,1fr);
-    gap:14px;
+    gap:6px;
     align-items:start;
   }
-
-  .metric-icon{
-    width:56px;
-    height:56px;
-    border-radius:18px;
-    display:grid;
-    place-items:center;
-    font-size:22px;
-  }
-
-  .metric-icon.green{ background:#eaf8ef; color:#16a34a; }
-  .metric-icon.emerald{ background:#edf9f2; color:#0f9f4a; }
-  .metric-icon.amber{ background:#fff5e8; color:#f59e0b; }
-  .metric-icon.blue{ background:#eff6ff; color:#3b82f6; }
 
   .metric-copy{
     min-width:0;
@@ -64,9 +49,9 @@
 
   .metric-copy strong{
     display:block;
-    margin-top:8px;
+    margin-top:2px;
     color:#172033;
-    font-size:24px;
+    font-size:22px;
     font-weight:900;
     line-height:1;
     letter-spacing:-.03em;
@@ -74,43 +59,29 @@
 
   .metric-copy span{
     display:block;
-    margin-top:10px;
+    margin-top:4px;
     color:#667085;
     font-size:12px;
     line-height:1.5;
   }
 
   .registration-strip{
-    padding:18px 20px;
+    padding:16px 18px;
     display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(320px,480px);
-    gap:18px;
+    grid-template-columns:minmax(0,1fr) minmax(280px,420px);
+    gap:14px;
     align-items:center;
   }
 
   .registration-info{
     display:grid;
-    grid-template-columns:74px minmax(0,1fr);
-    gap:16px;
-    align-items:center;
-  }
-
-  .registration-badge{
-    width:74px;
-    height:74px;
-    border-radius:24px;
-    display:grid;
-    place-items:center;
-    background:linear-gradient(135deg,#eefbf3,#ffffff);
-    color:#16a34a;
-    font-size:28px;
-    border:1px solid #d9efe2;
+    gap:6px;
   }
 
   .registration-copy h3{
     margin:0;
     color:#172033;
-    font-size:16px;
+    font-size:15px;
     font-weight:900;
     letter-spacing:-.03em;
   }
@@ -132,10 +103,10 @@
 
   .copy-strip input{
     width:100%;
-    min-height:48px;
+    min-height:42px;
     border:1px solid #d9efe2;
-    border-radius:14px;
-    background:linear-gradient(135deg,#f6fdf8,#ffffff);
+    border-radius:12px;
+    background:#fff;
     padding:0 14px;
     color:#0f7a38;
     font-size:13px;
@@ -143,13 +114,13 @@
 
   .btn-soft,
   .btn-primary{
-    min-height:46px;
+    min-height:42px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:9px;
-    padding:10px 16px;
-    border-radius:14px;
+    padding:10px 14px;
+    border-radius:12px;
     font-size:13px;
     font-weight:800;
     text-decoration:none;
@@ -180,7 +151,7 @@
   .toolbar{
     display:grid;
     grid-template-columns:minmax(0,1fr) auto;
-    gap:16px;
+    gap:12px;
     align-items:center;
   }
 
@@ -193,10 +164,10 @@
   .filter-pill{
     display:inline-flex;
     align-items:center;
-    gap:10px;
-    min-height:44px;
-    padding:10px 14px;
-    border-radius:14px;
+    gap:8px;
+    min-height:40px;
+    padding:8px 12px;
+    border-radius:12px;
     border:1px solid #dfe9e3;
     background:#fff;
     color:#172033;
@@ -246,13 +217,13 @@
 
   .search-box{
     min-width:280px;
-    min-height:46px;
+    min-height:42px;
     display:flex;
     align-items:center;
     gap:10px;
     padding:0 14px;
     border:1px solid #dfe9e3;
-    border-radius:14px;
+    border-radius:12px;
     background:#fff;
   }
 
@@ -272,7 +243,7 @@
   }
 
   .table-head{
-    padding:22px 24px 18px;
+    padding:16px 18px 14px;
     display:flex;
     justify-content:space-between;
     gap:18px;
@@ -290,10 +261,7 @@
   }
 
   .table-head-copy p{
-    margin:6px 0 0;
-    color:#667085;
-    font-size:13px;
-    line-height:1.55;
+    display:none;
   }
 
   .table-head-actions{
@@ -315,7 +283,7 @@
   }
 
   table.members-table thead th{
-    padding:16px 18px;
+    padding:14px 16px;
     color:#667085;
     font-size:12px;
     font-weight:800;
@@ -326,7 +294,7 @@
   }
 
   table.members-table tbody td{
-    padding:18px;
+    padding:14px 16px;
     border-bottom:1px solid #edf2ef;
     color:#172033;
     font-size:13px;
@@ -340,23 +308,10 @@
 
   .member-cell{
     display:grid;
-    grid-template-columns:40px minmax(0,1fr);
-    gap:12px;
+    grid-template-columns:minmax(0,1fr);
+    gap:6px;
     align-items:center;
     min-width:0;
-  }
-
-  .member-avatar{
-    width:40px;
-    height:40px;
-    border-radius:14px;
-    display:grid;
-    place-items:center;
-    background:#eaf8ef;
-    color:#15803d;
-    font-size:18px;
-    font-weight:900;
-    border:1px solid #d7ece0;
   }
 
   .member-meta{
@@ -398,8 +353,8 @@
   .data-pill{
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    padding:8px 12px;
+    gap:6px;
+    padding:6px 10px;
     border-radius:999px;
     border:1px solid #e5ede8;
     background:#fff;
@@ -413,8 +368,8 @@
   .status-pill{
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    padding:8px 12px;
+    gap:6px;
+    padding:6px 10px;
     border-radius:999px;
     font-size:12px;
     font-weight:800;
@@ -440,12 +395,12 @@
   }
 
   .action-btn{
-    min-height:40px;
+    min-height:36px;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:8px;
-    padding:8px 14px;
+    padding:7px 12px;
     border-radius:12px;
     border:1px solid #dfe9e3;
     background:#fff;
@@ -479,7 +434,7 @@
   }
 
   .table-footer{
-    padding:16px 22px 20px;
+    padding:14px 18px 16px;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -605,7 +560,6 @@
 
   <section class="members-overview">
     <article class="metric-card">
-      <div class="metric-icon green"><i class="fa-solid fa-users"></i></div>
       <div class="metric-copy">
         <b>Total Members</b>
         <strong>{{ member_counts.all }}</strong>
@@ -614,7 +568,6 @@
     </article>
 
     <article class="metric-card">
-      <div class="metric-icon emerald"><i class="fa-solid fa-circle-check"></i></div>
       <div class="metric-copy">
         <b>Authorized</b>
         <strong>{{ member_counts.authorized }}</strong>
@@ -623,32 +576,19 @@
     </article>
 
     <article class="metric-card">
-      <div class="metric-icon amber"><i class="fa-solid fa-circle-exclamation"></i></div>
       <div class="metric-copy">
-        <b>Not Authorized</b>
+        <b>Pending</b>
         <strong>{{ member_counts.pending }}</strong>
-        <span>Access restricted</span>
-      </div>
-    </article>
-
-    <article class="metric-card">
-      <div class="metric-icon blue"><i class="fa-solid fa-clock"></i></div>
-      <div class="metric-copy">
-        <b>Pending Approval</b>
-        <strong>{{ member_counts.pending }}</strong>
-        <span>Awaiting approval</span>
+        <span>Still needs approval</span>
       </div>
     </article>
   </section>
 
   {% if registration_url %}
     <section class="registration-strip">
-      <div class="registration-info">
-        <div class="registration-badge"><i class="fa-solid fa-link"></i></div>
-        <div class="registration-copy">
-          <h3>Member self-registration link</h3>
-          <p>Share this link with members. New submissions appear as pending until staff review and approve them.</p>
-        </div>
+      <div class="registration-copy">
+        <h3>Member self-registration link</h3>
+        <p>Share this link with members. New submissions stay pending until staff approve them.</p>
       </div>
 
       <div class="copy-strip">
@@ -729,7 +669,6 @@
             <tr>
               <td>
                 <div class="member-cell">
-                  <div class="member-avatar">{{ person.name|default:"?"|slice:":1"|upper }}</div>
                   <div class="member-meta">
                     <div class="member-name">{{ person.name }}</div>
                     <div class="member-sub">{{ person.email|default:"No email added yet" }}</div>

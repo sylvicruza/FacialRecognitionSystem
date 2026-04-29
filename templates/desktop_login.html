@@ -36,33 +36,18 @@
     .page {
       min-height: calc(100vh - 62px);
       display: grid;
-      grid-template-columns: 56% 44%;
+      grid-template-columns: 50% 50%;
       background:
-        linear-gradient(104deg, var(--deep) 0%, var(--deep) 58%, transparent 58.1%),
-        radial-gradient(circle, rgba(15, 107, 45, .09) 1.2px, transparent 1.4px) 100% 0 / 17px 17px,
+        linear-gradient(104deg, var(--deep) 0%, var(--deep) 52%, transparent 52.1%),
         #fbfcfb;
     }
 
     .story {
       position: relative;
-      min-height: 680px;
-      padding: 52px 42px 48px;
+      min-height: 560px;
+      padding: 36px 30px 34px;
       color: #fff;
       overflow: hidden;
-    }
-
-    .story::before {
-      content: "";
-      position: absolute;
-      width: 470px;
-      height: 470px;
-      right: 68px;
-      top: 206px;
-      border-radius: 999px;
-      background:
-        radial-gradient(circle, rgba(25, 168, 76, .18) 0 34%, transparent 35%),
-        repeating-radial-gradient(circle, rgba(34, 197, 94, .16) 0 2px, transparent 2px 28px);
-      opacity: .75;
     }
 
     .brand {
@@ -74,8 +59,8 @@
     }
 
     .brand-mark {
-      width: 62px;
-      height: 62px;
+      width: 54px;
+      height: 54px;
       padding: 4px;
       border-radius: 19px;
       display: grid;
@@ -94,7 +79,7 @@
     }
 
     .brand-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 900;
       letter-spacing: .08em;
       line-height: 1;
@@ -113,15 +98,15 @@
     .hero-copy {
       position: relative;
       z-index: 2;
-      max-width: 530px;
-      margin-top: 84px;
+      max-width: 440px;
+      margin-top: 52px;
     }
 
     .hero-copy h1 {
       margin: 0;
-      font-size: clamp(38px, 4vw, 50px);
-      line-height: 1.08;
-      letter-spacing: -.06em;
+      font-size: clamp(30px, 3.3vw, 40px);
+      line-height: 1.1;
+      letter-spacing: -.05em;
       font-weight: 900;
     }
 
@@ -131,38 +116,38 @@
     }
 
     .hero-copy p {
-      max-width: 415px;
-      margin: 20px 0 0;
+      max-width: 360px;
+      margin: 14px 0 0;
       color: rgba(255, 255, 255, .75);
-      font-size: 15px;
-      line-height: 1.7;
+      font-size: 13px;
+      line-height: 1.6;
       font-weight: 700;
     }
 
     .feature-list {
       position: relative;
       z-index: 2;
-      width: min(100%, 370px);
+      width: min(100%, 330px);
       display: grid;
-      gap: 16px;
-      margin-top: 34px;
+      gap: 12px;
+      margin-top: 24px;
     }
 
     .feature {
       display: grid;
-      grid-template-columns: 38px 1fr;
-      gap: 13px;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
       align-items: center;
-      padding-bottom: 15px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(255, 255, 255, .1);
     }
 
     .feature:last-child { border-bottom: 0; }
 
     .feature-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 11px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
       display: grid;
       place-items: center;
       background: rgba(34, 197, 94, .72);
@@ -171,83 +156,17 @@
 
     .feature b {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 900;
       color: #fff;
     }
 
     .feature span {
       display: block;
-      margin-top: 3px;
+      margin-top: 2px;
       color: rgba(255, 255, 255, .65);
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.45;
-      font-weight: 700;
-    }
-
-    .camera-scene {
-      position: absolute;
-      z-index: 3;
-      right: 82px;
-      top: 280px;
-      width: 322px;
-      height: 290px;
-      display: grid;
-      place-items: center;
-      pointer-events: none;
-    }
-
-    .camera-scene::after {
-      content: "";
-      position: absolute;
-      left: 82px;
-      right: 54px;
-      bottom: 18px;
-      height: 116px;
-      background: linear-gradient(180deg, #0d542a, #062b17);
-      transform: skewY(-8deg);
-      box-shadow: 0 30px 55px rgba(0, 0, 0, .32);
-    }
-
-    .camera-scene img {
-      position: relative;
-      z-index: 2;
-      width: 292px;
-      height: auto;
-      filter: drop-shadow(0 30px 30px rgba(0, 0, 0, .26));
-    }
-
-    .quote {
-      position: relative;
-      z-index: 4;
-      width: min(100%, 440px);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-top: 28px;
-      padding: 17px 19px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, .075);
-      border: 1px solid rgba(255, 255, 255, .1);
-    }
-
-    .quote i {
-      color: #4ade80;
-      font-size: 24px;
-    }
-
-    .quote p {
-      margin: 0;
-      color: rgba(255, 255, 255, .86);
-      font-size: 12px;
-      line-height: 1.55;
-      font-weight: 800;
-    }
-
-    .quote small {
-      display: block;
-      margin-top: 5px;
-      color: rgba(255, 255, 255, .56);
       font-weight: 700;
     }
 
@@ -255,13 +174,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 54px 56px;
+      padding: 40px 42px;
     }
 
     .login-card {
       width: min(100%, 430px);
-      padding: 48px 42px 32px;
-      border-radius: 24px;
+      padding: 36px 30px 26px;
+      border-radius: 18px;
       background: var(--card);
       border: 1px solid rgba(231, 236, 233, .9);
       box-shadow: var(--shadow);
@@ -269,16 +188,16 @@
 
     .login-card h2 {
       margin: 0;
-      font-size: 30px;
+      font-size: 26px;
       line-height: 1.08;
       letter-spacing: -.05em;
       font-weight: 900;
     }
 
     .login-card .lede {
-      margin: 10px 0 22px;
+      margin: 8px 0 16px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
     }
 
@@ -286,8 +205,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 22px;
-      padding: 12px 14px;
+      margin-bottom: 16px;
+      padding: 10px 12px;
       border-radius: 10px;
       background: var(--mint);
       color: #15803d;
@@ -308,7 +227,7 @@
     }
 
     .field {
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .field-head {
@@ -353,7 +272,7 @@
 
     input {
       width: 100%;
-      height: 48px;
+      height: 44px;
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 0 44px;
@@ -373,10 +292,10 @@
 
     .submit {
       width: 100%;
-      height: 52px;
-      margin-top: 6px;
+      height: 46px;
+      margin-top: 4px;
       border: 0;
-      border-radius: 11px;
+      border-radius: 10px;
       background: var(--green-dark);
       color: #fff;
       font: inherit;
@@ -396,7 +315,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin: 24px 0;
+      margin: 18px 0;
       color: #667085;
       font-size: 13px;
       font-weight: 800;
@@ -412,7 +331,7 @@
 
     .org-button {
       width: 100%;
-      height: 48px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -431,7 +350,7 @@
     }
 
     .card-note {
-      margin-top: 28px;
+      margin-top: 20px;
       text-align: center;
       color: #667085;
       font-size: 13px;
@@ -477,11 +396,7 @@
 
       .story {
         min-height: auto;
-        padding-bottom: 34px;
-      }
-
-      .camera-scene {
-        display: none;
+        padding-bottom: 24px;
       }
 
       .login-wrap {
@@ -493,23 +408,19 @@
 
     @media (max-width: 680px) {
       .story {
-        padding: 32px 24px;
+        padding: 28px 22px;
       }
 
       .hero-copy {
-        margin-top: 46px;
-      }
-
-      .quote {
-        display: none;
+        margin-top: 34px;
       }
 
       .login-wrap {
-        padding: 28px 18px;
+        padding: 24px 16px;
       }
 
       .login-card {
-        padding: 34px 24px 28px;
+        padding: 30px 22px 24px;
       }
 
       .trust-strip {
@@ -556,18 +467,6 @@
         <div class="feature">
           <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
           <div><b>Reports and exports</b><span>Export to CSV, Excel, PDF and more.</span></div>
-        </div>
-      </div>
-
-      <div class="camera-scene">
-        <img src="{% static 'images/dashboard-camera-transparent.png' %}" alt="">
-      </div>
-
-      <div class="quote">
-        <i class="fa-solid fa-quote-left"></i>
-        <div>
-          <p>KairosTrack made attendance simple, reliable and faster for our team.</p>
-          <small>Grace Living Church</small>
         </div>
       </div>
     </section>
@@ -630,12 +529,6 @@
       </div>
     </section>
   </main>
-
-  <footer class="trust-strip">
-    <span><i class="fa-solid fa-shield-halved"></i> Enterprise-grade security</span>
-    <span><i class="fa-regular fa-cloud"></i> 99.9% uptime guarantee</span>
-    <span><i class="fa-solid fa-lock"></i> Your data is always protected</span>
-  </footer>
 
   <script>
     const toggle = document.getElementById("togglePassword");

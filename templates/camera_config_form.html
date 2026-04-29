@@ -5,445 +5,826 @@
 {% block content %}
 
 <style>
-  :root{
-    --brandA:#0b3c5d;
-    --brandB:#1c5874;
-    --gold:#fddb3a;
-
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-
-    --shadow: 0 18px 45px rgba(2, 6, 23, .10);
-    --softShadow: 0 10px 24px rgba(2, 6, 23, .06);
-
-    --ok:#16a34a;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-
-    --radius: 20px;
+  .camera-form-shell{
+    max-width:1120px;
+    margin:0 auto;
+    display:grid;
+    gap:12px;
+    padding:4px 0 24px;
   }
 
-  .page-wrap{
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 10px 0 40px;
-  }
-
-  .hero{
-    border-radius: 24px;
-    padding: 18px 18px 16px;
-    background:
-      radial-gradient(900px 260px at 12% 0%, rgba(253,219,58,.16), transparent 55%),
-      radial-gradient(900px 260px at 86% 30%, rgba(34,197,94,.16), transparent 55%),
-      linear-gradient(180deg, var(--brandA), var(--brandB));
-    box-shadow: 0 22px 60px rgba(2, 6, 23, .18);
-    color: rgba(255,255,255,.94);
-    position:relative;
+  .camera-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(15,23,42,.04);
     overflow:hidden;
-    animation: reveal .35s ease-out both;
   }
 
-  @keyframes reveal{
-    from{opacity:0;transform:translateY(10px);}
-    to{opacity:1;transform:translateY(0);}
+  .camera-card-inner{
+    padding:16px 18px;
   }
 
-  .hero-top{
+  .content-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,.92fr);
+    gap:12px;
+    align-items:start;
+  }
+
+  .section-head{
     display:flex;
-    justify-content:space-between;
     align-items:flex-start;
-    gap: 12px;
-    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:10px;
   }
 
-  .title{
+  .section-head h3{
+    margin:0;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .section-head p{
+    margin:2px 0 0;
+    color:#667085;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .field-stack{
+    display:grid;
+    gap:12px;
+  }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+
+  .field label{
+    color:#172033;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .field input,
+  .field select{
+    width:100%;
+    min-height:42px;
+    border:1px solid #dfe7ef;
+    background:#fff;
+    border-radius:12px;
+    padding:0 14px;
+    color:#101827;
+    outline:none;
+  }
+
+  .field textarea{
+    width:100%;
+    min-height:96px;
+    border:1px solid #dfe7ef;
+    background:#fff;
+    border-radius:12px;
+    padding:12px 14px;
+    color:#101827;
+    outline:none;
+    resize:vertical;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus{
+    border-color:#90d4b1;
+    box-shadow:0 0 0 4px rgba(34,197,94,.12);
+  }
+
+  .source-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .source-card{
+    position:relative;
+    border:1px solid #e4ece7;
+    border-radius:14px;
+    background:#fff;
+    padding:10px;
+    cursor:pointer;
+    transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+
+  .source-card:hover{
+    border-color:#bfe4cb;
+  }
+
+  .source-card.active{
+    border-color:#8fd5ab;
+    background:#f6fcf8;
+  }
+
+  .source-card input{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer;
+  }
+
+  .source-top{
     display:flex;
     align-items:center;
-    gap: 10px;
-    min-width: 280px;
+    gap:10px;
+    margin-bottom:4px;
   }
 
-  .avatar{
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+  .source-icon{
+    width:28px;
+    height:28px;
+    border-radius:9px;
     display:grid;
     place-items:center;
-    font-weight: 900;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 12px 28px rgba(0,0,0,.10);
-    color: var(--gold);
-    flex: 0 0 auto;
+    background:#eef8f1;
+    color:#16a34a;
+    font-size:13px;
+    flex:0 0 auto;
   }
 
-  .title h1{
-    margin:0;
-    font-size: 18px;
-    line-height:1.15;
-    font-weight: 800;
-    letter-spacing:-0.02em;
+  .source-icon.purple{background:#f4efff;color:#7c3aed;}
+  .source-icon.orange{background:#fff4ea;color:#f97316;}
+
+  .source-card strong{
+    display:block;
+    color:#172033;
+    font-size:12px;
+    font-weight:900;
   }
 
-  .title p{
-    margin:4px 0 0;
-    font-size: 12px;
-    line-height:1.45;
-    color: rgba(255,255,255,.72);
-    max-width: 640px;
+  .source-card span{
+    display:block;
+    color:#667085;
+    font-size:10px;
+    line-height:1.5;
   }
 
-  .chip-link{
-    display:inline-flex;
+  .source-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 42px;
+    gap:8px;
+    align-items:end;
+  }
+
+  .icon-btn{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+  }
+
+  .status-line{
+    display:flex;
     align-items:center;
     gap:8px;
-    padding: 10px 13px;
-    border-radius: 999px;
-    color: rgba(255,255,255,.92);
-    text-decoration:none;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.20);
-    backdrop-filter: blur(10px);
-    transition: transform .06s ease, background .2s ease, border-color .2s ease;
-    user-select:none;
-    white-space: nowrap;
+    color:#16a34a;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .status-line .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#22c55e;
+  }
+
+  .slider-card{
+    border:1px solid #e4ece7;
+    border-radius:14px;
+    background:#fff;
+    padding:12px;
+  }
+
+  .slider-card h4,
+  .preview-card h4,
+  .review-card h4{
+    margin:0;
+    color:#172033;
+    font-size:13px;
+    font-weight:900;
+  }
+
+  .slider-card p,
+  .preview-card p,
+  .review-card p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:11px;
+    line-height:1.55;
+  }
+
+  .threshold-wrap{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 76px;
+    gap:12px;
+    align-items:center;
+  }
+
+  .threshold-value{
+    min-height:44px;
+    border:1px solid #dfe7ef;
+    border-radius:12px;
+    background:#fff;
+    display:grid;
+    place-items:center;
+    color:#172033;
+    font-size:14px;
+    font-weight:900;
+    box-shadow:0 8px 18px rgba(15,23,42,.03);
+  }
+
+  input[type="range"]{
+    width:100%;
+    appearance:none;
+    height:6px;
+    border-radius:999px;
+    background:linear-gradient(90deg,#16a34a 0%, #16a34a var(--range-fill,50%), #e5e7eb var(--range-fill,50%), #e5e7eb 100%);
+    outline:none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb{
+    appearance:none;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:#fff;
+    border:4px solid #15803d;
+    box-shadow:0 8px 16px rgba(21,128,61,.2);
+    cursor:pointer;
+  }
+
+  .range-labels{
+    margin-top:8px;
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    color:#667085;
+    font-size:11px;
     font-weight:700;
   }
 
-  .chip-link:hover{
-    background: rgba(255,255,255,.14);
-    border-color: rgba(255,255,255,.24);
+  .range-labels .recommended{
+    color:#16a34a;
+    font-weight:900;
   }
 
-  .chip-link:active{
-    transform: scale(.98);
+  .preview-card{
+    margin-top:12px;
+    border:1px solid #e4ece7;
+    border-radius:14px;
+    background:#fff;
+    padding:12px;
   }
 
-  .cardx{
-    margin-top: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    animation: reveal2 .38s ease-out both;
-  }
-
-  @keyframes reveal2{
-    from{opacity:0;transform:translateY(12px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-
-  .cardx-head{
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(248,250,252,.96), rgba(255,255,255,.92));
+  .preview-head{
     display:flex;
-    justify-content:space-between;
     align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .preview-tools{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .preview-stage{
+    margin-top:12px;
+    min-height:160px;
+    border:1px solid #edf2ef;
+    border-radius:14px;
+    background:linear-gradient(180deg,#fcfdfc,#f8fbfa);
+    display:grid;
+    place-items:center;
+    text-align:center;
+    padding:14px;
+  }
+
+  .preview-stage.active{
+    padding:0;
+    overflow:hidden;
+    background:#0b1220;
+  }
+
+  .preview-stage.active .preview-empty{
+    display:none;
+  }
+
+  .preview-stream{
+    display:none;
+    width:100%;
+    height:100%;
+    min-height:160px;
+    object-fit:cover;
+    background:#0b1220;
+  }
+
+  .preview-stage.active .preview-stream{
+    display:block;
+  }
+
+  .preview-stage .preview-icon{
+    width:50px;
+    height:50px;
+    margin:0 auto 10px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    background:#f5f8fb;
+    border:1px dashed #cfd8e3;
+    color:#64748b;
+    font-size:20px;
+  }
+
+  .preview-stage strong{
+    display:block;
+    color:#475467;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .preview-stage span{
+    display:block;
+    margin-top:6px;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .btnx{
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:9px 15px;
+    border-radius:10px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .btnx.success{
+    background:#16a34a;
+    border-color:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.16);
+  }
+
+  .btnx.soft{
+    background:#eef8f1;
+    border-color:#d3ebda;
+    color:#11623d;
+    box-shadow:none;
+  }
+
+  .save-bar{
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .save-summary{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .summary-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:30px;
+    padding:0 12px;
+    border-radius:999px;
+    background:#f7faf8;
+    border:1px solid #e4ece7;
+    color:#172033;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .summary-pill span{
+    color:#667085;
+    font-weight:700;
+  }
+
+  .save-actions{
+    display:flex;
+    align-items:center;
     gap:10px;
     flex-wrap:wrap;
   }
 
-  .cardx-head .h{
-    font-size:15px;
-    font-weight: 800;
-    letter-spacing:-0.02em;
-    color: var(--text);
-  }
-
-  .cardx-head .s{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .mini{
-    display:inline-flex;
-    align-items:flex-start;
-    gap:8px;
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: rgba(2,6,23,.03);
-    border: 1px solid rgba(226,232,240,.95);
-    max-width: 360px;
-  }
-
-  .mini .help{
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-
-  .form-wrap{
-    padding: 16px;
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  @media (max-width: 860px){
-    .grid{ grid-template-columns: 1fr; }
-  }
-
-  .fgroup{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-
-  .fgroup.full{
-    grid-column: 1 / -1;
-  }
-
-  .fgroup label{
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--text);
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-
-  .soft{
-    border-radius: 16px !important;
-    border: 1px solid var(--border) !important;
-    padding: 12px 12px !important;
-    background:#fff !important;
-    box-shadow: var(--softShadow);
-    outline: none !important;
-    min-height: 46px;
-  }
-
-  .soft:focus{
-    border-color: rgba(37,99,235,.55) !important;
-    box-shadow: 0 0 0 4px rgba(37,99,235,.12), var(--softShadow) !important;
-  }
-
-  .help{
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-
-  .mono{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 12px;
-  }
-
   .alertx{
-    margin: 16px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    border: 1px solid rgba(226,232,240,.95);
-    box-shadow: var(--softShadow);
-    font-weight: 700;
-    font-size: 13px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(226,232,240,.95);
+    font-weight:700;
+    font-size:13px;
     display:flex;
     gap:10px;
     align-items:flex-start;
   }
 
   .alertx.success{
-    background: rgba(22,163,74,.10);
-    border-color: rgba(22,163,74,.25);
+    background:rgba(22,163,74,.10);
+    border-color:rgba(22,163,74,.25);
     color:#065f46;
   }
 
   .alertx.error,
   .alertx.danger{
-    background: rgba(239,68,68,.10);
-    border-color: rgba(239,68,68,.25);
+    background:rgba(239,68,68,.10);
+    border-color:rgba(239,68,68,.25);
     color:#991b1b;
   }
 
   .alertx.info{
-    background: rgba(14,165,233,.10);
-    border-color: rgba(14,165,233,.22);
+    background:rgba(14,165,233,.10);
+    border-color:rgba(14,165,233,.22);
     color:#0b3c5d;
   }
 
   .alertx .ic{
-    width: 30px;
-    height: 30px;
-    border-radius: 12px;
+    width:30px;
+    height:30px;
+    border-radius:12px;
     display:grid;
     place-items:center;
-    background: rgba(255,255,255,.65);
-    border: 1px solid rgba(255,255,255,.55);
-    flex: 0 0 auto;
+    background:rgba(255,255,255,.65);
+    border:1px solid rgba(255,255,255,.55);
+    flex:0 0 auto;
   }
 
-  .btnx{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    height: 44px;
-    padding: 0 14px;
-    border-radius: 14px;
-    font-weight: 800;
-    font-size: 13px;
-    text-decoration:none;
-    border: 1px solid var(--border);
-    background:#fff;
-    color:#0f172a;
-    box-shadow: var(--softShadow);
-    transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
-    user-select:none;
-    white-space: nowrap;
+  @media (max-width: 1080px){
+    .content-grid{
+      grid-template-columns:1fr;
+    }
   }
 
-  .btnx:hover{ background: rgba(2,6,23,.02); }
-  .btnx:active{ transform: scale(.98); }
-
-  .btnx.primary{
-    border: none;
-    background: linear-gradient(135deg, #0ea5e9, #2563eb);
-    color: #061225;
-    box-shadow: 0 20px 40px rgba(37,99,235,.18);
+  @media (max-width: 980px){
+    .source-grid{
+      grid-template-columns:1fr;
+    }
   }
 
-  .btnx.ghost{
-    background: #f8fafc;
-  }
-
-  .actions{
-    padding: 0 16px 16px;
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  .actions .left,
-  .actions .right{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
+  @media (max-width: 720px){
+    .threshold-wrap,
+    .source-row{
+      grid-template-columns:1fr;
+    }
   }
 </style>
 
-<div class="page-wrap">
-
-  <div class="cardx">
-
-    <div class="cardx-head">
-      <div>
-        <div class="h">Details</div>
-        <div class="s">Save a webcam index or stream URL.</div>
-      </div>
-
-      <div class="mini">
-        <i class="fa-solid fa-circle-info"></i>
-        <div class="help">
-          Use <span class="mono">0</span>, <span class="mono">1</span>, etc. for local webcams.
-        </div>
-      </div>
-    </div>
-
-    {% for message in messages %}
-      <div class="alertx {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
-        <div class="ic">
-          {% if 'success' in message.tags %}
-            <i class="fa-solid fa-check"></i>
-          {% elif 'error' in message.tags or 'danger' in message.tags %}
-            <i class="fa-solid fa-triangle-exclamation"></i>
-          {% else %}
-            <i class="fa-solid fa-circle-info"></i>
-          {% endif %}
-        </div>
-        <div>{{ message }}</div>
-      </div>
-    {% endfor %}
-
-    <div class="form-wrap">
-      <form method="POST" novalidate>
-        {% csrf_token %}
-
-        <div class="grid">
-
-          <div class="fgroup">
-            <label for="name">
-              <i class="fa-solid fa-tag"></i> Name
-            </label>
-            <input
-              class="form-control soft"
-              type="text"
-              id="name"
-              name="name"
-              value="{{ config.name|default:'' }}"
-              placeholder="e.g. Foyer Cam"
-              required
-            >
+<div class="camera-form-shell">
+  {% if messages %}
+    <section class="camera-card">
+      <div class="camera-card-inner" style="display:grid;gap:10px;">
+        {% for message in messages %}
+          <div class="alertx {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+            <div class="ic">
+              {% if 'success' in message.tags %}
+                <i class="fa-solid fa-check"></i>
+              {% elif 'error' in message.tags or 'danger' in message.tags %}
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              {% else %}
+                <i class="fa-solid fa-circle-info"></i>
+              {% endif %}
+            </div>
+            <div>{{ message }}</div>
           </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
-          <div class="fgroup">
-            <label for="threshold">
-              <i class="fa-solid fa-bullseye"></i> Threshold
-            </label>
-            <input
-              class="form-control soft"
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              id="threshold"
-              name="threshold"
-              value="{{ config.threshold|default:0.6 }}"
-              placeholder="0.0 to 1.0"
-              required
-            >
-            <div class="help">Recommended: <span class="mono">0.55</span> to <span class="mono">0.70</span></div>
-          </div>
+  <form method="POST" novalidate>
+    {% csrf_token %}
+    <input type="hidden" id="camera_source" name="camera_source" value="{{ config.camera_source|default:'' }}">
 
-          <div class="fgroup full">
-            <label for="camera_source">
-              <i class="fa-solid fa-link"></i> Camera Source
-            </label>
-            <input
-              class="form-control soft"
-              type="text"
-              id="camera_source"
-              name="camera_source"
-              value="{{ config.camera_source|default:'' }}"
-              placeholder="e.g. 0 or rtsp://... or http://..."
-              required
-            >
-            <div class="help">
-              Supports webcam index, RTSP, or HTTP stream.
+    <section class="content-grid">
+      <div class="camera-card">
+        <div class="camera-card-inner">
+          <div class="section-head">
+            <div>
+              <h3>Camera Source</h3>
+              <p>Choose the source and give it a clear name.</p>
             </div>
           </div>
 
-        </div>
+          <div class="field-stack">
+            <div class="field">
+              <label for="name"><i class="fa-solid fa-tag"></i> Camera Name</label>
+              <input type="text" id="name" name="name" value="{{ config.name|default:'' }}" placeholder="e.g. Desktop Cam" required>
+            </div>
 
-        <div class="actions">
-          <div class="left">
-            <button type="submit" class="btnx primary">
-              <i class="fa-solid fa-floppy-disk"></i> Save
-            </button>
+            <div class="field">
+              <label><i class="fa-solid fa-camera"></i> Camera Source Type</label>
+              <div class="source-grid">
+                <label class="source-card active" data-source-mode="webcam">
+                  <input type="radio" name="camera_source_type" value="webcam" checked>
+                  <div class="source-top">
+                    <div class="source-icon"><i class="fa-solid fa-camera"></i></div>
+                    <div>
+                      <strong>Local Webcam</strong>
+                      <span>Built-in or USB webcam</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="source-card" data-source-mode="rtsp">
+                  <input type="radio" name="camera_source_type" value="rtsp">
+                  <div class="source-top">
+                    <div class="source-icon purple"><i class="fa-solid fa-wifi"></i></div>
+                    <div>
+                      <strong>IP Camera (RTSP)</strong>
+                      <span>RTSP stream URL</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="source-card" data-source-mode="http">
+                  <input type="radio" name="camera_source_type" value="http">
+                  <div class="source-top">
+                    <div class="source-icon orange"><i class="fa-solid fa-globe"></i></div>
+                    <div>
+                      <strong>IP Camera (HTTP)</strong>
+                      <span>HTTP stream URL</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="source_input"><i class="fa-solid fa-link"></i> Source / Device</label>
+              <div class="source-row">
+                <select id="webcam_select">
+                  <option value="0" {% if config.camera_source|default:'' == '0' %}selected{% endif %}>0 - Integrated Webcam (HD Pro Webcam C920)</option>
+                  <option value="1" {% if config.camera_source|default:'' == '1' %}selected{% endif %}>1 - External USB Camera</option>
+                </select>
+                <button class="icon-btn" type="button" title="Refresh devices">
+                  <i class="fa-solid fa-rotate"></i>
+                </button>
+              </div>
+              <input type="text" id="stream_input" placeholder="rtsp://... or http://..." style="display:none;" value="{% if config.camera_source and config.camera_source != '0' and config.camera_source != '1' %}{{ config.camera_source }}{% endif %}">
+              <div class="status-line"><span class="dot"></span> Camera detected and ready</div>
+            </div>
           </div>
-
-          <div class="right">
-            <a class="btnx ghost" href="{% url 'camera_config_list' %}">
-              <i class="fa-solid fa-arrow-left"></i> Back to List
-            </a>
-          </div>
         </div>
+      </div>
 
-      </form>
-    </div>
+      <div>
+        <section class="camera-card">
+          <div class="camera-card-inner">
+            <div class="section-head">
+              <div>
+                <h3>Threshold & Preview</h3>
+                <p>Adjust confidence and test the camera feed.</p>
+              </div>
+            </div>
 
-  </div>
+            <div class="slider-card">
+              <h4>Recognition Threshold</h4>
+              <p>Higher values require more confident matches.</p>
 
+              <div class="threshold-wrap">
+                <div>
+                  <input type="range" id="threshold_slider" min="0.30" max="0.90" step="0.01" value="{{ config.threshold|default:0.60 }}">
+                  <div class="range-labels">
+                    <span>0.30</span>
+                    <span class="recommended">0.55 (Recommended)</span>
+                    <span>0.90</span>
+                  </div>
+                </div>
+                <div class="threshold-value" id="threshold_display">{{ config.threshold|default:0.60 }}</div>
+              </div>
+            </div>
+
+            <div class="preview-card">
+              <div class="preview-head">
+                <div>
+                  <h4>Live Preview</h4>
+                  <p>Start, refresh, or stop the feed before saving.</p>
+                </div>
+                <div class="preview-tools">
+                  <button class="btnx soft" type="button" id="test_camera_btn">
+                    <i class="fa-solid fa-video"></i>
+                    Start Preview
+                  </button>
+                  <button class="btnx" type="button" id="refresh_camera_btn">
+                    <i class="fa-solid fa-rotate"></i>
+                    Refresh
+                  </button>
+                  <button class="btnx" type="button" id="stop_camera_btn">
+                    <i class="fa-solid fa-stop"></i>
+                    Stop
+                  </button>
+                </div>
+              </div>
+              <div class="preview-stage">
+                <img id="preview_stream" class="preview-stream" alt="Camera preview stream">
+                <div class="preview-empty">
+                  <div class="preview-icon"><i class="fa-solid fa-camera"></i></div>
+                  <strong>Camera preview will appear here</strong>
+                  <span>Click Test Camera to start preview</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="camera-card">
+      <div class="save-bar">
+        <div class="save-summary">
+          <div class="summary-pill"><span>Name</span> <strong id="review_name">{{ config.name|default:"Desktop Cam" }}</strong></div>
+          <div class="summary-pill"><span>Type</span> <strong id="review_type">Local Webcam</strong></div>
+          <div class="summary-pill"><span>Threshold</span> <strong id="review_threshold">{{ config.threshold|default:0.60 }}</strong></div>
+        </div>
+        <div class="save-actions">
+          <a class="btnx" href="{% url 'camera_config_list' %}">
+            <i class="fa-solid fa-xmark"></i>
+            Cancel
+          </a>
+          <button type="submit" class="btnx success">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Save Configuration
+          </button>
+        </div>
+      </div>
+
+      <input type="hidden" id="threshold" name="threshold" value="{{ config.threshold|default:0.60 }}">
+    </section>
+  </form>
 </div>
+
+<script>
+  const thresholdSlider = document.getElementById("threshold_slider");
+  const thresholdDisplay = document.getElementById("threshold_display");
+  const thresholdInput = document.getElementById("threshold");
+  const reviewThreshold = document.getElementById("review_threshold");
+  const nameInput = document.getElementById("name");
+  const reviewName = document.getElementById("review_name");
+  const webcamSelect = document.getElementById("webcam_select");
+  const streamInput = document.getElementById("stream_input");
+  const cameraSourceInput = document.getElementById("camera_source");
+  const reviewType = document.getElementById("review_type");
+  const sourceCards = Array.from(document.querySelectorAll(".source-card"));
+  const sourceRadios = Array.from(document.querySelectorAll('input[name="camera_source_type"]'));
+  const testCameraBtn = document.getElementById("test_camera_btn");
+  const refreshCameraBtn = document.getElementById("refresh_camera_btn");
+  const stopCameraBtn = document.getElementById("stop_camera_btn");
+  const previewStage = document.querySelector(".preview-stage");
+  const previewStream = document.getElementById("preview_stream");
+
+  function formatThreshold(value) {
+    return Number(value).toFixed(2);
+  }
+
+  function updateThreshold() {
+    const value = formatThreshold(thresholdSlider.value);
+    thresholdDisplay.textContent = value;
+    thresholdInput.value = value;
+    reviewThreshold.textContent = value;
+    const percent = ((Number(value) - 0.30) / 0.60) * 100;
+    thresholdSlider.style.setProperty("--range-fill", `${percent}%`);
+  }
+
+  function detectInitialMode() {
+    const current = (cameraSourceInput.value || "").trim().toLowerCase();
+    if (current.startsWith("rtsp://")) return "rtsp";
+    if (current.startsWith("http://") || current.startsWith("https://")) return "http";
+    return "webcam";
+  }
+
+  function applySourceMode(mode) {
+    sourceCards.forEach((card) => card.classList.toggle("active", card.dataset.sourceMode === mode));
+    sourceRadios.forEach((radio) => {
+      radio.checked = radio.value === mode;
+    });
+
+    if (mode === "webcam") {
+      webcamSelect.style.display = "";
+      webcamSelect.parentElement.style.display = "";
+      streamInput.style.display = "none";
+      cameraSourceInput.value = webcamSelect.value;
+      reviewType.textContent = "Local Webcam";
+      restartPreviewIfActive();
+    } else {
+      webcamSelect.parentElement.style.display = "none";
+      streamInput.style.display = "";
+      if (!streamInput.value.trim()) {
+        streamInput.value = mode === "rtsp" ? "rtsp://..." : "http://...";
+      }
+      cameraSourceInput.value = streamInput.value.trim();
+      reviewType.textContent = mode === "rtsp" ? "IP Camera (RTSP)" : "IP Camera (HTTP)";
+      restartPreviewIfActive();
+    }
+  }
+
+  function currentPreviewSource() {
+    return (cameraSourceInput.value || "").trim();
+  }
+
+  function stopPreview() {
+    previewStream.removeAttribute("src");
+    previewStage.classList.remove("active");
+    testCameraBtn.innerHTML = '<i class="fa-solid fa-video"></i> Start Preview';
+  }
+
+  function startPreview() {
+    const source = currentPreviewSource();
+    if (!source) {
+      alert("Choose a camera source first.");
+      return;
+    }
+    const url = "{% url 'camera_preview_source' %}?source=" + encodeURIComponent(source) + "&_ts=" + Date.now();
+    previewStream.src = url;
+    previewStage.classList.add("active");
+    testCameraBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Restart Preview';
+  }
+
+  function restartPreviewIfActive() {
+    if (!previewStage.classList.contains("active")) {
+      return;
+    }
+    stopPreview();
+    setTimeout(startPreview, 120);
+  }
+
+  thresholdSlider.addEventListener("input", updateThreshold);
+  nameInput.addEventListener("input", () => {
+    reviewName.textContent = nameInput.value.trim() || "Desktop Cam";
+  });
+
+  webcamSelect.addEventListener("change", () => {
+    cameraSourceInput.value = webcamSelect.value;
+    restartPreviewIfActive();
+  });
+
+  streamInput.addEventListener("input", () => {
+    cameraSourceInput.value = streamInput.value.trim();
+    restartPreviewIfActive();
+  });
+
+  sourceCards.forEach((card) => {
+    card.addEventListener("click", () => applySourceMode(card.dataset.sourceMode));
+  });
+
+  testCameraBtn.addEventListener("click", () => {
+    if (previewStage.classList.contains("active")) {
+      stopPreview();
+      setTimeout(startPreview, 120);
+      return;
+    }
+    startPreview();
+  });
+
+  refreshCameraBtn.addEventListener("click", () => {
+    restartPreviewIfActive();
+    if (!previewStage.classList.contains("active")) {
+      startPreview();
+    }
+  });
+
+  stopCameraBtn.addEventListener("click", () => {
+    stopPreview();
+  });
+
+  updateThreshold();
+  applySourceMode(detectInitialMode());
+</script>
 
 {% endblock %}

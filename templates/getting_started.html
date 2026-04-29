@@ -7,10 +7,10 @@
 {% block content %}
 <style>
   .setup-shell{
-    max-width:1240px;
+    max-width:1140px;
     margin:0 auto;
     display:grid;
-    gap:18px;
+    gap:16px;
   }
 
   .hero-card,
@@ -18,69 +18,69 @@
   .panel{
     background:#fff;
     border:1px solid #dfe9e3;
-    border-radius:22px;
-    box-shadow:0 18px 44px rgba(15,23,42,.06);
+    border-radius:18px;
+    box-shadow:0 14px 34px rgba(15,23,42,.05);
   }
 
   .hero-card{
     display:grid;
-    gap:18px;
-    padding:22px 24px;
+    gap:14px;
+    padding:16px 18px;
   }
 
   .hero-top{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 320px;
-    gap:20px;
+    grid-template-columns:minmax(0,1fr) 280px;
+    gap:16px;
     align-items:center;
   }
 
   .hero-welcome{
     display:grid;
-    grid-template-columns:76px minmax(0,1fr);
-    gap:18px;
+    grid-template-columns:54px minmax(0,1fr);
+    gap:14px;
     align-items:center;
   }
 
   .hero-icon{
-    width:76px;
-    height:76px;
-    border-radius:24px;
+    width:54px;
+    height:54px;
+    border-radius:18px;
     display:grid;
     place-items:center;
-    background:linear-gradient(135deg,#eefaf2,#f7fcf8);
+    background:#eef8f1;
     color:#16a34a;
-    font-size:28px;
+    font-size:20px;
     border:1px solid #dcefe3;
   }
 
   .hero-copy h2{
     margin:0;
     color:#172033;
-    font-size:16px;
+    font-size:15px;
     font-weight:900;
     letter-spacing:-.03em;
   }
 
   .hero-copy p{
-    margin:7px 0 0;
+    margin:5px 0 0;
     color:#667085;
-    font-size:13px;
+    font-size:12px;
     line-height:1.55;
-    max-width:520px;
+    max-width:460px;
   }
 
   .progress-box{
-    padding-left:20px;
+    padding-left:16px;
     border-left:1px solid #edf2ef;
     display:grid;
-    gap:8px;
+    gap:6px;
     align-content:center;
   }
 
   .progress-box strong{
     color:#16a34a;
-    font-size:26px;
+    font-size:24px;
     font-weight:900;
     letter-spacing:-.05em;
     line-height:1;
@@ -108,9 +108,9 @@
   .step-strip{
     display:grid;
     grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:10px;
+    gap:8px;
     align-items:start;
-    padding-top:8px;
+    padding-top:6px;
     border-top:1px solid #edf2ef;
   }
 
@@ -153,33 +153,19 @@
 
   .step-item span{
     color:#172033;
-    font-size:12px;
+    font-size:11px;
     font-weight:700;
     line-height:1.35;
   }
 
   .action-card{
     display:grid;
-    grid-template-columns:108px minmax(0,1fr) auto;
-    gap:18px;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:14px;
     align-items:center;
-    padding:22px 24px;
-    background:
-      radial-gradient(360px 140px at 92% 18%, rgba(34,197,94,.10), transparent 60%),
-      linear-gradient(135deg,#f5fbf6,#fbfefc);
+    padding:16px 18px;
+    background:#f8fcf9;
     border-color:#dcefe3;
-  }
-
-  .action-visual{
-    width:108px;
-    height:108px;
-    border-radius:24px;
-    display:grid;
-    place-items:center;
-    color:#16a34a;
-    font-size:46px;
-    background:linear-gradient(135deg,#effaf2,#ffffff);
-    border:1px solid #dcefe3;
   }
 
   .action-copy .label{
@@ -191,19 +177,19 @@
   }
 
   .action-copy h3{
-    margin:8px 0 0;
+    margin:6px 0 0;
     color:#172033;
-    font-size:18px;
+    font-size:16px;
     font-weight:900;
     letter-spacing:-.03em;
   }
 
   .action-copy p{
-    margin:8px 0 0;
+    margin:6px 0 0;
     color:#667085;
-    font-size:13px;
+    font-size:12px;
     line-height:1.55;
-    max-width:500px;
+    max-width:460px;
   }
 
   .btnx{
@@ -213,7 +199,7 @@
     justify-content:center;
     gap:8px;
     padding:10px 14px;
-    border-radius:14px;
+    border-radius:12px;
     border:1px solid #dfe9e3;
     background:#fff;
     color:#223246;
@@ -242,17 +228,17 @@
   .setup-grid{
     display:grid;
     grid-template-columns:minmax(0,1.05fr) minmax(360px,.92fr);
-    gap:18px;
+    gap:16px;
     align-items:start;
   }
 
   .right-stack{
     display:grid;
-    gap:18px;
+    gap:16px;
   }
 
   .panel-head{
-    padding:18px 20px 10px;
+    padding:16px 18px 10px;
   }
 
   .panel-head h3{
@@ -271,19 +257,19 @@
   }
 
   .checklist{
-    padding:8px 18px 18px;
+    padding:6px 16px 16px;
     display:grid;
-    gap:12px;
+    gap:10px;
   }
 
   .check-item{
     display:grid;
-    grid-template-columns:54px minmax(0,1fr) auto;
-    gap:14px;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    gap:12px;
     align-items:center;
-    padding:16px;
+    padding:13px 14px;
     border:1px solid #e5ede8;
-    border-radius:18px;
+    border-radius:14px;
     background:#fff;
   }
 
@@ -299,46 +285,46 @@
   }
 
   .check-icon{
-    width:54px;
-    height:54px;
-    border-radius:18px;
+    width:42px;
+    height:42px;
+    border-radius:14px;
     display:grid;
     place-items:center;
     color:#fff;
     background:linear-gradient(135deg,#22c55e,#16a34a);
-    font-size:18px;
+    font-size:15px;
   }
 
   .check-main strong{
     display:block;
     color:#172033;
-    font-size:14px;
+    font-size:13px;
     font-weight:800;
   }
 
   .check-main span{
     display:block;
-    margin-top:5px;
+    margin-top:4px;
     color:#667085;
-    font-size:12px;
+    font-size:11px;
     line-height:1.5;
-    max-width:360px;
+    max-width:320px;
   }
 
   .feature-list{
-    padding:8px 18px 18px;
+    padding:6px 16px 16px;
     display:grid;
     gap:10px;
   }
 
   .feature-row{
     display:grid;
-    grid-template-columns:46px minmax(0,1fr) auto;
+    grid-template-columns:40px minmax(0,1fr) auto;
     gap:12px;
     align-items:center;
-    padding:14px;
+    padding:12px;
     border:1px solid #e5ede8;
-    border-radius:16px;
+    border-radius:14px;
     background:#fff;
   }
 
@@ -356,9 +342,9 @@
   }
 
   .feature-icon{
-    width:46px;
-    height:46px;
-    border-radius:15px;
+    width:40px;
+    height:40px;
+    border-radius:13px;
     display:grid;
     place-items:center;
     color:#fff;
@@ -377,15 +363,15 @@
   .feature-copy b{
     display:block;
     color:#172033;
-    font-size:13px;
+    font-size:12px;
     font-weight:800;
   }
 
   .feature-copy span{
     display:block;
-    margin-top:4px;
+    margin-top:3px;
     color:#667085;
-    font-size:12px;
+    font-size:11px;
     line-height:1.5;
   }
 
@@ -406,7 +392,7 @@
   .feature-badge.mobile-note{ color:#2563eb; }
 
   .footer-link{
-    padding:0 18px 18px;
+    padding:0 16px 16px;
     text-align:center;
   }
 
@@ -421,7 +407,7 @@
   }
 
   .snapshot{
-    padding:8px 18px 18px;
+    padding:6px 16px 16px;
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:10px;
@@ -432,9 +418,9 @@
     align-items:center;
     justify-content:space-between;
     gap:12px;
-    padding:14px;
+    padding:12px;
     border:1px solid #e8efeb;
-    border-radius:16px;
+    border-radius:14px;
     background:#fff;
   }
 
@@ -455,27 +441,27 @@
 
   .snap-card b{
     color:#172033;
-    font-size:22px;
+    font-size:20px;
     font-weight:900;
     letter-spacing:-.04em;
   }
 
   .completion-card{
-    margin:0 18px 18px;
-    padding:16px 18px;
+    margin:0 16px 16px;
+    padding:13px 14px;
     border:1px solid #dcefe3;
-    border-radius:18px;
-    background:linear-gradient(135deg,#f4fbf6,#fbfefc);
+    border-radius:14px;
+    background:#f8fcf9;
     display:grid;
-    grid-template-columns:52px minmax(0,1fr) auto;
-    gap:14px;
+    grid-template-columns:44px minmax(0,1fr);
+    gap:12px;
     align-items:center;
   }
 
   .completion-icon{
-    width:52px;
-    height:52px;
-    border-radius:18px;
+    width:44px;
+    height:44px;
+    border-radius:14px;
     display:grid;
     place-items:center;
     background:linear-gradient(135deg,#22c55e,#16a34a);
@@ -486,15 +472,15 @@
   .completion-copy strong{
     display:block;
     color:#0f7a38;
-    font-size:15px;
+    font-size:14px;
     font-weight:900;
   }
 
   .completion-copy span{
     display:block;
-    margin-top:5px;
+    margin-top:4px;
     color:#667085;
-    font-size:12px;
+    font-size:11px;
     line-height:1.5;
   }
 
@@ -523,12 +509,6 @@
 
     .action-card{
       grid-template-columns:1fr;
-    }
-
-    .action-visual{
-      width:84px;
-      height:84px;
-      font-size:36px;
     }
 
     .check-item,
@@ -595,9 +575,6 @@
 
   {% if setup_next_step %}
     <section class="action-card">
-      <div class="action-visual">
-        <i class="fa-regular fa-square-check"></i>
-      </div>
       <div class="action-copy">
         <div class="label">Next Required Step</div>
         <h3>{{ setup_next_step.title }}</h3>
@@ -609,9 +586,6 @@
     </section>
   {% elif setup_recommended_action %}
     <section class="action-card">
-      <div class="action-visual">
-        <i class="fa-solid fa-check-double"></i>
-      </div>
       <div class="action-copy">
         <div class="label">Recommended Next Action</div>
         <h3>{{ setup_recommended_action.title }}</h3>

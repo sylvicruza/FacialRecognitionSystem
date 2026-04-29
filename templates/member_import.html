@@ -8,32 +8,27 @@
 <style>
   .import-wrap{
     display:grid;
-    grid-template-columns:minmax(0, .85fr) minmax(0, 1.15fr);
-    gap:18px;
+    grid-template-columns:minmax(280px, .75fr) minmax(0, 1.25fr);
+    gap:16px;
     align-items:start;
+    max-width:1140px;
+    margin:0 auto;
   }
 
   .panel{
     background:#fff;
     border:1px solid #dfe9e3;
-    border-radius:26px;
-    box-shadow:0 22px 54px rgba(15,23,42,.08);
+    border-radius:20px;
+    box-shadow:0 14px 34px rgba(15,23,42,.05);
     overflow:hidden;
   }
 
-  .panel.pad{ padding:22px; }
-
-  .guide{
-    background:
-      radial-gradient(520px 240px at 82% 0%, rgba(34,197,94,.18), transparent 70%),
-      linear-gradient(135deg,#06291b,#10364a);
-    color:#fff;
-  }
+  .panel.pad{ padding:18px; }
 
   .guide h2,
   .panel h2{
     margin:0;
-    font-size:24px;
+    font-size:20px;
     font-weight:900;
     letter-spacing:-.035em;
   }
@@ -41,52 +36,50 @@
   .guide p,
   .panel p{
     color:#64748b;
-    margin:8px 0 0;
+    margin:6px 0 0;
     line-height:1.55;
   }
 
-  .guide p{ color:rgba(255,255,255,.75); }
-
   .columns{
     display:grid;
-    gap:10px;
-    margin-top:20px;
+    gap:8px;
+    margin-top:16px;
   }
 
   .column{
     display:flex;
     align-items:flex-start;
     gap:10px;
-    padding:12px;
-    border-radius:16px;
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.12);
-    color:rgba(255,255,255,.9);
+    padding:11px 12px;
+    border-radius:14px;
+    background:#f8fbf9;
+    border:1px solid #e5ede8;
+    color:#334155;
     font-weight:750;
   }
 
   .column i{
-    width:30px;
-    height:30px;
+    width:28px;
+    height:28px;
     display:grid;
     place-items:center;
-    border-radius:11px;
-    color:#06291b;
-    background:#62e6a0;
+    border-radius:10px;
+    color:#15803d;
+    background:#eaf8ef;
     flex:0 0 auto;
   }
 
   .panel-head{
-    padding:20px 22px;
+    padding:16px 18px 14px;
     border-bottom:1px solid #edf2ef;
   }
 
-  .panel-body{ padding:22px; }
+  .panel-body{ padding:18px; }
 
   .field{
     display:grid;
     gap:7px;
-    margin-bottom:14px;
+    margin-bottom:12px;
   }
 
   .field label{
@@ -98,10 +91,10 @@
   .field input,
   .field select{
     width:100%;
-    min-height:52px;
-    border:1px solid #dfe7ef;
-    background:#f7fbff;
-    border-radius:15px;
+    min-height:44px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    border-radius:12px;
     padding:0 14px;
     color:#101827;
     outline:none;
@@ -111,11 +104,11 @@
     display:flex;
     gap:10px;
     align-items:center;
-    padding:13px 14px;
-    border-radius:16px;
-    background:#f7fbff;
-    border:1px solid #dfe7ef;
-    margin-bottom:14px;
+    padding:11px 12px;
+    border-radius:14px;
+    background:#fbfdfb;
+    border:1px solid #e5ede8;
+    margin-bottom:12px;
     color:#334155;
     font-weight:800;
   }
@@ -128,8 +121,8 @@
 
   .btnx{
     border:none;
-    border-radius:15px;
-    padding:13px 16px;
+    border-radius:12px;
+    padding:11px 14px;
     font-weight:900;
     display:inline-flex;
     align-items:center;
@@ -160,15 +153,15 @@
   .result-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:12px;
-    margin-bottom:16px;
+    gap:10px;
+    margin-bottom:14px;
   }
 
   .result{
     border:1px solid #e6eee9;
-    border-radius:20px;
-    padding:16px;
-    background:linear-gradient(180deg,#fff,#fbfdfc);
+    border-radius:14px;
+    padding:13px 14px;
+    background:#fcfefd;
   }
 
   .result span{
@@ -180,9 +173,9 @@
 
   .result b{
     display:block;
-    margin-top:8px;
+    margin-top:5px;
     color:#101827;
-    font-size:30px;
+    font-size:24px;
     letter-spacing:-.04em;
   }
 
@@ -192,9 +185,9 @@
   }
 
   .limit-note{
-    margin-bottom:16px;
-    padding:14px 15px;
-    border-radius:17px;
+    margin-bottom:14px;
+    padding:12px 14px;
+    border-radius:14px;
     border:1px solid #d8f0df;
     background:#f0fbf4;
     color:#14532d;
@@ -209,8 +202,8 @@
   }
 
   .error-row{
-    padding:11px 12px;
-    border-radius:14px;
+    padding:10px 12px;
+    border-radius:12px;
     background:#fff7ed;
     border:1px solid #fed7aa;
     color:#9a3412;
@@ -233,7 +226,7 @@
 
   .preview-table th,
   .preview-table td{
-    padding:12px 14px;
+    padding:10px 12px;
     border-bottom:1px solid #edf2ef;
     text-align:left;
     vertical-align:top;
@@ -241,8 +234,8 @@
   }
 
   .preview-table th{
-    background:#0f172a;
-    color:#fff;
+    background:#f8fafc;
+    color:#475467;
     font-size:12px;
     font-weight:900;
   }
@@ -251,7 +244,7 @@
     display:inline-flex;
     align-items:center;
     gap:7px;
-    padding:7px 10px;
+    padding:6px 9px;
     border-radius:999px;
     font-size:12px;
     font-weight:900;
@@ -264,6 +257,21 @@
 
   .muted{color:#64748b;font-size:12px;}
 
+  .preview-head{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+
+  .preview-block{
+    margin-top:18px;
+    border-top:1px solid #edf2ef;
+    padding-top:18px;
+  }
+
   @media (max-width:980px){
     .import-wrap{ grid-template-columns:1fr; }
   }
@@ -275,22 +283,22 @@
 
 <div class="import-wrap">
   <aside class="panel pad guide">
-    <h2>CSV format</h2>
-    <p>Keep the file simple. A name is required; the other fields help KairosTrack match and organize members.</p>
+    <h2>Import Format</h2>
+    <p>Keep the file simple. Name is required. Other fields help match or organize members.</p>
 
     <div class="columns">
-      <div class="column"><i class="fa-solid fa-user"></i><div><code>name</code> or <code>first_name,last_name</code><br>Required member name.</div></div>
-      <div class="column"><i class="fa-solid fa-envelope"></i><div><code>email</code>, <code>phone</code><br>Useful for contact and lookup.</div></div>
-      <div class="column"><i class="fa-solid fa-id-card"></i><div><code>external_id</code><br>Used to update existing members safely.</div></div>
-      <div class="column"><i class="fa-solid fa-building"></i><div><code>branch</code><br>Must match an existing branch name.</div></div>
-      <div class="column"><i class="fa-solid fa-file-excel"></i><div><code>.csv</code> or <code>.xlsx</code><br>Download the template if you are unsure.</div></div>
+      <div class="column"><i class="fa-solid fa-user"></i><div><code>name</code> or <code>first_name,last_name</code><br>Required.</div></div>
+      <div class="column"><i class="fa-solid fa-envelope"></i><div><code>email</code>, <code>phone</code><br>Optional contact fields.</div></div>
+      <div class="column"><i class="fa-solid fa-id-card"></i><div><code>external_id</code><br>Helps update existing records.</div></div>
+      <div class="column"><i class="fa-solid fa-building"></i><div><code>branch</code><br>Must match an existing branch.</div></div>
+      <div class="column"><i class="fa-solid fa-file-excel"></i><div><code>.csv</code> or <code>.xlsx</code><br>Use the template if needed.</div></div>
     </div>
   </aside>
 
   <main class="panel">
     <div class="panel-head">
       <h2>Upload Members</h2>
-      <p>Preview members first, then create new records or update existing matches.</p>
+      <p>Preview first, then create new records or update existing matches.</p>
     </div>
 
     <div class="panel-body">
@@ -354,8 +362,8 @@
       </form>
 
       {% if preview_rows %}
-        <div style="margin-top:22px;border-top:1px solid #edf2ef;padding-top:20px;">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+        <div class="preview-block">
+          <div class="preview-head">
             <div>
               <h2 style="font-size:20px;">Preview</h2>
               <p>Review the rows below. Invalid rows will be skipped.</p>

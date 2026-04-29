@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block page_crumb %}Attendance{% endblock %}
 {% block page_title %}NFC Check-In{% endblock %}
@@ -6,96 +7,524 @@
 
 {% block content %}
 <style>
-  .nfc-page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px}
-  .panel{background:var(--paper);border:1px solid var(--line);border-radius:30px;box-shadow:0 24px 60px rgba(15,23,42,.075);overflow:hidden}
-  .hero{
-    padding:32px;
-    background:
-      radial-gradient(600px 240px at 100% 0%, rgba(34,197,94,.16), transparent 58%),
-      linear-gradient(135deg,#fff,#fbfffc);
+  .nfc-shell{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:20px;
+    align-items:start;
+    padding:8px 0 40px;
   }
-  .tag{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border-radius:999px;color:#0f6b3a;background:#ecfdf3;border:1px solid #d8f0df;font-weight:900;font-size:13px}
-  .hero h2{margin:18px 0 10px;color:#172033;font-size:36px;line-height:1.02;font-weight:900;letter-spacing:-.06em}
-  .hero p{margin:0;color:var(--muted);line-height:1.6;max-width:680px}
-  .session-card{margin-top:24px;padding:18px;border:1px solid var(--line);border-radius:22px;background:#f7fbf8;display:grid;gap:10px}
-  .session-row{display:flex;align-items:center;gap:11px;color:#283548;font-weight:900}
-  .session-row i{color:#16a34a;width:18px;text-align:center}
-  .session-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .session-stats span{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;background:#eaf8ef;color:#0f6b3a;border:1px solid #d6efdd;font-size:12px;font-weight:900}
-  .reader{margin-top:26px;padding:22px;border-radius:26px;background:#0b1f1a;color:#fff;box-shadow:0 24px 48px rgba(5,46,36,.18)}
-  .reader label{display:block;margin-bottom:10px;color:rgba(255,255,255,.72);font-weight:900;font-size:13px}
-  .reader-input{width:100%;min-height:62px;border:1px solid rgba(255,255,255,.18);border-radius:20px;background:rgba(255,255,255,.08);color:#fff;padding:14px 16px;font:inherit;font-size:22px;font-weight:900;outline:none}
-  .reader-input:focus{box-shadow:0 0 0 4px rgba(34,197,94,.18);border-color:rgba(34,197,94,.55)}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-  .btnx{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 15px;border-radius:15px;border:1px solid var(--line);background:#fff;color:#263244;font-weight:900;font-size:13px;text-decoration:none;cursor:pointer}
-  .btnx.primary{border-color:transparent;color:#052012;background:linear-gradient(135deg,#22c55e,#16a34a)}
-  .result{margin-top:16px;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:rgba(255,255,255,.86);font-weight:800;min-height:54px}
-  .guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
-  .step{padding:18px;border:1px solid var(--line);border-radius:22px;background:#fff}
-  .step b{display:grid;place-items:center;width:38px;height:38px;margin-bottom:14px;border-radius:15px;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a)}
-  .step strong{display:block;color:#202939}.step span{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.45}
-  .side{padding:26px}
-  .side h3{margin:0;color:#172033;font-weight:900;letter-spacing:-.04em}
-  .side p{margin:6px 0 18px;color:var(--muted)}
-  .log-list{display:grid;gap:10px}
-  .log-item{padding:14px;border:1px solid var(--line);border-radius:18px;background:#fff;display:flex;justify-content:space-between;gap:12px}
-  .log-item strong{display:block;color:#1f2937}.log-item span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-  .empty{padding:24px;border:1px dashed var(--line);border-radius:20px;text-align:center;color:var(--muted);font-weight:800}
-  @media (max-width:1050px){.nfc-page{grid-template-columns:1fr}.guide{grid-template-columns:1fr}}
+
+  .nfc-card{
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:24px;
+    box-shadow:0 18px 44px rgba(15,23,42,.06);
+  }
+
+  .nfc-main{
+    padding:20px;
+    display:grid;
+    gap:18px;
+  }
+
+  .session-card{
+    padding:18px;
+    border:1px solid #e4ece7;
+    border-radius:20px;
+    display:grid;
+    gap:16px;
+  }
+
+  .session-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .session-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .session-copy p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+    font-weight:600;
+  }
+
+  .nfc-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:#eefaf2;
+    border:1px solid #dcefe1;
+    color:#15803d;
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .session-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .session-stat{
+    min-height:70px;
+    padding:12px;
+    border:1px solid #e7efe9;
+    border-radius:16px;
+    display:grid;
+    gap:6px;
+    background:#fff;
+  }
+
+  .session-stat strong{
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    line-height:1;
+  }
+
+  .session-stat span{
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .session-stat.present strong{color:#16a34a;}
+  .session-stat.absent strong{color:#dc2626;}
+  .session-stat.pending strong{color:#d97706;}
+
+  .reader-stage{
+    padding:22px 20px 20px;
+    border-radius:22px;
+    background:linear-gradient(180deg,#fbfefc 0%, #f6fbf8 100%);
+    border:1px solid #e2ebe5;
+    color:#172033;
+    box-shadow:0 18px 34px rgba(15,23,42,.05);
+  }
+
+  .stage-copy{
+    text-align:center;
+  }
+
+  .stage-copy small{
+    display:block;
+    color:#16a34a;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .stage-copy h3{
+    margin:8px 0 6px;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .stage-copy p{
+    margin:0;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .reader-visual{
+    margin:18px auto 14px;
+    width:min(100%, 340px);
+  }
+
+  .reader-visual img{
+    width:100%;
+    height:auto;
+    display:block;
+    object-fit:contain;
+    user-select:none;
+    pointer-events:none;
+    border-radius:18px;
+  }
+
+  .uid-block{
+    max-width:420px;
+    margin:0 auto;
+  }
+
+  .uid-block label{
+    display:block;
+    margin-bottom:8px;
+    text-align:center;
+    color:#172033;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .uid-field{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 54px;
+    overflow:hidden;
+    border:1px solid #dfe9e3;
+    border-radius:16px;
+    background:#fff;
+  }
+
+  .uid-input{
+    min-height:44px;
+    border:0;
+    background:transparent;
+    color:#172033;
+    padding:0 16px;
+    font:inherit;
+    font-size:14px;
+    font-weight:700;
+    outline:none;
+  }
+
+  .uid-input::placeholder{
+    color:#98a2b3;
+  }
+
+  .uid-icon{
+    display:grid;
+    place-items:center;
+    color:#667085;
+    border-left:1px solid #dfe9e3;
+  }
+
+  .reader-actions{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .reader-btn{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#172033;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+  }
+
+  .reader-btn.primary{
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.2);
+  }
+
+  .reader-status{
+    margin-top:14px;
+    min-height:44px;
+    border-radius:16px;
+    border:1px solid #dfe9e3;
+    background:#f8fbf9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    color:#172033;
+    font-size:14px;
+    font-weight:700;
+    text-align:center;
+    padding:0 14px;
+  }
+
+  .status-dot{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:#7ddc3e;
+    box-shadow:0 0 12px rgba(125,220,62,.6);
+    flex:0 0 auto;
+  }
+
+  .tip-card{
+    display:grid;
+    grid-template-columns:40px minmax(0,1fr);
+    gap:14px;
+    padding:16px 18px;
+    border-radius:20px;
+    border:1px solid #dfeee4;
+    background:linear-gradient(135deg,#f6fcf8,#ffffff);
+  }
+
+  .tip-card i{
+    width:40px;
+    height:40px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:#eaf8ef;
+    color:#16a34a;
+    font-size:18px;
+  }
+
+  .tip-card strong{
+    display:block;
+    color:#137a38;
+    font-size:15px;
+    font-weight:800;
+    margin-bottom:4px;
+  }
+
+  .tip-card p{
+    margin:0;
+    color:#667085;
+    font-size:14px;
+    line-height:1.6;
+  }
+
+  .nfc-side{
+    padding:20px;
+    display:grid;
+    gap:16px;
+  }
+
+  .recent-card h3{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .recent-card p{
+    margin:6px 0 0;
+    color:#667085;
+    font-size:13px;
+  }
+
+  .scan-list{
+    margin-top:16px;
+    display:grid;
+    gap:10px;
+  }
+
+  .scan-item{
+    padding:14px 16px;
+    border:1px solid #e4ece7;
+    border-radius:18px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .scan-item strong{
+    display:block;
+    color:#172033;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .scan-item span{
+    display:block;
+    margin-top:4px;
+    color:#667085;
+    font-size:12px;
+  }
+
+  .scan-item i{
+    color:#16a34a;
+    font-size:18px;
+  }
+
+  .empty-state{
+    min-height:260px;
+    margin-top:16px;
+    border:1px solid #e4ece7;
+    border-radius:24px;
+    background:#fff;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    padding:28px 20px;
+  }
+
+  .empty-state-icon{
+    width:72px;
+    height:72px;
+    margin:0 auto 16px;
+    border-radius:22px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#effaf2,#e5f6ec);
+    color:#16a34a;
+    font-size:30px;
+  }
+
+  .empty-state strong{
+    display:block;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+  }
+
+  .empty-state p{
+    margin:8px 0 0;
+    color:#667085;
+    font-size:14px;
+    line-height:1.6;
+  }
+
+  @media (max-width: 1080px){
+    .nfc-shell{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 720px){
+    .session-stats,
+    .reader-actions{
+      grid-template-columns:1fr;
+    }
+
+    .session-top{
+      flex-direction:column;
+    }
+
+    .reader-visual{
+      width:100%;
+    }
+  }
 </style>
 
-<div class="nfc-page">
-  <section class="panel hero">
-    <div class="tag"><i class="fa-solid fa-id-card-clip"></i> NFC Reader</div>
-    <h2>{{ active_session.session_name|default:active_session.event_name }}</h2>
-    <p>Tap or scan a member card. The reader should type the UID into the box below and press Enter automatically. Every successful tap is saved against this active event session.</p>
-
+<div class="nfc-shell">
+  <section class="nfc-card nfc-main">
     <div class="session-card">
-      <div class="session-row"><i class="fa-solid fa-calendar-check"></i><span>{{ active_session.event_name }}</span></div>
-      {% if active_session.starts_at %}
-        <div class="session-row"><i class="fa-solid fa-clock"></i><span>{{ active_session.starts_at }}</span></div>
-      {% endif %}
+      <div class="session-top">
+        <div class="session-copy">
+          <h2>{{ active_session.session_name|default:active_session.event_name }}</h2>
+          <p>{{ active_session.event_name }} | {{ active_session.starts_at|default:"Not scheduled" }}</p>
+        </div>
+        <span class="nfc-chip">
+          <i class="fa-solid fa-id-card-clip"></i>
+          NFC Reader
+        </span>
+      </div>
+
       <div class="session-stats">
-        <span><i class="fa-solid fa-user-check"></i> {{ method_counts.present }} present</span>
-        <span><i class="fa-solid fa-user-xmark"></i> {{ method_counts.absent }} absent</span>
-        <span><i class="fa-solid fa-hourglass-half"></i> {{ method_counts.pending }} pending</span>
+        <div class="session-stat present">
+          <strong>{{ method_counts.present }}</strong>
+          <span>Present</span>
+        </div>
+        <div class="session-stat absent">
+          <strong>{{ method_counts.absent }}</strong>
+          <span>Absent</span>
+        </div>
+        <div class="session-stat pending">
+          <strong>{{ method_counts.pending }}</strong>
+          <span>Pending</span>
+        </div>
       </div>
     </div>
 
-    <div class="reader">
-      <label for="nfcUid">Ready for card/tag UID</label>
-      <input class="reader-input" id="nfcUid" autocomplete="off" placeholder="Tap card or type UID" autofocus>
-      <div class="actions">
-        <button class="btnx primary" type="button" id="submitNfc"><i class="fa-solid fa-right-to-bracket"></i> Check In</button>
-        <button class="btnx" type="button" id="clearNfc"><i class="fa-solid fa-rotate-left"></i> Clear</button>
-        <a class="btnx" href="{% url 'person_attendance_list' %}?attendance_session_id={{ active_session.id }}"><i class="fa-solid fa-table-list"></i> Logs</a>
-        <a class="btnx" href="{{ session_report_url }}"><i class="fa-solid fa-chart-simple"></i> Report</a>
+    <div class="reader-stage">
+      <div class="stage-copy">
+        <small>Ready to scan</small>
+        <h3>Tap a member card or tag</h3>
+        <p>Hold the NFC card near the reader or enter the UID below.</p>
       </div>
-      <div class="result" id="nfcResult">Waiting for a card...</div>
+
+      <div class="reader-visual" aria-hidden="true">
+        <img src="{% static 'images/nfc-reader-hero.png' %}" alt="NFC reader illustration">
+      </div>
+
+      <div class="uid-block">
+        <label for="nfcUid">NFC Tag UID</label>
+        <div class="uid-field">
+          <input class="uid-input" id="nfcUid" autocomplete="off" placeholder="Enter or paste UID" autofocus>
+          <div class="uid-icon">
+            <i class="fa-regular fa-id-card"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="reader-actions">
+        <button class="reader-btn primary" type="button" id="submitNfc">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Check In
+        </button>
+        <button class="reader-btn" type="button" id="clearNfc">
+          <i class="fa-solid fa-rotate-left"></i>
+          Clear
+        </button>
+        <a class="reader-btn" href="{% url 'person_attendance_list' %}?attendance_session_id={{ active_session.id }}">
+          <i class="fa-solid fa-table-list"></i>
+          Logs
+        </a>
+        <a class="reader-btn" href="{{ session_report_url }}">
+          <i class="fa-solid fa-chart-simple"></i>
+          Report
+        </a>
+      </div>
+
+      <div class="reader-status" id="nfcResult">
+        <span class="status-dot"></span>
+        <span>Waiting for card...</span>
+      </div>
     </div>
 
-    <div class="guide">
-      <div class="step"><b>1</b><strong>Assign UID</strong><span>Open a member profile and save their NFC card/tag UID.</span></div>
-      <div class="step"><b>2</b><strong>Select session</strong><span>NFC always writes to the active event session.</span></div>
-      <div class="step"><b>3</b><strong>Tap card</strong><span>The log is saved with method NFC for reporting.</span></div>
+    <div class="tip-card">
+      <i class="fa-regular fa-lightbulb"></i>
+      <div>
+        <strong>Tip</strong>
+        <p>Only authorized members with a saved NFC UID can check in here.</p>
+      </div>
     </div>
   </section>
 
-  <aside class="panel side">
-    <h3>Recent NFC scans</h3>
-    <p>This session only.</p>
-    <div class="log-list" id="scanList">
-      {% for record in recent_logs %}
-        <div class="log-item">
-          <div>
-            <strong>{{ record.person_name|default:"Member" }}</strong>
-            <span>{{ record.status|title }}{% if record.check_in_time %} - {{ record.check_in_time }}{% endif %}</span>
-          </div>
-          <i class="fa-solid fa-id-card-clip" style="color:#16a34a;"></i>
+  <aside class="nfc-card nfc-side">
+    <div class="recent-card">
+      <h3>Recent NFC scans</h3>
+      <p>This session only.</p>
+
+      {% if recent_logs %}
+        <div class="scan-list" id="scanList">
+          {% for record in recent_logs %}
+            <div class="scan-item">
+              <div>
+                <strong>{{ record.person_name|default:"Member" }}</strong>
+                <span>{{ record.status|title }}{% if record.check_in_time %} | {{ record.check_in_time }}{% endif %}</span>
+              </div>
+              <i class="fa-solid fa-wifi"></i>
+            </div>
+          {% endfor %}
         </div>
-      {% empty %}
-        <div class="empty" id="emptyScans">No NFC scans yet.</div>
-      {% endfor %}
+      {% else %}
+        <div class="empty-state" id="scanList">
+          <div>
+            <div class="empty-state-icon">
+              <i class="fa-solid fa-wifi"></i>
+            </div>
+            <strong>No NFC scans yet</strong>
+            <p>Scans will appear here.</p>
+          </div>
+        </div>
+      {% endif %}
     </div>
   </aside>
 </div>
@@ -103,27 +532,41 @@
 <script>
   const uidInput = document.getElementById("nfcUid");
   const result = document.getElementById("nfcResult");
-  const scanList = document.getElementById("scanList");
   const endpoint = "{% url 'nfc_check_in' %}";
 
   function setResult(message, ok=false){
-    result.textContent = message;
-    result.style.background = ok ? "rgba(34,197,94,.18)" : "rgba(255,255,255,.08)";
-    result.style.borderColor = ok ? "rgba(34,197,94,.42)" : "rgba(255,255,255,.14)";
+    result.innerHTML = `
+      <span class="status-dot" style="${ok ? 'background:#41d95f;box-shadow:0 0 12px rgba(65,217,95,.65);' : 'background:#7ddc3e;box-shadow:0 0 12px rgba(125,220,62,.6);'}"></span>
+      <span>${message}</span>
+    `;
+    result.style.background = ok ? "rgba(34,197,94,.14)" : "#f8fbf9";
+    result.style.borderColor = ok ? "rgba(34,197,94,.28)" : "#dfe9e3";
+  }
+
+  function getScanList(){
+    return document.getElementById("scanList");
+  }
+
+  function ensureScanListContainer(){
+    const current = getScanList();
+    if (current && current.classList.contains("empty-state")) {
+      current.outerHTML = '<div class="scan-list" id="scanList"></div>';
+    }
+    return getScanList();
   }
 
   function addScan(attendance){
-    document.getElementById("emptyScans")?.remove();
+    const target = ensureScanListContainer();
     const item = document.createElement("div");
-    item.className = "log-item";
+    item.className = "scan-item";
     item.innerHTML = `
       <div>
         <strong>${attendance.person_name || "Member"}</strong>
-        <span>${(attendance.status || "present").replace("_", " ")} - just now</span>
+        <span>${(attendance.status || "present").replace("_", " ")} | just now</span>
       </div>
-      <i class="fa-solid fa-id-card-clip" style="color:#16a34a;"></i>
+      <i class="fa-solid fa-wifi"></i>
     `;
-    scanList.prepend(item);
+    target.prepend(item);
   }
 
   async function submitNfc(){
@@ -158,7 +601,7 @@
   document.getElementById("submitNfc").addEventListener("click", submitNfc);
   document.getElementById("clearNfc").addEventListener("click", () => {
     uidInput.value = "";
-    setResult("Waiting for a card...");
+    setResult("Waiting for card...");
     uidInput.focus();
   });
   uidInput.addEventListener("keydown", (event) => {
