@@ -261,8 +261,25 @@ def _api_client(request=None):
     return get_client(request=request, token_updater=token_updater)
 
 
+def _normalize_backend_url(url: str | None) -> str:
+    value = (url or "").strip().rstrip("/")
+    if value in {
+        "http://127.0.0.1:8085/api/attendance",
+        "http://localhost:8085/api/attendance",
+        "http://192.168.1.138:8085/api/attendance",
+    }:
+        return settings.ATTENDANCE_API_BASE_URL.rstrip("/")
+    return value
+
+
 def _desktop_backend_url(request) -> str:
-    return request.session.get(API_BASE_URL_SESSION_KEY) or settings.ATTENDANCE_API_BASE_URL
+    session_url = _normalize_backend_url(request.session.get(API_BASE_URL_SESSION_KEY))
+    if session_url:
+        if session_url != request.session.get(API_BASE_URL_SESSION_KEY):
+            request.session[API_BASE_URL_SESSION_KEY] = session_url
+            request.session.modified = True
+        return session_url
+    return settings.ATTENDANCE_API_BASE_URL.rstrip("/")
 
 
 def _set_desktop_sync_status(request, *, ok: bool, message: str = ""):
