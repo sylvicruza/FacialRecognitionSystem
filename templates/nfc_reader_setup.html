@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}NFC Reader Setup{% endblock %}
+{% block page_subtitle %}Configure a production reader station and route each scan into live check-in, enrollment, or monitor-only mode.{% endblock %}
+{% block content %}
+<style>
+  .reader-shell{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.25fr);gap:16px}
+  .reader-card{background:#fff;border:1px solid #dfe9e3;border-radius:20px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+  .reader-head{padding:16px 18px;border-bottom:1px solid #edf2ef}
+  .reader-head h2,.reader-head h3{margin:0;color:#172033;font-size:18px;font-weight:900}
+  .reader-head p{margin:6px 0 0;color:#667085;font-size:13px;line-height:1.5}
+  .reader-body{padding:16px 18px 18px;display:grid;gap:14px}
+  .field{display:grid;gap:7px}
+  .field label{color:#344054;font-size:12px;font-weight:800}
+  .field input,.field select{width:100%;min-height:44px;padding:10px 12px;border:1px solid #dfe9e3;border-radius:12px;background:#fff}
+  .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .btnx{min-height:44px;padding:10px 14px;border-radius:12px;border:1px solid #dfe9e3;background:#fff;color:#172033;font-size:13px;font-weight:800}
+  .btnx.primary{border-color:transparent;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+  .status{padding:12px 14px;border-radius:14px;border:1px solid #e5ede8;background:#f8fbf9;color:#526070;font-size:13px}
+  .status.live{border-color:#d7efdf;background:#eefaf2;color:#137a38}
+  .status.error{border-color:#fecaca;background:#fff5f5;color:#b42318}
+  .metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .metric{padding:14px;border:1px solid #e5ede8;border-radius:16px;background:#fff}
+  .metric span{display:block;color:#667085;font-size:12px;font-weight:800}
+  .metric strong{display:block;margin-top:6px;color:#172033;font-size:18px;font-weight:900}
+  .capture-box{min-height:130px;padding:16px;border:1px dashed #b7c7bc;border-radius:16px;background:#fcfefd;color:#526070;display:grid;gap:8px;align-content:start}
+  .capture-box code{font-size:20px;color:#172033;font-weight:900}
+  .helper-list{margin:0;padding-left:18px;color:#667085;font-size:13px;display:grid;gap:6px}
+  @media (max-width: 980px){.reader-shell{grid-template-columns:1fr}.row,.metric-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="reader-shell">
+  <section class="reader-card">
+    <div class="reader-head">
+      <h2>Reader Profile</h2>
+      <p>Save the mode this workstation uses. Keyboard-style readers and serial-friendly bridges can both be handled from this station.</p>
+    </div>
+    <div class="reader-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="field">
+          <label for="reader_name">Reader Name</label>
+          <input id="reader_name" name="reader_name" value="{{ reader_settings.reader_name }}">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="reader_mode">Reader Mode</label>
+            <select id="reader_mode" name="reader_mode">
+              <option value="keyboard" {% if reader_settings.reader_mode == "keyboard" %}selected{% endif %}>Keyboard-wedge USB reader</option>
+              <option value="serial" {% if reader_settings.reader_mode == "serial" %}selected{% endif %}>Serial-friendly bridge</option>
+              <option value="bluetooth" {% if reader_settings.reader_mode == "bluetooth" %}selected{% endif %}>Bluetooth reader (future-safe profile)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="capture_mode">Capture Mode</label>
+            <select id="capture_mode" name="capture_mode">
+              <option value="check_in" {% if reader_settings.capture_mode == "check_in" %}selected{% endif %}>Live entrance check-in</option>
+              <option value="enroll" {% if reader_settings.capture_mode == "enroll" %}selected{% endif %}>Member enrollment handoff</option>
+              <option value="monitor" {% if reader_settings.capture_mode == "monitor" %}selected{% endif %}>Monitor only</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="station_identifier">Station Identifier</label>
+            <input id="station_identifier" name="station_identifier" value="{{ reader_settings.station_identifier }}" placeholder="door-east-reader">
+          </div>
+          <div class="field">
+            <label for="reader_prefix">UID Prefix To Ignore</label>
+            <input id="reader_prefix" name="reader_prefix" value="{{ reader_settings.reader_prefix }}" placeholder="Optional">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="reader_suffix">UID Terminator</label>
+            <select id="reader_suffix" name="reader_suffix">
+              <option value="Enter" {% if reader_settings.reader_suffix == "Enter" %}selected{% endif %}>Enter key</option>
+              <option value="Tab" {% if reader_settings.reader_suffix == "Tab" %}selected{% endif %}>Tab key</option>
+              <option value="Timeout" {% if reader_settings.reader_suffix == "Timeout" %}selected{% endif %}>No suffix, use timeout</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Current Active Session</label>
+            <input value="{% if active_session %}{{ active_session.session_name|default:active_session.event_name }}{% else %}No active session selected{% endif %}" disabled>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btnx primary" type="submit">Save Reader Setup</button>
+          <a class="btnx" href="{% url 'bulk_nfc_enrollment' %}">Open Bulk NFC Enrollment</a>
+          {% if desktop_can_view_audit %}
+            <a class="btnx" href="{% url 'anomaly_summary' %}">View Monitoring</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="reader-card">
+    <div class="reader-head">
+      <h3>Live Capture</h3>
+      <p>This station listens for generic reader input on this page and can immediately forward scans into attendance or enrollment workflows.</p>
+    </div>
+    <div class="reader-body">
+      <div class="metric-grid">
+        <div class="metric"><span>Status</span><strong id="reader-status">{{ reader_runtime.status|default:"Waiting" }}</strong></div>
+        <div class="metric"><span>Last Scan</span><strong id="reader-last-time">{% if reader_runtime.last_scan_at %}{{ reader_runtime.last_scan_at }}{% else %}Never{% endif %}</strong></div>
+        <div class="metric"><span>Last UID</span><strong id="reader-last-uid">{% if reader_runtime.last_uid %}{{ reader_runtime.last_uid }}{% else %}--{% endif %}</strong></div>
+        <div class="metric"><span>Last Error</span><strong id="reader-last-error">{% if reader_runtime.last_error %}{{ reader_runtime.last_error }}{% else %}None{% endif %}</strong></div>
+        <div class="metric"><span>Capture Mode</span><strong id="reader-capture-mode">{{ reader_settings.capture_mode|default:"check_in"|title }}</strong></div>
+        <div class="metric"><span>Active Session</span><strong id="reader-active-session">{% if active_session %}{{ active_session.session_name|default:active_session.event_name }}{% else %}None{% endif %}</strong></div>
+      </div>
+      <div id="reader-note" class="status {% if reader_runtime.status == 'Connected' %}live{% elif reader_runtime.status == 'Error' %}error{% endif %}">
+        {{ reader_runtime.last_action|default:"Focus this browser tab and present a card to the reader. Keyboard-style readers can type directly here, while Android browsers should still use Web NFC in the enrollment page." }}
+      </div>
+      <div class="capture-box">
+        <span>Raw capture buffer</span>
+        <code id="reader-buffer">Waiting for input...</code>
+      </div>
+      <div class="status">
+        <strong style="display:block;color:#172033;font-size:13px;">Station behavior</strong>
+        <ul class="helper-list">
+          <li><strong>Live entrance check-in</strong> sends the UID straight to the current active attendance session.</li>
+          <li><strong>Member enrollment handoff</strong> captures the UID and opens bulk enrollment ready to assign it.</li>
+          <li><strong>Monitor only</strong> confirms reader health without changing attendance.</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="btnx" id="reader-enrollment-link" href="{% if reader_runtime.pending_enrollment_url %}{{ reader_runtime.pending_enrollment_url }}{% else %}{% url 'bulk_nfc_enrollment' %}{% endif %}">Open Enrollment Handoff</a>
+        <button class="btnx" type="button" id="reader-refresh-btn">Refresh Status</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  (() => {
+    const csrfToken = "{{ csrf_token }}";
+    const prefix = "{{ reader_settings.reader_prefix|escapejs }}";
+    const suffix = "{{ reader_settings.reader_suffix|escapejs }}";
+    const captureModeInput = document.getElementById("capture_mode");
+    const status = document.getElementById("reader-status");
+    const lastTime = document.getElementById("reader-last-time");
+    const lastUid = document.getElementById("reader-last-uid");
+    const lastError = document.getElementById("reader-last-error");
+    const captureMode = document.getElementById("reader-capture-mode");
+    const activeSession = document.getElementById("reader-active-session");
+    const buffer = document.getElementById("reader-buffer");
+    const note = document.getElementById("reader-note");
+    const enrollmentLink = document.getElementById("reader-enrollment-link");
+    const refreshBtn = document.getElementById("reader-refresh-btn");
+    let typed = "";
+    let timeoutId = null;
+
+    function setState(label, noteText, noteClass = "") {
+      status.textContent = label;
+      note.className = `status${noteClass ? ` ${noteClass}` : ""}`;
+      note.textContent = noteText;
+    }
+
+    function resetBufferSoon() {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (suffix === "Timeout" && typed.trim()) finalizeCapture(typed);
+      }, 350);
+    }
+
+    function syncRuntime(data) {
+      if (!data) return;
+      if (data.runtime) {
+        status.textContent = data.runtime.status || "Waiting";
+        lastTime.textContent = data.runtime.last_scan_at
+          ? new Date(data.runtime.last_scan_at).toLocaleTimeString()
+          : "Never";
+        lastUid.textContent = data.runtime.last_uid || "--";
+        lastError.textContent = data.runtime.last_error || "None";
+        setState(
+          data.runtime.status || "Waiting",
+          data.runtime.last_action || "Reader station ready.",
+          (data.runtime.status || "").toLowerCase() === "connected"
+            ? "live"
+            : (data.runtime.status || "").toLowerCase() === "error"
+              ? "error"
+              : ""
+        );
+        if (data.runtime.pending_enrollment_url && enrollmentLink) {
+          enrollmentLink.href = data.runtime.pending_enrollment_url;
+        }
+      }
+      if (data.settings && captureMode) {
+        captureMode.textContent = (data.settings.capture_mode || "check_in").replaceAll("_", " ");
+      }
+      if (activeSession) {
+        activeSession.textContent = (data.active_session && data.active_session.label) || "None";
+      }
+    }
+
+    async function postCapture(uid) {
+      try {
+        const response = await fetch("{% url 'nfc_reader_capture' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          },
+          body: JSON.stringify({
+            uid,
+            capture_mode: captureModeInput ? captureModeInput.value : ""
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          lastError.textContent = data.error || "Reader action failed";
+          setState("Error", data.error || "Reader action failed.", "error");
+          return;
+        }
+        if (data.message) {
+          setState("Connected", data.message, "live");
+        }
+        if (data.enrollment_url && enrollmentLink) {
+          enrollmentLink.href = data.enrollment_url;
+        }
+        lastUid.textContent = data.uid || uid;
+        lastTime.textContent = new Date().toLocaleTimeString();
+        lastError.textContent = "None";
+      } catch (error) {
+        lastError.textContent = error?.message || "Could not reach reader runtime";
+        setState("Error", error?.message || "Could not reach reader runtime.", "error");
+      }
+    }
+
+    async function refreshRuntime() {
+      try {
+        const response = await fetch("{% url 'nfc_reader_status' %}", {
+          headers: { "Accept": "application/json" }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setState("Error", data.error || "Could not refresh reader status.", "error");
+          return;
+        }
+        syncRuntime(data);
+      } catch (error) {
+        setState("Error", error?.message || "Could not refresh reader status.", "error");
+      }
+    }
+
+    function finalizeCapture(raw) {
+      let value = (raw || "").trim();
+      if (!value) return;
+      if (prefix && value.startsWith(prefix)) value = value.slice(prefix.length);
+      value = value.replace(/\s+/g, "").toUpperCase();
+      typed = "";
+      buffer.textContent = value || "Waiting for input...";
+      if (!value) {
+        lastError.textContent = "Empty UID received";
+        setState("Error", "The reader sent an empty or unsupported UID.", "error");
+        return;
+      }
+      setState("Connected", `Captured ${value}. Processing workstation action...`, "live");
+      postCapture(value);
+    }
+
+    window.addEventListener("keydown", event => {
+      if (event.key === "Shift" || event.key === "Control" || event.key === "Alt") return;
+      if (suffix === "Enter" && event.key === "Enter") {
+        event.preventDefault();
+        finalizeCapture(typed);
+        return;
+      }
+      if (suffix === "Tab" && event.key === "Tab") {
+        event.preventDefault();
+        finalizeCapture(typed);
+        return;
+      }
+      if (event.key.length === 1) {
+        typed += event.key;
+        buffer.textContent = typed;
+        resetBufferSoon();
+      }
+    });
+
+    refreshBtn?.addEventListener("click", refreshRuntime);
+    refreshRuntime();
+  })();
+</script>
+{% endblock %}

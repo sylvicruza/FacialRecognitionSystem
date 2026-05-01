@@ -553,7 +553,7 @@
                     </div>
                   {% endif %}
                   <div class="method-card-actions">
-                    {% if can_use_face %}<a class="btn" href="{% url 'stream_all_cameras' %}">Open Cameras</a>{% endif %}
+                    {% if can_use_face %}<a class="btn" data-monitor-link="true" href="{% url 'stream_all_cameras' %}">Open Cameras</a>{% endif %}
                   </div>
                 </div>
 
@@ -659,7 +659,7 @@
             <a class="btn quick-action-btn" href="{% url 'nfc_attendance' %}"><i class="fa-solid fa-id-card-clip"></i> Open NFC Attendance</a>
           {% endif %}
           {% if can_use_face and session_methods.face %}
-            <a class="btn quick-action-btn" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-expand"></i> View Full Screen</a>
+            <a class="btn quick-action-btn" data-monitor-link="true" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-expand"></i> View Full Screen</a>
           {% endif %}
         </div>
       </section>

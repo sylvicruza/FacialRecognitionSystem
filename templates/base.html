@@ -596,7 +596,7 @@
       </a>
     {% endif %}
     {% if request.session.attendance_desktop_plan.allow_face_recognition %}
-      <a class="navlink" data-route="{% url 'stream_all_cameras' %}" href="{% url 'stream_all_cameras' %}">
+      <a class="navlink" data-route="{% url 'stream_all_cameras' %}" data-monitor-link="true" href="{% url 'stream_all_cameras' %}">
         <i class="fa-solid fa-face-smile"></i> Face Recognition
         <span class="pill">Live</span>
       </a>
@@ -607,6 +607,14 @@
     <a class="navlink" data-route="{% url 'attendance_reports' %}" href="{% url 'attendance_reports' %}">
       <i class="fa-solid fa-chart-line"></i> Reports
     </a>
+    {% if request.session.attendance_desktop_role == "owner" or request.session.attendance_desktop_role == "admin" or request.session.attendance_desktop_user.is_superuser %}
+      <a class="navlink" data-route="{% url 'audit_history' %}" href="{% url 'audit_history' %}">
+        <i class="fa-solid fa-clock-rotate-left"></i> Audit History
+      </a>
+      <a class="navlink" data-route="{% url 'anomaly_summary' %}" href="{% url 'anomaly_summary' %}">
+        <i class="fa-solid fa-triangle-exclamation"></i> Monitoring
+      </a>
+    {% endif %}
 
     <div class="nav-group-title">Setup</div>
 
@@ -719,12 +727,15 @@
       <a class="navlink" href="{% url 'nfc_attendance' %}"><i class="fa-solid fa-id-card-clip"></i> NFC Check-In</a>
     {% endif %}
     {% if request.session.attendance_desktop_plan.allow_face_recognition %}
-      <a class="navlink" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-face-smile"></i> Face Recognition <span class="pill">Live</span></a>
+      <a class="navlink" data-monitor-link="true" href="{% url 'stream_all_cameras' %}"><i class="fa-solid fa-face-smile"></i> Face Recognition <span class="pill">Live</span></a>
     {% endif %}
     <a class="navlink" href="{% url 'person_attendance_list' %}"><i class="fa-solid fa-clipboard-list"></i> Attendance Logs</a>
     <a class="navlink" href="{% url 'attendance_reports' %}"><i class="fa-solid fa-chart-line"></i> Reports</a>
     {% if request.session.attendance_desktop_plan.allow_face_recognition %}
       <a class="navlink" href="{% url 'camera_config_list' %}"><i class="fa-solid fa-camera-retro"></i> Camera Setup</a>
+    {% endif %}
+    {% if request.session.attendance_desktop_plan.allow_nfc %}
+      <a class="navlink" href="{% url 'nfc_reader_setup' %}"><i class="fa-solid fa-tower-cell"></i> Reader Setup</a>
     {% endif %}
     <a class="navlink" href="{% url 'organization_settings' %}"><i class="fa-solid fa-building-user"></i> Organization</a>
     <a class="navlink" href="{% url 'desktop_settings' %}"><i class="fa-solid fa-sliders"></i> Desktop Settings</a>
@@ -762,6 +773,24 @@
 
     tick();
     setInterval(tick, 1000);
+  })();
+
+  (function(){
+    const monitorWindowName = "kairostrack-face-recognition-monitor";
+
+    document.querySelectorAll("[data-monitor-link='true']").forEach((link) => {
+      link.setAttribute("target", monitorWindowName);
+      link.setAttribute("rel", "noopener");
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const href = link.getAttribute("href");
+        if (!href) return;
+        const monitorWindow = window.open(href, monitorWindowName);
+        if (monitorWindow) {
+          monitorWindow.focus();
+        }
+      });
+    });
   })();
 </script>
 

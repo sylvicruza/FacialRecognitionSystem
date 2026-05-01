@@ -293,6 +293,15 @@ class AttendanceApiClient:
     def authorize_person(self, person_id: int, authorized: bool):
         return self._request("PATCH", f"persons/{person_id}/authorize/", json={"authorized": authorized})
 
+    def list_audit_logs(self, **params):
+        return self._request("GET", "audit/logs/", params=params)
+
+    def audit_summary(self):
+        return self._request("GET", "audit/summary/")
+
+    def nfc_station_check_in(self, payload: dict[str, Any]):
+        return self._request("POST", "nfc/station-check-in/", json=payload)
+
     def delete_person(self, person_id: int):
         return self._request("DELETE", f"persons/{person_id}/")
 

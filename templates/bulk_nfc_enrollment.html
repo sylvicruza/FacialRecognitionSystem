@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block page_crumb %}Members{% endblock %}
+{% block page_title %}Bulk NFC Enrollment{% endblock %}
+{% block page_subtitle %}Assign member stickers quickly with Android Web NFC or a keyboard-style reader.{% endblock %}
+{% block content %}
+<style>
+  .bulk-shell{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.4fr);gap:16px}
+  .bulk-card{background:#fff;border:1px solid #dfe9e3;border-radius:20px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+  .bulk-head{padding:16px 18px;border-bottom:1px solid #edf2ef}
+  .bulk-head h2,.bulk-head h3{margin:0;color:#172033;font-size:18px;font-weight:900}
+  .bulk-head p{margin:6px 0 0;color:#667085;font-size:13px;line-height:1.5}
+  .bulk-body{padding:16px 18px 18px;display:grid;gap:14px}
+  .search-row,.action-row{display:flex;gap:10px;flex-wrap:wrap}
+  .search-row input,.uid-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #dfe9e3;border-radius:12px;background:#fff}
+  .btnx{min-height:44px;padding:10px 14px;border-radius:12px;border:1px solid #dfe9e3;background:#fff;color:#172033;font-size:13px;font-weight:800}
+  .btnx.primary{border-color:transparent;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+  .status-box{min-height:42px;padding:10px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f8fbf9;color:#526070;font-size:12px;display:flex;align-items:center}
+  .status-box.live{border-color:#d7efdf;background:#eefaf2;color:#137a38}
+  .queue{display:grid;gap:10px;max-height:620px;overflow:auto}
+  .queue-item{padding:12px 14px;border:1px solid #e5ede8;border-radius:14px;background:#fff;display:grid;gap:4px}
+  .queue-item.active{border-color:#bde8cb;background:linear-gradient(135deg,#f3fcf6,#fff)}
+  .queue-item strong{color:#172033;font-size:14px}
+  .queue-item span{color:#667085;font-size:12px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid #dfe9e3;color:#172033;font-size:12px;font-weight:800}
+  @media (max-width: 980px){.bulk-shell{grid-template-columns:1fr}}
+</style>
+
+<div class="bulk-shell">
+  <section class="bulk-card">
+    <div class="bulk-head">
+      <h2>Current Member</h2>
+      <p>Keep the scan box focused if you are using a USB keyboard-wedge NFC reader. On Android Chrome you can use direct Web NFC scanning.</p>
+    </div>
+    <div class="bulk-body">
+      {% if current_person %}
+        <div>
+          <div class="pill">{{ queue_total }} member{{ queue_total|pluralize }} in this queue</div>
+        </div>
+        <div>
+          <strong style="display:block;color:#172033;font-size:20px;font-weight:900;">{{ current_person.name }}</strong>
+          <div style="margin-top:6px;color:#667085;font-size:13px;">
+            {{ current_person.member_code|default:"No code yet" }}
+            {% if current_person.email %} · {{ current_person.email }}{% endif %}
+            {% if current_person.phone %} · {{ current_person.phone }}{% endif %}
+          </div>
+        </div>
+        <form method="post" id="nfc-enroll-form">
+          {% csrf_token %}
+          <input type="hidden" name="person_id" value="{{ current_person.id }}">
+          <input type="hidden" name="search" value="{{ search }}">
+          <input type="hidden" name="include_assigned" value="{% if include_assigned %}1{% else %}0{% endif %}">
+          <label for="nfc-uid" style="color:#344054;font-size:12px;font-weight:800;">NFC UID</label>
+          <input id="nfc-uid" class="uid-input" name="nfc_uid" value="{{ prefill_uid|default:current_person.nfc_uid|default:'' }}" placeholder="Tap card or paste UID here" autofocus>
+          <div class="action-row">
+            <button type="button" class="btnx" id="scan-nfc-btn">Scan NFC Tag</button>
+            <button type="button" class="btnx" id="stop-nfc-btn" hidden>Stop Scan</button>
+            <button type="submit" class="btnx primary">Save And Advance</button>
+          </div>
+        </form>
+        <div id="nfc-status" class="status-box">Ready. Android Chrome can scan directly here. USB or Bluetooth keyboard-style readers can type into the UID box automatically.</div>
+      {% else %}
+        <div class="status-box live">Everyone in this filtered list already has an NFC tag assigned.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="bulk-card">
+    <div class="bulk-head">
+      <h3>Queue</h3>
+      <p>Stay focused on members without a tag, or include already assigned records when you need to replace stickers.</p>
+    </div>
+    <div class="bulk-body">
+      <form method="get" class="search-row">
+        <input type="text" name="search" value="{{ search }}" placeholder="Search name, code, email, or phone">
+        <label class="pill" style="cursor:pointer;">
+          <input type="checkbox" name="include_assigned" value="1" {% if include_assigned %}checked{% endif %} style="margin-right:8px;">
+          Include already assigned
+        </label>
+        <button type="submit" class="btnx">Refresh Queue</button>
+      </form>
+      <div class="queue">
+        {% for person in people %}
+          <a class="queue-item {% if current_person and current_person.id == person.id %}active{% endif %}" href="?search={{ search|urlencode }}&include_assigned={% if include_assigned %}1{% else %}0{% endif %}&current={{ person.id }}">
+            <strong>{{ person.name }}</strong>
+            <span>{{ person.member_code|default:"No code yet" }}</span>
+            <span>
+              {% if person.nfc_uid %}
+                Assigned: {{ person.nfc_uid }}
+              {% else %}
+                No NFC tag assigned yet
+              {% endif %}
+            </span>
+          </a>
+        {% empty %}
+          <div class="status-box">No members matched this queue.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  (() => {
+    const uidInput = document.getElementById('nfc-uid');
+    const scanBtn = document.getElementById('scan-nfc-btn');
+    const stopBtn = document.getElementById('stop-nfc-btn');
+    const statusBox = document.getElementById('nfc-status');
+    const form = document.getElementById('nfc-enroll-form');
+    if (!uidInput || !scanBtn || !statusBox || !form) return;
+
+    let nfcReader = null;
+    let scanning = false;
+
+    function setStatus(message, kind = '') {
+      statusBox.className = `status-box${kind ? ` ${kind}` : ''}`;
+      statusBox.textContent = message;
+    }
+
+    async function startScan() {
+      if (!('NDEFReader' in window)) {
+        setStatus('Direct Web NFC is not available here. Use Android Chrome or let a keyboard-style reader type into the UID box.', 'error');
+        return;
+      }
+      try {
+        nfcReader = new NDEFReader();
+        await nfcReader.scan();
+        scanning = true;
+        scanBtn.hidden = true;
+        stopBtn.hidden = false;
+        setStatus('Scanning. Hold the NFC sticker near this Android device.', 'live');
+        nfcReader.addEventListener('reading', event => {
+          const serial = (event.serialNumber || '').replace(/\s+/g, '').toUpperCase();
+          if (!serial) {
+            setStatus('A tag was detected but the UID was not exposed by this browser. Try Android Chrome or manual entry.', 'error');
+            return;
+          }
+          uidInput.value = serial;
+          setStatus(`Captured ${serial}. Saving and moving to the next member.`, 'live');
+          form.requestSubmit();
+        });
+      } catch (error) {
+        setStatus(error?.message || 'Could not start NFC scanning on this device.', 'error');
+      }
+    }
+
+    function stopScan() {
+      scanning = false;
+      scanBtn.hidden = false;
+      stopBtn.hidden = true;
+      nfcReader = null;
+      setStatus('Stopped scanning. You can still paste a UID or use a keyboard-style reader.');
+    }
+
+    scanBtn.addEventListener('click', startScan);
+    stopBtn.addEventListener('click', stopScan);
+    uidInput.addEventListener('focus', () => {
+      if (!scanning) {
+        setStatus('Ready. Keep this box focused if your NFC reader types like a keyboard.');
+      }
+    });
+  })();
+</script>
+{% endblock %}

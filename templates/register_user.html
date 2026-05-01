@@ -280,6 +280,43 @@
     line-height:1.45;
   }
 
+  .nfc-inline{
+    display:grid;
+    gap:8px;
+  }
+
+  .nfc-inline-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .nfc-inline-status{
+    min-height:40px;
+    padding:10px 12px;
+    border:1px solid #e5ede8;
+    border-radius:12px;
+    background:#f8fbf9;
+    color:#526070;
+    font-size:12px;
+    line-height:1.45;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .nfc-inline-status.live{
+    border-color:#d7efdf;
+    background:#eefaf2;
+    color:#137a38;
+  }
+
+  .nfc-inline-status.error{
+    border-color:#fecaca;
+    background:#fff5f5;
+    color:#b42318;
+  }
+
   .helper-strip{
     margin-top:14px;
     padding:11px 12px;
@@ -849,6 +886,26 @@
     font-weight:700;
   }
 
+  .review-item .review-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:30px;
+    padding:5px 10px;
+    border-radius:999px;
+    border:1px solid #d7efdf;
+    background:#eefaf2;
+    color:#137a38;
+    font-size:12px;
+    font-weight:800;
+    width:max-content;
+    max-width:100%;
+  }
+
+  .review-item .review-pill i{
+    font-size:11px;
+  }
+
   .review-photo{
     border-radius:16px;
     overflow:hidden;
@@ -1229,7 +1286,21 @@
                     {% if request.session.attendance_desktop_plan.allow_nfc %}
                       <div class="field">
                         <label for="nfc_uid">NFC Tag UID</label>
-                        <input id="nfc_uid" name="nfc_uid" value="{{ nfc_uid }}" placeholder="Optional card/tag UID">
+                        <div class="nfc-inline">
+                          <input id="nfc_uid" name="nfc_uid" value="{{ nfc_uid }}" placeholder="Optional card/tag UID">
+                          <div class="nfc-inline-actions">
+                            <button type="button" class="btnx" id="scanRegisterNfcBtn">
+                              <i class="fa-solid fa-wave-square"></i> Scan NFC Tag
+                            </button>
+                            <button type="button" class="btnx" id="stopRegisterNfcBtn" style="display:none;">
+                              <i class="fa-solid fa-stop"></i> Stop Scan
+                            </button>
+                          </div>
+                          <div class="nfc-inline-status" id="registerNfcStatus">
+                            <i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i>
+                            <span>Use an NFC-enabled Android device here, or paste the UID manually.</span>
+                          </div>
+                        </div>
                       </div>
                     {% endif %}
                   </div>
@@ -1558,7 +1629,14 @@
       const portalInput = document.getElementById('portal_id');
       if (portalInput) setReviewText('reviewPortalId', portalInput.value, 'Not provided');
       const nfcInput = document.getElementById('nfc_uid');
-      if (nfcInput) setReviewText('reviewNfcUid', nfcInput.value, 'Not provided');
+      const reviewNfc = document.getElementById('reviewNfcUid');
+      if (nfcInput && reviewNfc) {
+        if (nfcInput.value && nfcInput.value.trim()) {
+          reviewNfc.innerHTML = `<span class="review-pill"><i class="fa-solid fa-circle-check"></i> Captured: ${nfcInput.value.trim()}</span>`;
+        } else {
+          reviewNfc.textContent = 'Not provided';
+        }
+      }
 
       const reviewPhoto = document.getElementById('reviewPhoto');
       const imagePreview = document.getElementById('imagePreview');
@@ -1606,10 +1684,16 @@
     const resumeAfterRetakeBtn = document.getElementById('resumeAfterRetakeBtn');
     const uploadPhotoInput = document.getElementById('uploadPhotoInput');
     const registrationForm = document.getElementById('registrationForm');
+    const nfcInput = document.getElementById('nfc_uid');
+    const scanRegisterNfcBtn = document.getElementById('scanRegisterNfcBtn');
+    const stopRegisterNfcBtn = document.getElementById('stopRegisterNfcBtn');
+    const registerNfcStatus = document.getElementById('registerNfcStatus');
 
     let stream = null;
     let privacyOn = false;
     let sourceMode = 'local';
+    let nfcReader = null;
+    let nfcScanController = null;
 
     function setStage(state, msg) {
       stageText.textContent = msg;
@@ -1635,6 +1719,74 @@
 
     function setCaptureEnabled(enabled) {
       captureBtn.classList.toggle('disabled', !enabled);
+    }
+
+    function setRegisterNfcStatus(message, state){
+      if (!registerNfcStatus) return;
+      registerNfcStatus.classList.remove('live', 'error');
+      if (state) registerNfcStatus.classList.add(state);
+      registerNfcStatus.innerHTML = `
+        <i class="fa-solid ${state === 'error' ? 'fa-triangle-exclamation' : state === 'live' ? 'fa-wifi' : 'fa-circle-info'}" style="color:${state === 'error' ? '#b42318' : state === 'live' ? '#16a34a' : '#0ea5e9'};"></i>
+        <span>${message}</span>
+      `;
+    }
+
+    function setRegisterNfcScanning(active){
+      if (!scanRegisterNfcBtn || !stopRegisterNfcBtn) return;
+      scanRegisterNfcBtn.style.display = active ? 'none' : '';
+      stopRegisterNfcBtn.style.display = active ? '' : 'none';
+    }
+
+    async function stopRegisterNfcScan(){
+      try {
+        if (nfcScanController) {
+          nfcScanController.abort();
+        }
+      } catch (error) {
+      }
+      nfcReader = null;
+      nfcScanController = null;
+      setRegisterNfcScanning(false);
+      setRegisterNfcStatus('Scan stopped. You can start again or paste the UID manually.');
+    }
+
+    async function startRegisterNfcScan(){
+      if (!nfcInput) return;
+      if (!('NDEFReader' in window)) {
+        setRegisterNfcStatus('This device or browser does not support direct NFC scanning here. Use Android Chrome or paste the UID manually.', 'error');
+        return;
+      }
+
+      try {
+        nfcReader = new NDEFReader();
+        nfcScanController = new AbortController();
+        await nfcReader.scan({ signal: nfcScanController.signal });
+        setRegisterNfcScanning(true);
+        setRegisterNfcStatus('Hold the NFC sticker near this device.', 'live');
+
+        nfcReader.addEventListener('readingerror', () => {
+          setRegisterNfcStatus('The tag could not be read. Try holding it still for a moment.', 'error');
+        });
+
+        nfcReader.addEventListener('reading', ({ serialNumber }) => {
+          const uid = (serialNumber || '').trim();
+          if (!uid) {
+            setRegisterNfcStatus('A tag was detected but no readable UID was returned.', 'error');
+            return;
+          }
+          nfcInput.value = uid;
+          setRegisterNfcStatus(`Tag detected: ${uid}. It will be saved with this member.`, 'live');
+          nfcScanController = null;
+          setRegisterNfcScanning(false);
+        }, { once:true });
+      } catch (error) {
+        const message = error && error.name === 'NotAllowedError'
+          ? 'NFC permission was blocked. Allow NFC access and try again.'
+          : 'Could not start NFC scanning on this device.';
+        nfcScanController = null;
+        setRegisterNfcScanning(false);
+        setRegisterNfcStatus(message, 'error');
+      }
     }
 
     function stopLocalCamera() {
@@ -1873,6 +2025,9 @@
     retakeBtn.addEventListener('click', retake);
     privacyBtn.addEventListener('click', togglePrivacy);
     uploadPhotoInput.addEventListener('change', (event) => loadUploadedPhoto(event.target.files[0]));
+
+    scanRegisterNfcBtn?.addEventListener('click', startRegisterNfcScan);
+    stopRegisterNfcBtn?.addEventListener('click', stopRegisterNfcScan);
 
     resumeAfterRetakeBtn.addEventListener('click', async () => {
       if (sourceMode === 'local') {

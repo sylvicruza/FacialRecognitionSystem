@@ -249,6 +249,12 @@
     gap:8px;
   }
 
+  .nfc-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
   .nfc-form input{
     width:100%;
     min-height:42px;
@@ -258,6 +264,32 @@
     background:#fff;
     color:#172033;
     font-size:13px;
+  }
+
+  .nfc-status{
+    min-height:40px;
+    padding:10px 12px;
+    border:1px solid #e5ede8;
+    border-radius:12px;
+    background:#f8fbf9;
+    color:#526070;
+    font-size:12px;
+    line-height:1.45;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .nfc-status.live{
+    border-color:#d7efdf;
+    background:#eefaf2;
+    color:#137a38;
+  }
+
+  .nfc-status.error{
+    border-color:#fecaca;
+    background:#fff5f5;
+    color:#b42318;
   }
 
   .qr-card{
@@ -599,14 +631,27 @@
             <div class="info-copy">
               <label>NFC Tag UID</label>
               <div class="info-value">{{ person.nfc_uid|default:"No NFC tag assigned" }}</div>
-              <form method="post" action="{% url 'person_nfc_update' pk=person.pk %}" class="nfc-form">
+              <form method="post" action="{% url 'person_nfc_update' pk=person.pk %}" class="nfc-form" id="nfcEnrollForm">
                 {% csrf_token %}
                 <input
                   type="text"
+                  id="nfcUidInput"
                   name="nfc_uid"
                   value="{{ person.nfc_uid|default:'' }}"
                   placeholder="Scan or paste card UID"
                 >
+                <div class="nfc-actions">
+                  <button type="button" class="btnx" id="scanNfcBtn">
+                    <i class="fa-solid fa-wave-square"></i> Scan NFC Tag
+                  </button>
+                  <button type="button" class="btnx" id="stopNfcBtn" style="display:none;">
+                    <i class="fa-solid fa-stop"></i> Stop Scan
+                  </button>
+                </div>
+                <div class="nfc-status" id="nfcScanStatus">
+                  <i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i>
+                  <span>Use an NFC-enabled Android device here, or paste the UID manually.</span>
+                </div>
                 <button type="submit" class="btnx primary" style="width:100%;">
                   <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
                 </button>
@@ -868,6 +913,98 @@
   document.getElementById("authConfirmSubmitBtn")?.addEventListener("click", () => {
     authForm.submit();
   });
+
+  (function(){
+    const scanBtn = document.getElementById("scanNfcBtn");
+    const stopBtn = document.getElementById("stopNfcBtn");
+    const uidInput = document.getElementById("nfcUidInput");
+    const nfcForm = document.getElementById("nfcEnrollForm");
+    const statusBox = document.getElementById("nfcScanStatus");
+
+    if(!scanBtn || !stopBtn || !uidInput || !nfcForm || !statusBox){
+      return;
+    }
+
+    let ndefReader = null;
+    let scanController = null;
+    let scanning = false;
+
+    function setNfcStatus(message, state){
+      statusBox.classList.remove("live", "error");
+      if(state){
+        statusBox.classList.add(state);
+      }
+      statusBox.innerHTML = `
+        <i class="fa-solid ${state === "error" ? "fa-triangle-exclamation" : state === "live" ? "fa-wifi" : "fa-circle-info"}" style="color:${state === "error" ? "#b42318" : state === "live" ? "#16a34a" : "#0ea5e9"};"></i>
+        <span>${message}</span>
+      `;
+    }
+
+    function setScanning(active){
+      scanning = active;
+      scanBtn.style.display = active ? "none" : "";
+      stopBtn.style.display = active ? "" : "none";
+    }
+
+    async function stopScan(){
+      try{
+        if(scanController){
+          scanController.abort();
+        }
+      }catch(error){
+      }
+      ndefReader = null;
+      scanController = null;
+      setScanning(false);
+      setNfcStatus("Scan stopped. You can start again or paste the UID manually.");
+    }
+
+    async function startScan(){
+      if(!("NDEFReader" in window)){
+        setNfcStatus("This device or browser does not support direct NFC scanning here. Use Android Chrome or paste the UID manually.", "error");
+        return;
+      }
+
+      try{
+        ndefReader = new NDEFReader();
+        scanController = new AbortController();
+        await ndefReader.scan({ signal: scanController.signal });
+        setScanning(true);
+        setNfcStatus("Hold the NFC sticker near this device.", "live");
+
+        ndefReader.addEventListener("readingerror", () => {
+          setNfcStatus("The tag could not be read. Try holding it still for a moment.", "error");
+        });
+
+        ndefReader.addEventListener("reading", async ({ serialNumber }) => {
+          const uid = (serialNumber || "").trim();
+          if(!uid){
+            setNfcStatus("A tag was detected but no readable UID was returned.", "error");
+            return;
+          }
+
+          uidInput.value = uid;
+          setNfcStatus(`Tag detected: ${uid}. Saving now...`, "live");
+          showToast("NFC tag captured");
+          scanController = null;
+          setScanning(false);
+          stopBtn.style.display = "none";
+          scanBtn.style.display = "";
+          nfcForm.submit();
+        }, { once:true });
+      }catch(error){
+        const message = error && error.name === "NotAllowedError"
+          ? "NFC permission was blocked. Allow NFC access and try again."
+          : "Could not start NFC scanning on this device.";
+        scanController = null;
+        setScanning(false);
+        setNfcStatus(message, "error");
+      }
+    }
+
+    scanBtn.addEventListener("click", startScan);
+    stopBtn.addEventListener("click", stopScan);
+  })();
 
   setSaveEnabled();
 </script>

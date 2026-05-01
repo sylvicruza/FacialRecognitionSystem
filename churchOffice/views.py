@@ -118,6 +118,8 @@ DESKTOP_ORGANIZATION_SESSION_KEY = "attendance_desktop_organization"
 DESKTOP_PLAN_SESSION_KEY = "attendance_desktop_plan"
 ACTIVE_ATTENDANCE_SESSION_KEY = "active_attendance_session_id"
 DESKTOP_SYNC_STATUS_SESSION_KEY = "attendance_desktop_sync_status"
+NFC_READER_SETTINGS_SESSION_KEY = "attendance_nfc_reader_settings"
+NFC_READER_RUNTIME_SESSION_KEY = "attendance_nfc_reader_runtime"
 
 
 def _store_desktop_auth(request, payload: dict):
@@ -166,8 +168,34 @@ def _clear_desktop_auth(request):
         DESKTOP_PLAN_SESSION_KEY,
         ACTIVE_ATTENDANCE_SESSION_KEY,
         DESKTOP_SYNC_STATUS_SESSION_KEY,
+        NFC_READER_SETTINGS_SESSION_KEY,
+        NFC_READER_RUNTIME_SESSION_KEY,
     ):
         request.session.pop(key, None)
+    request.session.modified = True
+
+
+def _default_nfc_reader_runtime() -> dict:
+    return {
+        "status": "Waiting",
+        "last_uid": "",
+        "last_scan_at": "",
+        "last_error": "",
+        "last_action": "No reader activity yet.",
+        "pending_enrollment_uid": "",
+        "pending_enrollment_url": "",
+    }
+
+
+def _reader_runtime(request) -> dict:
+    return {
+        **_default_nfc_reader_runtime(),
+        **(request.session.get(NFC_READER_RUNTIME_SESSION_KEY) or {}),
+    }
+
+
+def _store_reader_runtime(request, payload: dict):
+    request.session[NFC_READER_RUNTIME_SESSION_KEY] = payload
     request.session.modified = True
 
 
@@ -210,6 +238,24 @@ def _is_staff_desktop_user(payload: dict) -> bool:
     profile = payload.get("staff_profile") or {}
     role = str(profile.get("role") or payload.get("role") or payload.get("user_type") or "").lower()
     return role in {"owner", "admin", "staff", "superuser", "finance", "viewer"}
+
+
+def _desktop_role_slug(request) -> str:
+    if request.session.get(DESKTOP_USER_SESSION_KEY, {}).get("is_superuser"):
+        return "superuser"
+    return str(request.session.get(DESKTOP_ROLE_SESSION_KEY, "")).strip().lower()
+
+
+def _desktop_is_owner_or_admin(request) -> bool:
+    return _desktop_role_slug(request) in {"owner", "admin", "superuser"}
+
+
+def _desktop_can_view_audit(request) -> bool:
+    return _desktop_is_owner_or_admin(request)
+
+
+def _desktop_can_manage_authorization(request) -> bool:
+    return _desktop_is_owner_or_admin(request)
 
 
 def _safe_next_url(request, candidate: str | None) -> str:
@@ -264,9 +310,7 @@ def _api_client(request=None):
 def _normalize_backend_url(url: str | None) -> str:
     value = (url or "").strip().rstrip("/")
     if value in {
-        "http://127.0.0.1:8085/api/attendance",
-        "http://localhost:8085/api/attendance",
-        "http://192.168.1.138:8085/api/attendance",
+        "https://heavensconnect.onrender.com/api/attendance",
     }:
         return settings.ATTENDANCE_API_BASE_URL.rstrip("/")
     return value
@@ -3213,6 +3257,287 @@ def person_list(request):
     )
 
 
+@desktop_login_required
+def bulk_nfc_enrollment(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return _render_plan_locked(
+            request,
+            "NFC tools are not included",
+            "Upgrade to Professional or above to manage NFC readers and member tags.",
+            "Professional",
+            back_url="person_list",
+        )
+    search = request.GET.get("search", "").strip()
+    include_assigned = request.GET.get("include_assigned") == "1"
+    current_id = (request.GET.get("current") or "").strip()
+    prefill_uid = (request.GET.get("prefill_uid") or "").strip()
+
+    try:
+        people = get_all_people(search=search, request=request)
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return auth_response
+        messages.error(request, f"Could not load members for NFC enrollment: {_friendly_api_error(exc)}")
+        people = []
+
+    queue = [
+        person for person in people
+        if include_assigned or not getattr(person, "nfc_uid", "")
+    ]
+    current_person = None
+    if current_id:
+        try:
+            current_person = next((person for person in queue if str(person.id) == current_id), None)
+        except StopIteration:
+            current_person = None
+    if current_person is None and queue:
+        current_person = queue[0]
+
+    if request.method == "POST":
+        person_id = (request.POST.get("person_id") or "").strip()
+        nfc_uid = (request.POST.get("nfc_uid") or "").strip()
+        search = (request.POST.get("search") or "").strip()
+        include_assigned = request.POST.get("include_assigned") == "1"
+        if not person_id:
+            messages.error(request, "Choose a member before saving an NFC tag.")
+            return redirect("bulk_nfc_enrollment")
+        try:
+            _api_client(request).update_person(int(person_id), {"nfc_uid": nfc_uid})
+            if nfc_uid:
+                messages.success(request, "NFC tag saved and the queue moved to the next member.")
+            else:
+                messages.success(request, "NFC tag cleared for this member.")
+        except AttendanceApiError as exc:
+            auth_response = _redirect_if_auth_error(request, exc)
+            if auth_response:
+                return auth_response
+            messages.error(request, f"Could not save the NFC tag: {_friendly_api_error(exc)}")
+            params = urlencode(
+                {
+                    "search": search,
+                    "include_assigned": "1" if include_assigned else "0",
+                    "current": person_id,
+                }
+            )
+            return redirect(f"{reverse('bulk_nfc_enrollment')}?{params}")
+
+        next_people = get_all_people(search=search, request=request)
+        next_queue = [person for person in next_people if include_assigned or not getattr(person, "nfc_uid", "")]
+        next_person = next((person for person in next_queue if str(person.id) != person_id), None)
+        params = {
+            "search": search,
+            "include_assigned": "1" if include_assigned else "0",
+        }
+        if next_person:
+            params["current"] = next_person.id
+        return redirect(f"{reverse('bulk_nfc_enrollment')}?{urlencode(params)}")
+
+    return render(
+        request,
+        "bulk_nfc_enrollment.html",
+        {
+            "people": queue,
+            "current_person": current_person,
+            "search": search,
+            "include_assigned": include_assigned,
+            "queue_total": len(queue),
+            "prefill_uid": prefill_uid,
+        },
+    )
+
+
+@desktop_login_required
+def nfc_reader_setup(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return _render_plan_locked(
+            request,
+            "NFC tools are not included",
+            "Upgrade to Professional or above to manage NFC readers and member tags.",
+            "Professional",
+            back_url="person_list",
+        )
+    defaults = {
+        "reader_name": "Entrance Reader",
+        "reader_mode": "keyboard",
+        "reader_suffix": "Enter",
+        "reader_prefix": "",
+        "station_identifier": "",
+        "capture_mode": "check_in",
+    }
+    settings_payload = {**defaults, **(request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {})}
+    if request.method == "POST":
+        settings_payload = {
+            "reader_name": (request.POST.get("reader_name") or "").strip() or defaults["reader_name"],
+            "reader_mode": (request.POST.get("reader_mode") or "").strip() or defaults["reader_mode"],
+            "reader_suffix": (request.POST.get("reader_suffix") or "").strip() or defaults["reader_suffix"],
+            "reader_prefix": (request.POST.get("reader_prefix") or "").strip(),
+            "station_identifier": (request.POST.get("station_identifier") or "").strip(),
+            "capture_mode": (request.POST.get("capture_mode") or "").strip() or defaults["capture_mode"],
+        }
+        request.session[NFC_READER_SETTINGS_SESSION_KEY] = settings_payload
+        request.session.modified = True
+        messages.success(request, "Reader setup saved for this desktop session.")
+        return redirect("nfc_reader_setup")
+    active_session = _get_active_attendance_session(request)
+    return render(
+        request,
+        "nfc_reader_setup.html",
+        {
+            "reader_settings": settings_payload,
+            "desktop_can_view_audit": _desktop_can_view_audit(request),
+            "reader_runtime": _reader_runtime(request),
+            "active_session": active_session,
+        },
+    )
+
+
+@desktop_login_required
+@require_GET
+def nfc_reader_status(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return JsonResponse({"error": "NFC tools are not included in this plan."}, status=403)
+    active_session = _get_active_attendance_session(request)
+    return JsonResponse(
+        {
+            "runtime": _reader_runtime(request),
+            "settings": request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {},
+            "active_session": {
+                "id": getattr(active_session, "id", None),
+                "label": getattr(active_session, "session_name", None) or getattr(active_session, "event_name", None) or "",
+                "branch_name": getattr(active_session, "branch_name", None) or "",
+            }
+            if active_session
+            else None,
+        }
+    )
+
+
+@desktop_login_required
+@require_POST
+def nfc_reader_capture(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return JsonResponse({"error": "NFC tools are not included in this plan."}, status=403)
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+    settings_payload = {
+        "reader_name": "Entrance Reader",
+        "reader_mode": "keyboard",
+        "reader_suffix": "Enter",
+        "reader_prefix": "",
+        "station_identifier": "",
+        "capture_mode": "check_in",
+        **(request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {}),
+    }
+    raw_uid = str(payload.get("uid") or "").strip()
+    prefix = str(settings_payload.get("reader_prefix") or "").strip()
+    if prefix and raw_uid.startswith(prefix):
+        raw_uid = raw_uid[len(prefix):]
+    uid = "".join(raw_uid.split()).upper()
+    runtime_payload = _reader_runtime(request)
+    if not uid:
+        runtime_payload.update(
+            {
+                "status": "Error",
+                "last_error": "Empty UID received",
+                "last_action": "The workstation received an empty UID.",
+            }
+        )
+        _store_reader_runtime(request, runtime_payload)
+        return JsonResponse({"error": "UID is required."}, status=400)
+
+    runtime_payload.update(
+        {
+            "status": "Connected",
+            "last_uid": uid,
+            "last_scan_at": timezone.localtime().isoformat(),
+            "last_error": "",
+        }
+    )
+    capture_mode = str(payload.get("capture_mode") or settings_payload.get("capture_mode") or "check_in").strip().lower()
+    active_session = _get_active_attendance_session(request)
+    response_payload = {
+        "uid": uid,
+        "capture_mode": capture_mode,
+        "active_session_id": getattr(active_session, "id", None),
+    }
+
+    if capture_mode == "enroll":
+        enroll_url = f"{reverse('bulk_nfc_enrollment')}?{urlencode({'prefill_uid': uid})}"
+        runtime_payload.update(
+            {
+                "last_action": "UID captured and ready for member enrollment.",
+                "pending_enrollment_uid": uid,
+                "pending_enrollment_url": enroll_url,
+            }
+        )
+        _store_reader_runtime(request, runtime_payload)
+        response_payload.update({"message": runtime_payload["last_action"], "enrollment_url": enroll_url})
+        return JsonResponse(response_payload)
+
+    if capture_mode == "check_in":
+        if not active_session:
+            runtime_payload.update(
+                {
+                    "status": "Error",
+                    "last_error": "No active session available",
+                    "last_action": "Set an active attendance session before using live NFC check-in.",
+                }
+            )
+            _store_reader_runtime(request, runtime_payload)
+            return JsonResponse({"error": "Select an active attendance session first.", "uid": uid}, status=400)
+        try:
+            outcome = _api_client(request).nfc_station_check_in(
+                {
+                    "uid": uid,
+                    "station_identifier": settings_payload.get("station_identifier") or "",
+                    "attendance_session_id": int(getattr(active_session, "id")),
+                    "device_label": settings_payload.get("reader_name") or "Desktop Reader Station",
+                }
+            )
+            attendance = outcome.get("attendance") if isinstance(outcome, dict) else {}
+            person_name = ""
+            if isinstance(attendance, dict):
+                person_name = str(attendance.get("person_name") or attendance.get("name") or "").strip()
+            runtime_payload.update(
+                {
+                    "last_action": f"Checked in {person_name or 'member'} with NFC.",
+                    "pending_enrollment_uid": "",
+                    "pending_enrollment_url": "",
+                }
+            )
+            _store_reader_runtime(request, runtime_payload)
+            response_payload.update({"message": runtime_payload["last_action"], "outcome": outcome})
+            return JsonResponse(response_payload)
+        except AttendanceApiError as exc:
+            runtime_payload.update(
+                {
+                    "status": "Error",
+                    "last_error": _friendly_api_error(exc),
+                    "last_action": "The reader station could not complete the check-in.",
+                }
+            )
+            _store_reader_runtime(request, runtime_payload)
+            auth_response = _redirect_if_auth_error(request, exc)
+            if auth_response:
+                return JsonResponse({"error": "Desktop session expired. Please sign in again."}, status=401)
+            return JsonResponse({"error": _friendly_api_error(exc), "uid": uid}, status=400)
+
+    runtime_payload.update(
+        {
+            "last_action": "UID captured in monitor mode.",
+            "pending_enrollment_uid": "",
+            "pending_enrollment_url": "",
+        }
+    )
+    _store_reader_runtime(request, runtime_payload)
+    response_payload["message"] = runtime_payload["last_action"]
+    return JsonResponse(response_payload)
+
+
 def _csv_value(row: dict, *keys: str) -> str:
     normalized = {str(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
     for key in keys:
@@ -3557,6 +3882,116 @@ def person_detail(request, pk: int):
 
 
 @desktop_login_required
+def audit_history(request):
+    if not _desktop_can_view_audit(request):
+        messages.error(request, "Only owners and admins can view audit history.")
+        return redirect("home")
+    action = request.GET.get("action", "").strip()
+    actor = request.GET.get("actor", "").strip()
+    branch_id = request.GET.get("branch_id", "").strip()
+    person_id = request.GET.get("person_id", "").strip()
+    session_id = request.GET.get("session_id", "").strip()
+    target_id = request.GET.get("target_id", "").strip()
+    date_from = request.GET.get("date_from", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
+    station_identifier = request.GET.get("station_identifier", "").strip()
+    page_number = int(request.GET.get("page", "1") or "1")
+    page_size = 30
+    params = {"page": page_number, "page_size": page_size}
+    if action:
+        params["action"] = action
+    for key, value in {
+        "actor": actor,
+        "branch_id": branch_id,
+        "person_id": person_id,
+        "session_id": session_id,
+        "target_id": target_id,
+        "date_from": date_from,
+        "date_to": date_to,
+        "station_identifier": station_identifier,
+    }.items():
+        if value:
+            params[key] = value
+    try:
+        payload = _api_client(request).list_audit_logs(**params)
+        items = [to_namespace(item) for item in extract_results(payload)]
+        for item in items:
+            metadata = getattr(item, "metadata", {}) or {}
+            formatted = []
+            changes = metadata.get("changes") if isinstance(metadata, dict) else None
+            if isinstance(changes, dict):
+                for field, values in changes.items():
+                    if isinstance(values, dict):
+                        formatted.append(f"{field}: {values.get('before', '—')} -> {values.get('after', '—')}")
+            elif isinstance(metadata, dict):
+                for key, value in metadata.items():
+                    formatted.append(f"{key}: {value}")
+            setattr(item, "formatted_metadata", formatted)
+            link = ""
+            if getattr(item, "target_type", "") == "person" and str(getattr(item, "target_id", "")).isdigit():
+                link = reverse("person_detail", args=[item.target_id])
+            elif getattr(item, "target_type", "") == "attendance_session" and str(getattr(item, "target_id", "")).isdigit():
+                link = reverse("attendance_session_detail", args=[item.target_id])
+            setattr(item, "target_link", link)
+        page = wrap_api_page(payload, items, page_number, page_size)
+        summary = _api_client(request).audit_summary()
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return auth_response
+        messages.error(request, f"Could not load audit history: {_friendly_api_error(exc)}")
+        page = wrap_api_page({"count": 0}, [], 1, page_size)
+        summary = {"today": {}, "anomalies": {}}
+
+    return render(
+        request,
+        "audit_history.html",
+        {
+            "audit_page": page,
+            "action": action,
+            "actor": actor,
+            "branch_id": branch_id,
+            "person_id": person_id,
+            "session_id": session_id,
+            "target_id": target_id,
+            "date_from": date_from,
+            "date_to": date_to,
+            "station_identifier": station_identifier,
+            "summary": summary,
+            "action_options": [
+                ("", "All activity"),
+                ("person_created", "Member created"),
+                ("person_updated", "Member updated"),
+                ("person_authorized", "Authorization changes"),
+                ("person_nfc_updated", "NFC changes"),
+                ("session_updated", "Session updates"),
+                ("session_state_changed", "Session state changes"),
+                ("public_self_register_checkin", "Public self-registration"),
+                ("member_logout", "Member logouts"),
+                ("nfc_station_check_in", "NFC station check-ins"),
+                ("anomaly", "Operational anomalies"),
+            ],
+        },
+    )
+
+
+@desktop_login_required
+def anomaly_summary(request):
+    if not _desktop_can_view_audit(request):
+        messages.error(request, "Only owners and admins can view monitoring summaries.")
+        return redirect("home")
+    try:
+        summary = _api_client(request).audit_summary()
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return auth_response
+        messages.error(request, f"Could not load monitoring summary: {_friendly_api_error(exc)}")
+        summary = {"today": {}, "anomalies": {}, "throttles": {}}
+    return render(request, "anomaly_summary.html", {"summary": summary})
+
+
+@desktop_login_required
 @require_POST
 def person_update(request, pk: int):
     payload = {
@@ -3604,6 +4039,9 @@ def person_nfc_update(request, pk: int):
 
 @desktop_login_required
 def person_authorize(request, pk: int):
+    if not _desktop_can_manage_authorization(request):
+        messages.error(request, "Only owners and admins can change member authorization.")
+        return redirect("person_detail", pk=pk)
     if request.method == "POST":
         authorized = request.POST.get("authorized") in ("1", "true", "True", "on", "yes")
         next_url = request.POST.get("next") or request.GET.get("next")

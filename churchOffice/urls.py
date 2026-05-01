@@ -22,6 +22,10 @@ urlpatterns = [
 
     # People management
     path('person_list/', views.person_list, name='person_list'),
+    path('members/nfc-enrollment/', views.bulk_nfc_enrollment, name='bulk_nfc_enrollment'),
+    path('members/nfc-reader/', views.nfc_reader_setup, name='nfc_reader_setup'),
+    path('members/nfc-reader/status/', views.nfc_reader_status, name='nfc_reader_status'),
+    path('members/nfc-reader/capture/', views.nfc_reader_capture, name='nfc_reader_capture'),
     path('members/import/', views.member_import, name='member_import'),
     path('members/import/template/', views.member_import_template, name='member_import_template'),
     path('persons/<int:pk>/', views.person_detail, name='person_detail'),
@@ -29,6 +33,8 @@ urlpatterns = [
     path('persons/<int:pk>/authorize/', views.person_authorize, name='person_authorize'),
     path('persons/<int:pk>/nfc/', views.person_nfc_update, name='person_nfc_update'),
     path('persons/<int:pk>/delete/', views.person_delete, name='person_delete'),
+    path('audit/history/', views.audit_history, name='audit_history'),
+    path('audit/anomalies/', views.anomaly_summary, name='anomaly_summary'),
 
     # Attendance views
     path('capture-and-recognize/', views.capture_and_recognize, name='capture_and_recognize'),

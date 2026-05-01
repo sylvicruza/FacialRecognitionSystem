@@ -641,6 +641,17 @@
       </div>
 
       <div class="table-head-actions">
+        <a class="btn-soft" href="{% url 'nfc_reader_setup' %}">
+          <i class="fa-solid fa-tower-cell"></i> Reader Setup
+        </a>
+        <a class="btn-soft" href="{% url 'bulk_nfc_enrollment' %}">
+          <i class="fa-solid fa-id-card"></i> Bulk NFC
+        </a>
+        {% if request.session.attendance_desktop_role == "owner" or request.session.attendance_desktop_role == "admin" or request.session.attendance_desktop_user.is_superuser %}
+          <a class="btn-soft" href="{% url 'audit_history' %}">
+            <i class="fa-solid fa-clock-rotate-left"></i> Audit History
+          </a>
+        {% endif %}
         {% if can_import_members %}
           <a class="btn-soft {% if member_limit.is_reached %}disabled{% endif %}" href="{% url 'member_import' %}">
             <i class="fa-solid fa-file-import"></i> Import CSV

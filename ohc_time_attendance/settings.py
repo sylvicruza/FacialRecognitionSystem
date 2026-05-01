@@ -148,7 +148,7 @@ STATICFILES_DIRS = [
 
 ATTENDANCE_API_BASE_URL = os.getenv(
     "ATTENDANCE_API_BASE_URL",
-    "https://heavensconnect.onrender.com/api/attendance",
+    "http://127.0.0.1:8085/api/attendance",
 )
 ATTENDANCE_API_TOKEN = os.getenv("ATTENDANCE_API_TOKEN", "")
 ATTENDANCE_API_TIMEOUT = int(os.getenv("ATTENDANCE_API_TIMEOUT", "30"))

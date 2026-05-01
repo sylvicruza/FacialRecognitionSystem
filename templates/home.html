@@ -377,6 +377,27 @@
     gap:6px;
   }
 
+  .live-monitor-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:40px;
+    margin-top:2px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid #d7e9de;
+    background:#fff;
+    color:#172033;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .live-monitor-link:hover{
+    color:#0f172a;
+    border-color:#cfe3d7;
+  }
+
   .live-time strong{
     color:#172033;
     font-size:16px;
@@ -702,6 +723,12 @@
                 <strong>{{ active_session.starts_at|default:"Live now" }}</strong>
                 <span>Started at {{ active_session.starts_at|default:"Now" }}</span>
               </div>
+              {% if session_methods.face %}
+                <a class="live-monitor-link" data-monitor-link="true" href="{% url 'stream_all_cameras' %}">
+                  <i class="fa-solid fa-up-right-from-square"></i>
+                  Open Live Monitor
+                </a>
+              {% endif %}
             </div>
           </div>
         {% else %}
