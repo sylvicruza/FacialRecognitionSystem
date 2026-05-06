@@ -1,32 +1,57 @@
 {% extends "base.html" %}
 {% block page_crumb %}Operations{% endblock %}
-{% block page_title %}Monitoring Summary{% endblock %}
-{% block page_subtitle %}Review anomaly trends, throttling scopes, and today’s operational change volume.{% endblock %}
+{% block page_title %}Anomalies{% endblock %}
+{% block page_subtitle %}Review unusual activity, failed scans, and protection scopes across the workspace.{% endblock %}
 {% block content %}
 <style>
-  .monitor-shell{max-width:1120px;margin:0 auto;display:grid;gap:16px}
+  .monitor-shell{max-width:1100px;margin:0 auto;display:grid;gap:16px}
+  .oversight-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .oversight-tab{min-height:42px;padding:0 16px;border-radius:14px;border:1px solid #dfe9e3;background:#fff;color:#475467;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;text-decoration:none;box-shadow:0 10px 22px rgba(15,23,42,.04)}
+  .oversight-tab.active{border-color:transparent;background:#16a34a;color:#fff;box-shadow:0 16px 28px rgba(22,163,74,.18)}
   .monitor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
   .card{background:#fff;border:1px solid #dfe9e3;border-radius:20px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
   .metric{padding:16px}
   .metric span{display:block;color:#667085;font-size:12px;font-weight:800}
   .metric strong{display:block;margin-top:6px;color:#172033;font-size:26px;font-weight:900}
+  .monitor-note{padding:16px 18px;border:1px solid #dfe9e3;border-radius:18px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+  .monitor-note strong{display:block;color:#172033;font-size:16px;font-weight:900}
+  .monitor-note p{margin:6px 0 0;color:#667085;font-size:13px;line-height:1.6}
   .block-head{padding:16px 18px;border-bottom:1px solid #edf2ef}
   .block-head h2{margin:0;color:#172033;font-size:18px;font-weight:900}
   .block-head p{margin:6px 0 0;color:#667085;font-size:13px}
   .block-body{padding:16px 18px 18px;display:grid;gap:12px}
   .item{padding:12px 14px;border:1px solid #e5ede8;border-radius:16px;background:#fff}
+  .item.danger{background:#fef2f2;border-color:#fecaca}
+  .item.warning{background:#fffbeb;border-color:#fde68a}
+  .item.success{background:#f0fdf4;border-color:#bbf7d0}
   .item strong{display:block;color:#172033;font-size:14px}
   .item span{display:block;margin-top:6px;color:#667085;font-size:12px}
   .pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid #dfe9e3;color:#172033;font-size:12px;font-weight:800}
+  .pill.warning{background:#fffbeb;border-color:#fde68a;color:#b45309}
+  .pill.danger{background:#fef2f2;border-color:#fecaca;color:#b42318}
   @media (max-width:980px){.monitor-grid{grid-template-columns:1fr}}
 </style>
+
 <div class="monitor-shell">
+  <nav class="oversight-tabs" aria-label="Oversight pages">
+    <a class="oversight-tab" href="{% url 'audit_history' %}">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      History
+    </a>
+    <a class="oversight-tab active" href="{% url 'anomaly_summary' %}">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Anomalies
+    </a>
+  </nav>
+
+  <section class="monitor-note">
+    <strong>What this page shows</strong>
+    <p>Use this page to spot unusual activity and repeated failures. For a full timeline of user and session changes, use History.</p>
+  </section>
+
   <div class="monitor-grid">
-    <div class="card metric"><span>Today total events</span><strong>{{ summary.today.total|default:0 }}</strong></div>
     <div class="card metric"><span>Today anomalies</span><strong>{{ summary.today.anomalies|default:0 }}</strong></div>
     <div class="card metric"><span>NFC station check-ins today</span><strong>{{ summary.today.nfc_station_check_ins|default:0 }}</strong></div>
-    <div class="card metric"><span>Member changes today</span><strong>{{ summary.today.member_changes|default:0 }}</strong></div>
-    <div class="card metric"><span>Session changes today</span><strong>{{ summary.today.session_changes|default:0 }}</strong></div>
     <div class="card metric"><span>Public check-ins today</span><strong>{{ summary.today.public_check_ins|default:0 }}</strong></div>
   </div>
 
@@ -43,9 +68,9 @@
       </div>
       <div class="item"><strong>Duplicate face candidate events</strong><span>{{ summary.anomalies.duplicate_face_candidates|default:0 }}</span></div>
       {% for item in summary.anomalies.recent %}
-        <div class="item">
+        <div class="item {% if 'failed' in item.action or 'mismatch' in item.action %}danger{% elif 'duplicate' in item.action or 'rapid' in item.action or 'throttle' in item.action %}warning{% endif %}">
           <strong>{{ item.summary }}</strong>
-          <span>{{ item.created_at }} · {{ item.action }}</span>
+          <span>{{ item.created_at }} | {{ item.action }}</span>
         </div>
       {% empty %}
         <div class="item"><strong>No recent anomalies</strong><span>The recent anomaly feed is clear.</span></div>
@@ -56,13 +81,13 @@
   <section class="card">
     <div class="block-head">
       <h2>Throttle Scopes</h2>
-      <p>These scopes help protect public entry points and high-cost recognition endpoints.</p>
+      <p>These protection scopes limit public entry points and expensive recognition endpoints.</p>
     </div>
     <div class="block-body">
-      <span class="pill">Public member lookup: {{ summary.throttles.public_lookup_scope|default:"public_member_lookup" }}</span>
-      <span class="pill">Public self-registration: {{ summary.throttles.public_registration_scope|default:"public_self_register" }}</span>
-      <span class="pill">NFC check-in: {{ summary.throttles.nfc_scope|default:"nfc_check_in" }}</span>
-      <span class="pill">Face recognition: {{ summary.throttles.face_scope|default:"face_recognition" }}</span>
+      <span class="pill warning">Public member lookup: {{ summary.throttles.public_lookup_scope|default:"public_member_lookup" }}</span>
+      <span class="pill warning">Public self-registration: {{ summary.throttles.public_registration_scope|default:"public_self_register" }}</span>
+      <span class="pill warning">NFC check-in: {{ summary.throttles.nfc_scope|default:"nfc_check_in" }}</span>
+      <span class="pill danger">Face recognition: {{ summary.throttles.face_scope|default:"face_recognition" }}</span>
     </div>
   </section>
 </div>

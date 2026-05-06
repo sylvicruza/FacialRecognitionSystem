@@ -1298,7 +1298,13 @@
                           </div>
                           <div class="nfc-inline-status" id="registerNfcStatus">
                             <i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i>
-                            <span>Use an NFC-enabled Android device here, or paste the UID manually.</span>
+                            <span>
+                              {% if nfc_handoff_ready %}
+                                NFC tag loaded from the desktop reader station. Review it or scan again on Android if needed.
+                              {% else %}
+                                Use an NFC-enabled Android device here, the desktop reader station handoff, or paste the UID manually.
+                              {% endif %}
+                            </span>
                           </div>
                         </div>
                       </div>

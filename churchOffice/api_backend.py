@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 from types import SimpleNamespace
 from typing import Any
 
 from django.conf import settings
+from django.utils import timezone
 
 from .api_client import AttendanceApiClient
 
@@ -59,6 +61,37 @@ def normalize_camera(camera: dict[str, Any]):
     return to_namespace({**camera, "pk": camera["id"]})
 
 
+def _parse_api_datetime(value: Any):
+    if not value or not isinstance(value, str):
+        return value
+    for candidate in (value, value.replace("Z", "+00:00")):
+        try:
+            parsed = datetime.fromisoformat(candidate)
+            if timezone.is_naive(parsed):
+                return timezone.make_aware(parsed, timezone.get_current_timezone())
+            return parsed
+        except ValueError:
+            pass
+    for pattern in ("%d-%m-%Y %H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            parsed = datetime.strptime(value, pattern)
+            return timezone.make_aware(parsed, timezone.get_current_timezone())
+        except ValueError:
+            continue
+    return value
+
+
+def _parse_api_date(value: Any):
+    if not value or not isinstance(value, str):
+        return value
+    for pattern in ("%Y-%m-%d", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(value, pattern).date()
+        except ValueError:
+            continue
+    return value
+
+
 def get_all_people(search: str = "", request=None, authorized: bool | None = None, source: str = ""):
     client = get_client(request=request)
     params: dict[str, Any] = {"page_size": 200}
@@ -104,6 +137,9 @@ def prepare_attendance_records(records: list[dict[str, Any]], request=None):
             to_namespace(
                 {
                     **record,
+                    "date": _parse_api_date(record.get("date")),
+                    "check_in_time": _parse_api_datetime(record.get("check_in_time")),
+                    "check_out_time": _parse_api_datetime(record.get("check_out_time")),
                     "person": person,
                     "camera": camera_obj,
                     "calculate_duration": record.get("duration"),

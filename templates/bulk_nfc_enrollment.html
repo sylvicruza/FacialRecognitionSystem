@@ -1,47 +1,99 @@
 {% extends "base.html" %}
 {% block page_crumb %}Members{% endblock %}
-{% block page_title %}Bulk NFC Enrollment{% endblock %}
-{% block page_subtitle %}Assign member stickers quickly with Android Web NFC or a keyboard-style reader.{% endblock %}
+{% block page_title %}NFC Tag Enrollment{% endblock %}
+{% block page_subtitle %}Assign, replace, or clear saved member tags from one focused workspace.{% endblock %}
 {% block content %}
 <style>
-  .bulk-shell{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.4fr);gap:16px}
-  .bulk-card{background:#fff;border:1px solid #dfe9e3;border-radius:20px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
-  .bulk-head{padding:16px 18px;border-bottom:1px solid #edf2ef}
+  .nfc-tabs{max-width:1160px;margin:0 auto 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .nfc-tab{min-height:42px;padding:0 16px;border-radius:14px;border:1px solid #dfe9e3;background:#fff;color:#475467;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;text-decoration:none;box-shadow:0 10px 22px rgba(15,23,42,.04)}
+  .nfc-tab.active{border-color:transparent;background:#16a34a;color:#fff;box-shadow:0 16px 28px rgba(22,163,74,.18)}
+  .bulk-shell{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,1.28fr);gap:18px}
+  .bulk-card{background:#fff;border:1px solid #dfe9e3;border-radius:22px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+  .bulk-head{padding:18px 20px;border-bottom:1px solid #edf2ef}
   .bulk-head h2,.bulk-head h3{margin:0;color:#172033;font-size:18px;font-weight:900}
   .bulk-head p{margin:6px 0 0;color:#667085;font-size:13px;line-height:1.5}
-  .bulk-body{padding:16px 18px 18px;display:grid;gap:14px}
+  .bulk-body{padding:18px 20px 20px;display:grid;gap:16px}
   .search-row,.action-row{display:flex;gap:10px;flex-wrap:wrap}
-  .search-row input,.uid-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #dfe9e3;border-radius:12px;background:#fff}
-  .btnx{min-height:44px;padding:10px 14px;border-radius:12px;border:1px solid #dfe9e3;background:#fff;color:#172033;font-size:13px;font-weight:800}
+  .search-row input,.uid-input{width:100%;min-height:46px;padding:12px 14px;border:1px solid #dfe9e3;border-radius:14px;background:#fff;color:#172033}
+  .uid-block{display:grid;gap:12px}
+  .uid-field{display:grid;gap:8px}
+  .action-row{margin-top:6px}
+  .btnx{min-height:46px;padding:10px 15px;border-radius:14px;border:1px solid #dfe9e3;background:#fff;color:#172033;font-size:13px;font-weight:800}
   .btnx.primary{border-color:transparent;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
-  .status-box{min-height:42px;padding:10px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f8fbf9;color:#526070;font-size:12px;display:flex;align-items:center}
+  .status-box{min-height:44px;padding:11px 13px;border:1px solid #e5ede8;border-radius:14px;background:#f8fbf9;color:#526070;font-size:12px;display:flex;align-items:center;line-height:1.5}
   .status-box.live{border-color:#d7efdf;background:#eefaf2;color:#137a38}
-  .queue{display:grid;gap:10px;max-height:620px;overflow:auto}
-  .queue-item{padding:12px 14px;border:1px solid #e5ede8;border-radius:14px;background:#fff;display:grid;gap:4px}
+  .queue{display:grid;gap:10px;max-height:660px;overflow:auto}
+  .queue-item{padding:14px 15px;border:1px solid #e5ede8;border-radius:16px;background:#fff;display:grid;gap:6px;text-decoration:none}
   .queue-item.active{border-color:#bde8cb;background:linear-gradient(135deg,#f3fcf6,#fff)}
-  .queue-item strong{color:#172033;font-size:14px}
+  .queue-item strong{color:#172033;font-size:15px}
   .queue-item span{color:#667085;font-size:12px}
+  .queue-item .queue-meta{display:flex;gap:8px;flex-wrap:wrap}
+  .queue-item .queue-meta span{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#f8fbf9;border:1px solid #e8efea;color:#526070}
   .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid #dfe9e3;color:#172033;font-size:12px;font-weight:800}
+  .member-panel{display:grid;gap:14px;padding:16px;border:1px solid #e6efe9;border-radius:18px;background:linear-gradient(180deg,#fbfefd,#f8fbf9)}
+  .member-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .member-label{color:#16a34a;font-size:12px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+  .member-name{margin:4px 0 0;color:#172033;font-size:24px;font-weight:900;line-height:1.2}
+  .member-code{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #dfe9e3;color:#344054;font-size:12px;font-weight:800}
+  .member-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .member-meta{padding:11px 12px;border:1px solid #e5ede8;border-radius:14px;background:#fff}
+  .member-meta small{display:block;margin-bottom:4px;color:#667085;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .member-meta strong{display:block;color:#172033;font-size:14px;word-break:break-word}
+  .helper-strip{padding:12px 13px;border:1px solid #e6efe9;border-radius:14px;background:#f8fbf9;color:#526070;font-size:12px;line-height:1.5}
+  .queue-headline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .queue-count{color:#667085;font-size:12px;font-weight:800}
   @media (max-width: 980px){.bulk-shell{grid-template-columns:1fr}}
+  @media (max-width: 640px){.member-grid{grid-template-columns:1fr}}
 </style>
+
+<nav class="nfc-tabs" aria-label="NFC pages">
+  <a class="nfc-tab" href="{% url 'nfc_attendance' %}">
+    <i class="fa-solid fa-id-card-clip"></i>
+    Attendance
+  </a>
+  <a class="nfc-tab" href="{% url 'nfc_reader_setup' %}">
+    <i class="fa-solid fa-tower-cell"></i>
+    Reader Station
+  </a>
+  <a class="nfc-tab active" href="{% url 'bulk_nfc_enrollment' %}">
+    <i class="fa-solid fa-tags"></i>
+    Tag Enrollment
+  </a>
+</nav>
 
 <div class="bulk-shell">
   <section class="bulk-card">
     <div class="bulk-head">
-      <h2>Current Member</h2>
-      <p>Keep the scan box focused if you are using a USB keyboard-wedge NFC reader. On Android Chrome you can use direct Web NFC scanning.</p>
+      <h2>Assign Tag</h2>
+      <p>Choose the member, scan or paste the UID, then save and move to the next person.</p>
     </div>
     <div class="bulk-body">
       {% if current_person %}
-        <div>
-          <div class="pill">{{ queue_total }} member{{ queue_total|pluralize }} in this queue</div>
-        </div>
-        <div>
-          <strong style="display:block;color:#172033;font-size:20px;font-weight:900;">{{ current_person.name }}</strong>
-          <div style="margin-top:6px;color:#667085;font-size:13px;">
-            {{ current_person.member_code|default:"No code yet" }}
-            {% if current_person.email %} · {{ current_person.email }}{% endif %}
-            {% if current_person.phone %} · {{ current_person.phone }}{% endif %}
+        <div class="member-panel">
+          <div class="member-top">
+            <div>
+              <div class="member-label">Current member</div>
+              <div class="member-name">{{ current_person.name }}</div>
+            </div>
+            <div class="member-code">{{ current_person.member_code|default:"No member code yet" }}</div>
+          </div>
+          <div class="member-grid">
+            <div class="member-meta">
+              <small>Email</small>
+              <strong>{{ current_person.email|default:"Not provided" }}</strong>
+            </div>
+            <div class="member-meta">
+              <small>Phone</small>
+              <strong>{{ current_person.phone|default:"Not provided" }}</strong>
+            </div>
+            <div class="member-meta">
+              <small>Current tag</small>
+              <strong>{{ current_person.nfc_uid|default:"No tag assigned" }}</strong>
+            </div>
+            <div class="member-meta">
+              <small>Queue size</small>
+              <strong>{{ queue_total }} member{{ queue_total|pluralize }} in this view</strong>
+            </div>
           </div>
         </div>
         <form method="post" id="nfc-enroll-form">
@@ -49,15 +101,20 @@
           <input type="hidden" name="person_id" value="{{ current_person.id }}">
           <input type="hidden" name="search" value="{{ search }}">
           <input type="hidden" name="include_assigned" value="{% if include_assigned %}1{% else %}0{% endif %}">
-          <label for="nfc-uid" style="color:#344054;font-size:12px;font-weight:800;">NFC UID</label>
-          <input id="nfc-uid" class="uid-input" name="nfc_uid" value="{{ prefill_uid|default:current_person.nfc_uid|default:'' }}" placeholder="Tap card or paste UID here" autofocus>
-          <div class="action-row">
-            <button type="button" class="btnx" id="scan-nfc-btn">Scan NFC Tag</button>
-            <button type="button" class="btnx" id="stop-nfc-btn" hidden>Stop Scan</button>
-            <button type="submit" class="btnx primary">Save And Advance</button>
+          <div class="uid-block">
+            <div class="uid-field">
+              <label for="nfc-uid" style="color:#344054;font-size:12px;font-weight:800;">NFC tag UID</label>
+              <input id="nfc-uid" class="uid-input" name="nfc_uid" value="{{ prefill_uid|default:current_person.nfc_uid|default:'' }}" placeholder="Tap tag or paste UID here" autofocus>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btnx" id="scan-nfc-btn">Scan NFC Tag</button>
+              <button type="button" class="btnx" id="stop-nfc-btn" hidden>Stop Scan</button>
+              <button type="submit" class="btnx primary">Save And Advance</button>
+            </div>
           </div>
         </form>
         <div id="nfc-status" class="status-box">Ready. Android Chrome can scan directly here. USB or Bluetooth keyboard-style readers can type into the UID box automatically.</div>
+      <div class="helper-strip">Saving a new UID replaces the existing tag for this member. Leave the UID field empty and save if you want to clear the tag assignment.</div>
       {% else %}
         <div class="status-box live">Everyone in this filtered list already has an NFC tag assigned.</div>
       {% endif %}
@@ -66,8 +123,8 @@
 
   <section class="bulk-card">
     <div class="bulk-head">
-      <h3>Queue</h3>
-      <p>Stay focused on members without a tag, or include already assigned records when you need to replace stickers.</p>
+      <h3>Member Queue</h3>
+      <p>Start with unassigned members, or include tagged members when you need to replace or remove an existing UID.</p>
     </div>
     <div class="bulk-body">
       <form method="get" class="search-row">
@@ -78,14 +135,22 @@
         </label>
         <button type="submit" class="btnx">Refresh Queue</button>
       </form>
+      <div class="queue-headline">
+        <div class="pill">Queue</div>
+        <div class="queue-count">{{ queue_total }} member{{ queue_total|pluralize }} in this filtered view</div>
+      </div>
       <div class="queue">
         {% for person in people %}
           <a class="queue-item {% if current_person and current_person.id == person.id %}active{% endif %}" href="?search={{ search|urlencode }}&include_assigned={% if include_assigned %}1{% else %}0{% endif %}&current={{ person.id }}">
             <strong>{{ person.name }}</strong>
-            <span>{{ person.member_code|default:"No code yet" }}</span>
+            <div class="queue-meta">
+              <span>{{ person.member_code|default:"No member code yet" }}</span>
+              {% if person.email %}<span>{{ person.email }}</span>{% endif %}
+              {% if person.phone %}<span>{{ person.phone }}</span>{% endif %}
+            </div>
             <span>
               {% if person.nfc_uid %}
-                Assigned: {{ person.nfc_uid }}
+                Current tag: {{ person.nfc_uid }}
               {% else %}
                 No NFC tag assigned yet
               {% endif %}

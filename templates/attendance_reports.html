@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block page_crumb %}Reports{% endblock %}
-{% block page_title %}Attendance Reports{% endblock %}
-{% block page_subtitle %}Review event, member, method, branch, and date range performance.{% endblock %}
+{% block page_title %}Attendance Summary{% endblock %}
+{% block page_subtitle %}Clear counts for the current filters, plus simple method, event, and branch breakdowns.{% endblock %}
 
 {% block content %}
 <style>
@@ -14,6 +14,36 @@
     padding:8px 0 40px;
   }
 
+  .reporting-tabs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .reporting-tab{
+    min-height:42px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#475467;
+    font-size:13px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    box-shadow:0 10px 22px rgba(15,23,42,.04);
+  }
+
+  .reporting-tab.active{
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.18);
+  }
+
   .report-card{
     background:#fff;
     border:1px solid #dfe9e3;
@@ -21,11 +51,51 @@
     box-shadow:0 18px 44px rgba(15,23,42,.06);
   }
 
+  .summary-note{
+    padding:16px 18px;
+    display:grid;
+    gap:10px;
+  }
+
+  .summary-note h2{
+    margin:0;
+    color:#172033;
+    font-size:18px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .summary-note p{
+    margin:0;
+    color:#667085;
+    font-size:13px;
+    line-height:1.6;
+  }
+
+  .summary-tags{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .summary-tag{
+    min-height:32px;
+    padding:0 12px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid #e4ece7;
+    border-radius:999px;
+    background:#fff;
+    color:#475467;
+    font-size:12px;
+    font-weight:800;
+  }
+
   .filter-card{
     padding:18px;
     display:grid;
-    grid-template-columns:minmax(0,1fr) 280px;
-    gap:18px;
+    gap:14px;
   }
 
   .filter-grid{
@@ -61,9 +131,10 @@
   }
 
   .button-stack{
-    display:grid;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
     gap:10px;
-    grid-template-columns:1fr 1fr;
     margin-top:12px;
   }
 
@@ -96,19 +167,6 @@
 
   .btnx.ghost{
     background:#fff;
-  }
-
-  .export-panel{
-    padding-left:18px;
-    border-left:1px solid #edf2ef;
-    display:grid;
-    gap:12px;
-    align-content:start;
-  }
-
-  .export-actions{
-    display:grid;
-    gap:10px;
   }
 
   .metric-grid{
@@ -171,15 +229,9 @@
   .metric-card .blue{color:#3b82f6;}
   .metric-card .gray{color:#667085;}
 
-  .report-grid{
-    display:grid;
-    grid-template-columns:1.1fr 1fr .95fr;
-    gap:18px;
-  }
-
   .bottom-grid{
     display:grid;
-    grid-template-columns:.95fr 1.35fr;
+    grid-template-columns:1fr 1fr;
     gap:18px;
   }
 
@@ -195,62 +247,13 @@
     letter-spacing:-.03em;
   }
 
-  .overview-grid{
+  .status-list{
     margin-top:18px;
-    display:grid;
-    grid-template-columns:170px minmax(0,1fr);
-    gap:18px;
-    align-items:center;
-  }
-
-  .donut{
-    width:146px;
-    height:146px;
-    margin:0 auto;
-    border-radius:50%;
-    background:{{ donut_style|safe }};
-    position:relative;
-  }
-
-  .donut:after{
-    content:"";
-    position:absolute;
-    inset:28px;
-    border-radius:50%;
-    background:#fff;
-    box-shadow:inset 0 0 0 1px #edf2ef;
-  }
-
-  .donut-center{
-    position:absolute;
-    inset:0;
-    z-index:1;
-    display:grid;
-    place-items:center;
-    text-align:center;
-  }
-
-  .donut-center strong{
-    display:block;
-    color:#172033;
-    font-size:18px;
-    font-weight:900;
-    line-height:1;
-  }
-
-  .donut-center span{
-    display:block;
-    margin-top:6px;
-    color:#667085;
-    font-size:12px;
-  }
-
-  .legend{
     display:grid;
     gap:12px;
   }
 
-  .legend-row{
+  .status-row{
     display:grid;
     grid-template-columns:14px minmax(0,1fr) auto;
     gap:10px;
@@ -265,7 +268,7 @@
     border-radius:50%;
   }
 
-  .legend-row strong{
+  .status-row strong{
     color:#172033;
     font-weight:800;
   }
@@ -358,36 +361,6 @@
     white-space:nowrap;
   }
 
-  .daily-chart{
-    margin-top:18px;
-    height:150px;
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(18px,1fr));
-    gap:10px;
-    align-items:end;
-  }
-
-  .daily-bar-wrap{
-    display:grid;
-    gap:10px;
-    justify-items:center;
-  }
-
-  .daily-bar{
-    width:10px;
-    border-radius:999px 999px 0 0;
-    background:linear-gradient(180deg,#1fc45b 0%, #17a349 100%);
-    border:1px solid rgba(23,163,73,.18);
-    min-height:14px;
-  }
-
-  .daily-label{
-    color:#667085;
-    font-size:11px;
-    font-weight:700;
-    white-space:nowrap;
-  }
-
   .empty{
     margin-top:16px;
     padding:18px;
@@ -404,17 +377,9 @@
       grid-template-columns:repeat(2,minmax(0,1fr));
     }
 
-    .report-grid,
     .bottom-grid,
     .filter-card{
       grid-template-columns:1fr;
-    }
-
-    .export-panel{
-      border-left:0;
-      border-top:1px solid #edf2ef;
-      padding-left:0;
-      padding-top:18px;
     }
   }
 
@@ -424,21 +389,21 @@
     }
 
     .button-stack{
-      grid-column:1 / -1;
-      grid-template-columns:1fr 1fr;
+      width:100%;
     }
   }
 
   @media (max-width: 720px){
     .filter-grid,
-    .metric-grid,
-    .overview-grid,
-    .button-stack,
-    .export-actions{
+    .metric-grid{
       grid-template-columns:1fr;
     }
 
-    .report-grid,
+    .button-stack{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
     .bottom-grid{
       grid-template-columns:1fr;
     }
@@ -446,78 +411,74 @@
 </style>
 
 <div class="reports-shell">
-  <section class="report-card filter-card">
-    <div>
-      <form method="get" class="filter-grid" id="reportsFilterForm">
-        <div class="field">
-          <label>Date From</label>
-          <input class="control" type="date" name="date_from" value="{{ date_from }}">
-        </div>
-        <div class="field">
-          <label>Date To</label>
-          <input class="control" type="date" name="date_to" value="{{ date_to }}">
-        </div>
-        <div class="field">
-          <label>Event</label>
-          <select class="control" name="event_id">
-            <option value="">All events</option>
-            {% for event in events %}
-              <option value="{{ event.id }}" {% if event_id == event.id|stringformat:"s" %}selected{% endif %}>{{ event.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label>Branch</label>
-          <select class="control" name="branch_id">
-            <option value="">All branches</option>
-            {% for branch in branches %}
-              <option value="{{ branch.id }}" {% if branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label>Method</label>
-          <select class="control" name="method">
-            <option value="">All methods</option>
-            <option value="manual" {% if method == "manual" %}selected{% endif %}>Manual</option>
-            <option value="swipe" {% if method == "swipe" %}selected{% endif %}>Swipe</option>
-            <option value="qr" {% if method == "qr" %}selected{% endif %}>QR Code</option>
-            <option value="member_self" {% if method == "member_self" %}selected{% endif %}>Self Check-In</option>
-            <option value="nfc" {% if method == "nfc" %}selected{% endif %}>NFC</option>
-            <option value="face" {% if method == "face" %}selected{% endif %}>Face Recognition</option>
-            <option value="geotracking" {% if method == "geotracking" %}selected{% endif %}>GeoTracking</option>
-          </select>
-        </div>
-      </form>
-      <div class="button-stack">
-        <button class="btnx success" type="submit" form="reportsFilterForm"><i class="fa-solid fa-filter"></i> Apply Filters</button>
-        <a class="btnx ghost" href="{% url 'attendance_reports' %}"><i class="fa-solid fa-rotate-left"></i> Reset</a>
-      </div>
+  <nav class="reporting-tabs" aria-label="Reporting views">
+    <a class="reporting-tab active" href="{% url 'attendance_reports' %}">
+      <i class="fa-solid fa-chart-line"></i>
+      Summary
+    </a>
+    <a class="reporting-tab" href="{% url 'person_attendance_list' %}">
+      <i class="fa-solid fa-clipboard-list"></i>
+      Records
+    </a>
+  </nav>
+
+  <section class="report-card summary-note">
+    <h2>What this summary counts</h2>
+    <p>Every number on this page is based on the current filters and counts attendance records, not unique people. If one member appears in multiple sessions, each attendance record is counted.</p>
+    <div class="summary-tags">
+      <span class="summary-tag"><i class="fa-regular fa-calendar"></i> {{ date_from }} to {{ date_to }}</span>
+      <span class="summary-tag"><i class="fa-solid fa-filter"></i> {{ total_records }} matching record{{ total_records|pluralize }}</span>
+      {% if method %}<span class="summary-tag"><i class="fa-solid fa-bolt"></i> Method: {{ method|title }}</span>{% endif %}
+      {% if event_id %}<span class="summary-tag"><i class="fa-regular fa-calendar-check"></i> Event filtered</span>{% endif %}
+      {% if branch_id %}<span class="summary-tag"><i class="fa-regular fa-building"></i> Branch filtered</span>{% endif %}
     </div>
+  </section>
 
-    <div class="export-panel">
-      <div class="export-title">Export Report</div>
-      <form method="get" action="{% url 'attendance_export_download' %}">
-        <input type="hidden" name="date_from" value="{{ date_from }}">
-        <input type="hidden" name="date_to" value="{{ date_to }}">
-        <input type="hidden" name="event_id" value="{{ event_id }}">
-        <input type="hidden" name="branch_id" value="{{ branch_id }}">
-        <input type="hidden" name="method" value="{{ method }}">
-
-        <div class="field">
-          <label for="downloadFormat">Format</label>
-          <select class="control" name="format" id="downloadFormat">
-            <option value="csv">CSV</option>
-            <option value="xlsx">Excel</option>
-            <option value="pdf">PDF</option>
-          </select>
-        </div>
-
-        <div class="export-actions">
-          <button type="submit" class="btnx"><i class="fa-solid fa-download"></i> Download</button>
-          <button type="button" class="btnx success" data-bs-toggle="modal" data-bs-target="#emailModal"><i class="fa-regular fa-envelope"></i> Email Report</button>
-        </div>
-      </form>
+  <section class="report-card filter-card">
+    <form method="get" class="filter-grid" id="reportsFilterForm">
+      <div class="field">
+        <label>Date From</label>
+        <input class="control" type="date" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="field">
+        <label>Date To</label>
+        <input class="control" type="date" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="field">
+        <label>Event</label>
+        <select class="control" name="event_id">
+          <option value="">All events</option>
+          {% for event in events %}
+            <option value="{{ event.id }}" {% if event_id == event.id|stringformat:"s" %}selected{% endif %}>{{ event.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Branch</label>
+        <select class="control" name="branch_id">
+          <option value="">All branches</option>
+          {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Method</label>
+        <select class="control" name="method">
+          <option value="">All methods</option>
+          <option value="manual" {% if method == "manual" %}selected{% endif %}>Manual</option>
+          <option value="swipe" {% if method == "swipe" %}selected{% endif %}>Swipe</option>
+          <option value="qr" {% if method == "qr" %}selected{% endif %}>QR Code</option>
+          <option value="member_self" {% if method == "member_self" %}selected{% endif %}>Self Check-In</option>
+          <option value="nfc" {% if method == "nfc" %}selected{% endif %}>NFC</option>
+          <option value="face" {% if method == "face" %}selected{% endif %}>Face Recognition</option>
+          <option value="geotracking" {% if method == "geotracking" %}selected{% endif %}>GeoTracking</option>
+        </select>
+      </div>
+    </form>
+    <div class="button-stack">
+      <button class="btnx success" type="submit" form="reportsFilterForm"><i class="fa-solid fa-filter"></i> Apply Filters</button>
+      <a class="btnx ghost" href="{% url 'attendance_reports' %}"><i class="fa-solid fa-rotate-left"></i> Reset</a>
     </div>
   </section>
 
@@ -526,17 +487,17 @@
       <div class="metric-top">
         <div class="metric-icon total"><i class="fa-solid fa-users"></i></div>
         <div class="metric-copy">
-          <small>Total Records</small>
+          <small>Total attendance records</small>
           <strong>{{ total_records }}</strong>
         </div>
       </div>
-      <span class="gray">Across current filters</span>
+      <span class="gray">Matching current filters</span>
     </div>
     <div class="report-card metric-card">
       <div class="metric-top">
         <div class="metric-icon present"><i class="fa-solid fa-user-check"></i></div>
         <div class="metric-copy">
-          <small>Present</small>
+          <small>Present records</small>
           <strong>{{ present_count }}</strong>
         </div>
       </div>
@@ -546,7 +507,7 @@
       <div class="metric-top">
         <div class="metric-icon absent"><i class="fa-solid fa-user-xmark"></i></div>
         <div class="metric-copy">
-          <small>Absent</small>
+          <small>Absent records</small>
           <strong>{{ absent_count }}</strong>
         </div>
       </div>
@@ -556,7 +517,7 @@
       <div class="metric-top">
         <div class="metric-icon pending"><i class="fa-solid fa-hourglass-half"></i></div>
         <div class="metric-copy">
-          <small>Pending</small>
+          <small>Pending records</small>
           <strong>{{ pending_count }}</strong>
         </div>
       </div>
@@ -566,7 +527,7 @@
       <div class="metric-top">
         <div class="metric-icon checked"><i class="fa-solid fa-right-from-bracket"></i></div>
         <div class="metric-copy">
-          <small>Checked Out</small>
+          <small>Checked-out records</small>
           <strong>{{ checked_out_count }}</strong>
         </div>
       </div>
@@ -574,28 +535,17 @@
     </div>
   </section>
 
-  <section class="report-grid">
+  <section class="bottom-grid">
     <div class="report-card panel-card">
-      <h3>Attendance Overview</h3>
-      <div class="overview-grid">
-        <div style="position:relative;">
-          <div class="donut"></div>
-          <div class="donut-center">
-            <div>
-              <strong>{{ total_records }}</strong>
-              <span>Total</span>
-            </div>
+      <h3>Status Breakdown</h3>
+      <div class="status-list">
+        {% for segment in donut_segments %}
+          <div class="status-row">
+            <span class="legend-dot" style="background:{{ segment.color }};"></span>
+            <strong>{{ segment.label }}</strong>
+            <span>{{ segment.count }} of {{ total_records }} ({{ segment.percent }}%)</span>
           </div>
-        </div>
-        <div class="legend">
-          {% for segment in donut_segments %}
-            <div class="legend-row">
-              <span class="legend-dot" style="background:{{ segment.color }};"></span>
-              <strong>{{ segment.label }}</strong>
-              <span>{{ segment.count }} ({{ segment.percent }}%)</span>
-            </div>
-          {% endfor %}
-        </div>
+        {% endfor %}
       </div>
     </div>
 
@@ -615,16 +565,18 @@
         <div class="empty">No method data for this period.</div>
       {% endif %}
     </div>
+  </section>
 
+  <section class="bottom-grid">
     <div class="report-card panel-card">
-      <h3>Top Events</h3>
+      <h3>Event Summary</h3>
       {% if top_event_rows %}
         <div class="top-list">
           {% for item in top_event_rows %}
             <div class="top-item">
               <span class="top-icon"><i class="fa-regular fa-calendar-check"></i></span>
               <strong>{{ item.label }}</strong>
-              <span>{{ item.count }} ({{ item.percent }}%)</span>
+              <span>{{ item.count }} record{{ item.count|pluralize }} ({{ item.percent }}%)</span>
             </div>
           {% endfor %}
         </div>
@@ -632,9 +584,7 @@
         <div class="empty">No event data for this period.</div>
       {% endif %}
     </div>
-  </section>
 
-  <section class="bottom-grid">
     <div class="report-card panel-card">
       <h3>Branch Summary</h3>
       {% if branch_rows %}
@@ -651,70 +601,6 @@
         <div class="empty">No branch data for this period.</div>
       {% endif %}
     </div>
-
-    <div class="report-card panel-card">
-      <h3>Daily Activity</h3>
-      {% if daily_rows %}
-        <div class="daily-chart">
-          {% for item in daily_rows %}
-            <div class="daily-bar-wrap">
-              <div class="daily-bar" style="height:{{ item.height }}px;" title="{{ item.date }} | {{ item.count }}"></div>
-              <div class="daily-label">{{ item.date|slice:"5:" }}</div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty">No daily records for this period.</div>
-      {% endif %}
-    </div>
   </section>
-</div>
-
-<div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold">
-          <i class="fa-solid fa-envelope me-2 text-primary"></i>
-          Email Report
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <form method="POST" action="{% url 'attendance_email_export' %}">
-        {% csrf_token %}
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label fw-bold">Recipient Email</label>
-            <input type="email" name="to_email" class="form-control" placeholder="e.g. admin@example.com" required>
-            <div class="form-text">This report will be sent with the current report filters.</div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-bold">Format</label>
-            <select name="format" class="form-select" id="emailFormat">
-              <option value="csv">CSV</option>
-              <option value="xlsx">Excel (XLSX)</option>
-              <option value="pdf">PDF</option>
-            </select>
-          </div>
-
-          <input type="hidden" name="date_from" value="{{ date_from }}">
-          <input type="hidden" name="date_to" value="{{ date_to }}">
-          <input type="hidden" name="event_id" value="{{ event_id }}">
-          <input type="hidden" name="branch_id" value="{{ branch_id }}">
-          <input type="hidden" name="method" value="{{ method }}">
-          <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-paper-plane"></i> Send
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 {% endblock %}

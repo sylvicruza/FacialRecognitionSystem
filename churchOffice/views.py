@@ -24,6 +24,8 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 import time
 import uuid
 from collections import defaultdict, deque
@@ -117,6 +119,7 @@ DESKTOP_NAME_SESSION_KEY = "attendance_desktop_name"
 DESKTOP_ORGANIZATION_SESSION_KEY = "attendance_desktop_organization"
 DESKTOP_PLAN_SESSION_KEY = "attendance_desktop_plan"
 ACTIVE_ATTENDANCE_SESSION_KEY = "active_attendance_session_id"
+ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY = "active_attendance_session_cleared"
 DESKTOP_SYNC_STATUS_SESSION_KEY = "attendance_desktop_sync_status"
 NFC_READER_SETTINGS_SESSION_KEY = "attendance_nfc_reader_settings"
 NFC_READER_RUNTIME_SESSION_KEY = "attendance_nfc_reader_runtime"
@@ -155,6 +158,10 @@ def _store_desktop_auth(request, payload: dict):
     request.session[DESKTOP_ROLE_SESSION_KEY] = profile_payload.get("role") or payload.get("role") or payload.get("user_type") or ""
     request.session[DESKTOP_NAME_SESSION_KEY] = user_payload.get("name") or payload.get("full_name") or user_payload.get("username") or "Desktop User"
     request.session.modified = True
+    try:
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
+    except Exception:
+        pass
 
 
 def _clear_desktop_auth(request):
@@ -167,12 +174,18 @@ def _clear_desktop_auth(request):
         DESKTOP_ORGANIZATION_SESSION_KEY,
         DESKTOP_PLAN_SESSION_KEY,
         ACTIVE_ATTENDANCE_SESSION_KEY,
+        ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY,
         DESKTOP_SYNC_STATUS_SESSION_KEY,
         NFC_READER_SETTINGS_SESSION_KEY,
         NFC_READER_RUNTIME_SESSION_KEY,
     ):
         request.session.pop(key, None)
     request.session.modified = True
+    try:
+        _reader_bridge_config_path().unlink(missing_ok=True)
+        _reader_bridge_runtime_path().unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def _default_nfc_reader_runtime() -> dict:
@@ -188,15 +201,120 @@ def _default_nfc_reader_runtime() -> dict:
 
 
 def _reader_runtime(request) -> dict:
+    file_payload = {}
+    try:
+        file_payload = json.loads(_reader_bridge_runtime_path().read_text(encoding="utf-8"))
+    except Exception:
+        file_payload = {}
     return {
         **_default_nfc_reader_runtime(),
         **(request.session.get(NFC_READER_RUNTIME_SESSION_KEY) or {}),
+        **(file_payload or {}),
     }
 
 
 def _store_reader_runtime(request, payload: dict):
     request.session[NFC_READER_RUNTIME_SESSION_KEY] = payload
     request.session.modified = True
+    try:
+        _reader_bridge_runtime_path().write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _reader_bridge_config_path():
+    return settings.RUNTIME_DIR / "nfc_reader_bridge_config.json"
+
+
+def _reader_bridge_runtime_path():
+    return settings.RUNTIME_DIR / "nfc_reader_bridge_runtime.json"
+
+
+def _reader_bridge_pid_path():
+    return settings.RUNTIME_DIR / "nfc_reader_bridge.pid"
+
+
+def _reader_bridge_running_pid():
+    try:
+        pid = int(_reader_bridge_pid_path().read_text(encoding="utf-8").strip())
+    except Exception:
+        return None
+    try:
+        completed = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            timeout=4,
+            creationflags=int(getattr(subprocess, "CREATE_NO_WINDOW", 0)),
+            check=False,
+        )
+        output = (completed.stdout or "").strip()
+        if completed.returncode != 0 or not output or "No tasks are running" in output:
+            raise RuntimeError("bridge process is not running")
+    except Exception:
+        try:
+            _reader_bridge_pid_path().unlink(missing_ok=True)
+        except OSError:
+            pass
+        return None
+    return pid
+
+
+def _launch_reader_bridge():
+    existing_pid = _reader_bridge_running_pid()
+    if existing_pid:
+        return existing_pid, False
+
+    bridge_script = settings.BASE_DIR / "run_acr122u_bridge.py"
+    venv_python = settings.BASE_DIR / ".venv" / "Scripts" / "python.exe"
+    python_executable = venv_python if venv_python.exists() else Path(sys.executable)
+    env = os.environ.copy()
+    env["DJANGO_SETTINGS_MODULE"] = "ohc_time_attendance.settings"
+    env["ATTENDANCE_DESKTOP_MODE"] = "1"
+    env["ATTENDANCE_DESKTOP_DATA_DIR"] = str(settings.RUNTIME_DIR)
+    creationflags = 0
+    for flag_name in ("CREATE_NO_WINDOW", "DETACHED_PROCESS", "CREATE_NEW_PROCESS_GROUP"):
+        creationflags |= int(getattr(subprocess, flag_name, 0))
+    process = subprocess.Popen(
+        [str(python_executable), str(bridge_script)],
+        cwd=str(settings.BASE_DIR),
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        creationflags=creationflags,
+        close_fds=True,
+    )
+    return process.pid, True
+
+
+def _sync_reader_bridge_config(request, *, active_session=None, reader_settings=None, resolve_active=True):
+    if active_session is None and resolve_active:
+        active_session = _get_active_attendance_session(request)
+    reader_settings = reader_settings or request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {}
+    payload = {
+        "reader_name": reader_settings.get("reader_name", "Entrance Reader"),
+        "reader_mode": reader_settings.get("reader_mode", "keyboard"),
+        "reader_suffix": reader_settings.get("reader_suffix", "Enter"),
+        "reader_prefix": reader_settings.get("reader_prefix", ""),
+        "station_identifier": reader_settings.get("station_identifier", ""),
+        "capture_mode": reader_settings.get("capture_mode", "check_in"),
+        "backend_api_base_url": request.session.get(API_BASE_URL_SESSION_KEY, settings.ATTENDANCE_API_BASE_URL),
+        "access_token": request.session.get(ACCESS_TOKEN_SESSION_KEY, ""),
+        "refresh_token": request.session.get(REFRESH_TOKEN_SESSION_KEY, ""),
+        "active_session_id": getattr(active_session, "id", None),
+        "active_session_label": (
+            getattr(active_session, "session_name", None)
+            or getattr(active_session, "event_name", None)
+            or ""
+        ),
+        "enrollment_base_url": request.build_absolute_uri(reverse("bulk_nfc_enrollment")),
+        "updated_at": timezone.localtime().isoformat(),
+    }
+    try:
+        _reader_bridge_config_path().write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError:
+        pass
 
 
 def _clear_queued_messages(request):
@@ -252,6 +370,10 @@ def _desktop_is_owner_or_admin(request) -> bool:
 
 def _desktop_can_view_audit(request) -> bool:
     return _desktop_is_owner_or_admin(request)
+
+
+def _desktop_can_view_platform_oversight(request) -> bool:
+    return bool(request.session.get(DESKTOP_USER_SESSION_KEY, {}).get("is_superuser"))
 
 
 def _desktop_can_manage_authorization(request) -> bool:
@@ -342,6 +464,28 @@ def _friendly_api_error(exc: Exception) -> str:
         for marker in ("connection refused", "failed to establish", "name resolution", "timed out", "max retries")
     ):
         return "The backend is offline or unreachable. Check Settings, internet connection, or the hosted API."
+    if isinstance(exc, AttendanceApiError):
+        payload = getattr(exc, "payload", None)
+        detail = ""
+        if isinstance(payload, dict):
+            for key in ("detail", "error", "message"):
+                value = payload.get(key)
+                if isinstance(value, str) and value.strip():
+                    detail = value.strip()
+                    break
+                if isinstance(value, list) and value:
+                    detail = ", ".join(str(item).strip() for item in value if str(item).strip())
+                    if detail:
+                        break
+        elif isinstance(payload, list) and payload:
+            detail = ", ".join(str(item).strip() for item in payload if str(item).strip())
+        if detail:
+            lower_detail = detail.lower()
+            if "uid not registered for this event session" in lower_detail:
+                return "This NFC tag was read successfully, but it is not assigned to a member for the active event session yet."
+            if "uid is required" in lower_detail:
+                return "No NFC tag UID was received. Tap the card again or enter the UID manually."
+            return detail
     return text
 
 
@@ -693,6 +837,7 @@ def _active_session_id(request):
         return int(session_id) if session_id else None
     except (TypeError, ValueError):
         request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
         return None
 
 
@@ -736,6 +881,10 @@ def _close_session_if_expired(request, session):
 
 
 def _restore_live_open_session(request):
+    if request.session.get(ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY):
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
+        return None
+
     open_sessions = [
         to_namespace(item)
         for item in extract_results(_api_client(request).list_sessions(status="open"))
@@ -748,6 +897,7 @@ def _restore_live_open_session(request):
 
     if not live_sessions:
         request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
         return None
 
     live_sessions.sort(
@@ -760,7 +910,9 @@ def _restore_live_open_session(request):
     )
     selected = live_sessions[0]
     request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = getattr(selected, "id", None)
+    request.session.pop(ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY, None)
     request.session.modified = True
+    _sync_reader_bridge_config(request, active_session=selected)
     return selected
 
 
@@ -775,12 +927,14 @@ def _get_active_attendance_session(request):
         if _is_auth_api_error(exc):
             raise
         request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
         return _restore_live_open_session(request)
 
     session = _close_session_if_expired(request, session)
     if not _session_is_open(session) or _session_has_ended(session):
         request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
         request.session.modified = True
+        _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
         return _restore_live_open_session(request)
     return session
 
@@ -811,8 +965,15 @@ def _datetime_local_value(value):
     if not value:
         return ""
     try:
-        parsed = value if hasattr(value, "strftime") else datetime.fromisoformat(str(value))
-    except ValueError:
+        if hasattr(value, "strftime"):
+            parsed = value
+        else:
+            raw = str(value).strip()
+            try:
+                parsed = datetime.fromisoformat(raw)
+            except ValueError:
+                parsed = datetime.strptime(raw, "%d-%m-%Y %H:%M")
+    except (TypeError, ValueError):
         return ""
     if timezone.is_naive(parsed):
         parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
@@ -1268,6 +1429,24 @@ def stream_all_cameras(request):
         if guard:
             return guard
         method_context = _session_method_context(request, active_session) if active_session else {}
+        if active_session:
+            face_payload = _api_client(request).list_attendance_logs(
+                attendance_session_id=active_session.id,
+                page_size=200,
+                method="face",
+            )
+            face_records = [
+                record
+                for record in extract_results(face_payload)
+                if str(record.get("method") or "").strip().lower() in {"face", "facial_recognition"}
+            ]
+            method_context["method_counts"] = {
+                "present": sum(1 for record in face_records if (record.get("status") or "").strip().lower() != "absent"),
+                "absent": sum(1 for record in face_records if (record.get("status") or "").strip().lower() == "absent"),
+                "pending": 0,
+                "marked": len(face_records),
+                "members": len(face_records),
+            }
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
         if auth_response:
@@ -1409,7 +1588,7 @@ def nfc_check_in(request):
     except AttendanceApiError as exc:
         if _is_auth_api_error(exc):
             return _expire_desktop_session(request)
-        return JsonResponse({"error": str(exc)}, status=400)
+        return JsonResponse({"error": _friendly_api_error(exc)}, status=400)
 
 
 # =========================================================
@@ -1522,6 +1701,69 @@ def desktop_login(request):
     return render(request, "desktop_login.html", {"next_url": _safe_next_url(request, request.GET.get("next"))})
 
 
+def desktop_forgot_password(request):
+    if request.method == "POST":
+        identifier = request.POST.get("identifier", "").strip()
+        if not identifier:
+            return render(
+                request,
+                "desktop_forgot_password.html",
+                {"error": "Enter your username or email to reset your password.", "identifier": ""},
+            )
+        try:
+            frontend_base_url = get_client().auth_base_url.rstrip("/")
+            get_client().forgot_password(identifier=identifier, frontend_base_url=frontend_base_url)
+            messages.success(request, "If the account exists, a password reset link has been sent to the registered email.")
+            return redirect("desktop_login")
+        except AttendanceApiError as exc:
+            return render(
+                request,
+                "desktop_forgot_password.html",
+                {"error": _friendly_api_error(exc), "identifier": identifier},
+            )
+
+    return render(request, "desktop_forgot_password.html", {"identifier": ""})
+
+
+def desktop_reset_password(request):
+    uid = (request.POST.get("uid") if request.method == "POST" else request.GET.get("uid") or "").strip()
+    token = (request.POST.get("token") if request.method == "POST" else request.GET.get("token") or "").strip()
+
+    if request.method == "POST":
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+        if not uid or not token:
+            return render(
+                request,
+                "desktop_reset_password.html",
+                {"error": "This password reset link is incomplete or invalid.", "uid": uid, "token": token},
+            )
+        if len(new_password) < 8:
+            return render(
+                request,
+                "desktop_reset_password.html",
+                {"error": "Your new password must be at least 8 characters long.", "uid": uid, "token": token},
+            )
+        if new_password != confirm_password:
+            return render(
+                request,
+                "desktop_reset_password.html",
+                {"error": "The new passwords do not match.", "uid": uid, "token": token},
+            )
+        try:
+            get_client().reset_password(uid=uid, token=token, new_password=new_password)
+            messages.success(request, "Password reset successful. You can now sign in with your new password.")
+            return redirect("desktop_login")
+        except AttendanceApiError as exc:
+            return render(
+                request,
+                "desktop_reset_password.html",
+                {"error": _friendly_api_error(exc), "uid": uid, "token": token},
+            )
+
+    return render(request, "desktop_reset_password.html", {"uid": uid, "token": token})
+
+
 def desktop_signup(request):
     _clear_queued_messages(request)
 
@@ -1529,13 +1771,14 @@ def desktop_signup(request):
         plans_payload = get_client().list_plans()
         plans = [
             plan for plan in extract_results(plans_payload)
-            if plan.get("tier") in {"starter", "standard", "professional"}
+            if plan.get("tier") in {"starter", "standard", "professional", "enterprise"}
         ]
     except AttendanceApiError:
         plans = [
             {"tier": "starter", "name": "Starter", "monthly_price_gbp": "0.00"},
             {"tier": "standard", "name": "Standard", "monthly_price_gbp": "9.99"},
             {"tier": "professional", "name": "Professional", "monthly_price_gbp": "19.99"},
+            {"tier": "enterprise", "name": "Enterprise", "monthly_price_gbp": None},
         ]
 
     if request.method == "POST":
@@ -2114,11 +2357,17 @@ def attendance_sessions(request):
                     if (session_payload.get("status") or "").lower() == "scheduled":
                         session_payload = client.update_session(int(session_id), {"status": "open"})
                     request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
+                    request.session.pop(ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY, None)
+                    request.session.modified = True
+                    _sync_reader_bridge_config(request, active_session=to_namespace(session_payload))
                     messages.success(request, f"Active session set to {session_payload.get('session_name') or session_payload.get('event_name')}.")
                 return redirect("attendance_sessions")
 
             if action == "clear":
                 request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+                request.session[ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY] = True
+                request.session.modified = True
+                _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
                 messages.success(request, "Active attendance session cleared.")
                 return redirect("attendance_sessions")
 
@@ -2130,6 +2379,9 @@ def attendance_sessions(request):
                 client.delete_session(int(session_id))
                 if str(_active_session_id(request) or "") == session_id:
                     request.session.pop(ACTIVE_ATTENDANCE_SESSION_KEY, None)
+                    request.session[ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY] = True
+                    request.session.modified = True
+                    _sync_reader_bridge_config(request, active_session=None, resolve_active=False)
                 messages.success(request, "Session deleted.")
                 return redirect("attendance_sessions")
 
@@ -2159,6 +2411,70 @@ def attendance_sessions(request):
         sessions = []
         active_session = None
 
+    def _parse_session_dt(value):
+        if not value:
+            return None
+        if isinstance(value, str):
+            raw = value.strip()
+            for pattern in (None, "%d-%m-%Y %H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+                try:
+                    parsed = datetime.fromisoformat(raw.replace("Z", "+00:00")) if pattern is None else datetime.strptime(raw, pattern)
+                    if timezone.is_naive(parsed):
+                        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+                    return timezone.localtime(parsed)
+                except ValueError:
+                    continue
+            return None
+        try:
+            return timezone.localtime(value)
+        except Exception:
+            return None
+
+    method_labels = {
+        "self": "Word Check-In",
+        "qr": "QR Code",
+        "swipe": "Swipe",
+        "nfc": "NFC",
+        "face": "Face Recognition",
+        "geo": "GeoTracking",
+    }
+    today = timezone.localdate()
+    open_count = 0
+    scheduled_count = 0
+    today_count = 0
+    prepared_sessions = []
+    for session in sessions:
+        starts_dt = _parse_session_dt(getattr(session, "starts_at", None))
+        status_key = (getattr(session, "status", "") or "open").strip().lower()
+        flags = _session_method_flags(session, request)
+        enabled_methods = [label for key, label in method_labels.items() if flags.get(key)]
+        if status_key == "open":
+            open_count += 1
+        if status_key == "scheduled":
+            scheduled_count += 1
+        if starts_dt and starts_dt.date() == today:
+            today_count += 1
+        setattr(session, "starts_at_local", starts_dt)
+        setattr(session, "date_label", starts_dt.strftime("%d-%m-%Y") if starts_dt else "Not scheduled")
+        setattr(session, "time_label", starts_dt.strftime("%H:%M") if starts_dt else "—")
+        setattr(session, "status_key", status_key)
+        setattr(session, "station_active", bool(active_session and active_session.id == session.id))
+        setattr(session, "method_flags", flags)
+        setattr(session, "method_summary", " + ".join(enabled_methods[:3]) if enabled_methods else "No check-in methods enabled")
+        prepared_sessions.append(session)
+    sessions = prepared_sessions
+
+    active_method_summary = "No check-in methods enabled"
+    if active_session:
+        active_flags = _session_method_flags(active_session, request)
+        active_enabled = [label for key, label in method_labels.items() if active_flags.get(key)]
+        active_method_summary = " + ".join(active_enabled[:4]) if active_enabled else active_method_summary
+        active_starts_dt = _parse_session_dt(getattr(active_session, "starts_at", None))
+        setattr(active_session, "starts_at_local", active_starts_dt)
+        setattr(active_session, "date_label", active_starts_dt.strftime("%d-%m-%Y") if active_starts_dt else "Not scheduled")
+        setattr(active_session, "time_label", active_starts_dt.strftime("%H:%M") if active_starts_dt else "—")
+        setattr(active_session, "status_key", ((getattr(active_session, "status", "") or "open").strip().lower()))
+
     return render(
         request,
         "attendance_sessions.html",
@@ -2166,6 +2482,12 @@ def attendance_sessions(request):
             "events": events,
             "sessions": sessions,
             "active_session": active_session,
+            "total_sessions": len(sessions),
+            "today_sessions": today_count,
+            "open_sessions": open_count,
+            "scheduled_sessions": scheduled_count,
+            "active_station_count": 1 if active_session else 0,
+            "active_method_summary": active_method_summary,
         },
     )
 
@@ -2213,6 +2535,9 @@ def attendance_session_create(request):
             )
             if status_value == "open":
                 request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
+                request.session.pop(ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY, None)
+                request.session.modified = True
+                _sync_reader_bridge_config(request, active_session=to_namespace(session_payload))
                 success_label = f"{success_label} Attendance is now active."
             else:
                 success_label = f"{success_label} Scheduled for later."
@@ -2380,6 +2705,9 @@ def attendance_session_detail(request, pk: int):
                 if (session_payload.get("status") or "").lower() == "scheduled":
                     session_payload = client.update_session(pk, {"status": "open"})
                 request.session[ACTIVE_ATTENDANCE_SESSION_KEY] = session_payload["id"]
+                request.session.pop(ACTIVE_ATTENDANCE_SESSION_CLEARED_KEY, None)
+                request.session.modified = True
+                _sync_reader_bridge_config(request, active_session=to_namespace(session_payload))
                 messages.success(request, "Active attendance session updated.")
                 return redirect("attendance_session_detail", pk=pk)
 
@@ -2392,14 +2720,21 @@ def attendance_session_detail(request, pk: int):
                 return redirect("attendance_session_detail", pk=pk)
 
             if action == "edit":
+                current_session = to_namespace(client.get_session(pk))
+                starts_at_value = request.POST.get("starts_at", "").strip()
+                starts_at = _parse_optional_datetime_local(starts_at_value)
                 payload = {
                     "name": request.POST.get("session_name", "").strip(),
                     "status": request.POST.get("status", "open").strip() or "open",
-                    "starts_at": _parse_datetime_local(request.POST.get("starts_at", "")).isoformat(),
+                    "starts_at": starts_at.isoformat() if starts_at else getattr(current_session, "starts_at", None),
                     **_session_advanced_payload(request),
                 }
-                ends_at = _parse_optional_datetime_local(request.POST.get("ends_at", ""))
-                payload["ends_at"] = ends_at.isoformat() if ends_at else None
+                ends_at_value = request.POST.get("ends_at", "").strip()
+                ends_at = _parse_optional_datetime_local(ends_at_value)
+                if ends_at_value:
+                    payload["ends_at"] = ends_at.isoformat() if ends_at else None
+                else:
+                    payload["ends_at"] = getattr(current_session, "ends_at", None)
                 if payload["status"] not in {"scheduled", "open", "closed", "cancelled"}:
                     payload["status"] = "open"
                 client.update_session(pk, payload)
@@ -2426,6 +2761,7 @@ def attendance_session_detail(request, pk: int):
 
     try:
         context = _session_report_context(request, pk)
+        session_detail = to_namespace(client.get_session(pk))
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
         if auth_response:
@@ -2434,21 +2770,21 @@ def attendance_session_detail(request, pk: int):
         return redirect("attendance_sessions")
 
     context["session_edit"] = {
-        "session_name": getattr(context["session"], "name", "") or "",
-        "starts_at": _datetime_local_value(getattr(context["session"], "starts_at", None)),
-        "ends_at": _datetime_local_value(getattr(context["session"], "ends_at", None)),
-        "status": getattr(context["session"], "status", "open") or "open",
-        "allow_member_self_check_in": _session_method_enabled(context["session"], request, "self"),
-        "allow_qr_check_in": _session_method_enabled(context["session"], request, "qr"),
-        "allow_swipe_check_in": _session_method_enabled(context["session"], request, "swipe"),
-        "allow_nfc_check_in": _session_method_enabled(context["session"], request, "nfc"),
-        "allow_face_check_in": _session_method_enabled(context["session"], request, "face"),
-        "allow_member_geo_check_in": _session_method_enabled(context["session"], request, "geo"),
-        "self_check_in_code": getattr(context["session"], "self_check_in_code", "") or "",
-        "check_in_opens_at": _datetime_local_value(getattr(context["session"], "check_in_opens_at", None)),
-        "check_in_closes_at": _datetime_local_value(getattr(context["session"], "check_in_closes_at", None)),
-        "late_check_in_grace_minutes": getattr(context["session"], "late_check_in_grace_minutes", "") or "",
-        "max_capacity": getattr(context["session"], "max_capacity", "") or "",
+        "session_name": getattr(session_detail, "name", "") or "",
+        "starts_at": _datetime_local_value(getattr(session_detail, "starts_at", None)),
+        "ends_at": _datetime_local_value(getattr(session_detail, "ends_at", None)),
+        "status": getattr(session_detail, "status", "open") or "open",
+        "allow_member_self_check_in": _session_method_enabled(session_detail, request, "self"),
+        "allow_qr_check_in": _session_method_enabled(session_detail, request, "qr"),
+        "allow_swipe_check_in": _session_method_enabled(session_detail, request, "swipe"),
+        "allow_nfc_check_in": _session_method_enabled(session_detail, request, "nfc"),
+        "allow_face_check_in": _session_method_enabled(session_detail, request, "face"),
+        "allow_member_geo_check_in": _session_method_enabled(session_detail, request, "geo"),
+        "self_check_in_code": getattr(session_detail, "self_check_in_code", "") or "",
+        "check_in_opens_at": _datetime_local_value(getattr(session_detail, "check_in_opens_at", None)),
+        "check_in_closes_at": _datetime_local_value(getattr(session_detail, "check_in_closes_at", None)),
+        "late_check_in_grace_minutes": getattr(session_detail, "late_check_in_grace_minutes", "") or "",
+        "max_capacity": getattr(session_detail, "max_capacity", "") or "",
     }
 
     return render(request, "attendance_session_detail.html", context)
@@ -2513,15 +2849,7 @@ def nfc_attendance(request):
             return guard
 
         method_context = _session_method_context(request, active_session)
-        logs_payload = _api_client(request).list_attendance_logs(
-            attendance_session_id=active_session.id,
-            page_size=12,
-        )
-        recent_logs = [
-            to_namespace(record)
-            for record in extract_results(logs_payload)
-            if record.get("method") == "nfc"
-        ][:8]
+        recent_logs = _nfc_recent_logs(request, active_session.id)
     except AttendanceApiError as exc:
         auth_response = _redirect_if_auth_error(request, exc)
         if auth_response:
@@ -2535,8 +2863,75 @@ def nfc_attendance(request):
         {
             "active_session": active_session,
             "recent_logs": recent_logs,
+            "reader_runtime": _reader_runtime(request),
+            "reader_settings": request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {},
             **method_context,
         },
+    )
+
+
+def _nfc_recent_logs(request, session_id: int, limit: int = 8):
+    logs_payload = _api_client(request).list_attendance_logs(
+        attendance_session_id=session_id,
+        page_size=max(limit, 12),
+    )
+    return [
+        to_namespace(record)
+        for record in extract_results(logs_payload)
+        if record.get("method") == "nfc"
+    ][:limit]
+
+
+def _serialize_nfc_recent_logs(records):
+    serialized = []
+    for record in records:
+        check_in_time = getattr(record, "check_in_time", "") or ""
+        if check_in_time:
+            check_in_time = str(check_in_time)
+        serialized.append(
+            {
+                "id": getattr(record, "id", None),
+                "person_name": getattr(record, "person_name", "") or "Member",
+                "status": getattr(record, "status", "") or "present",
+                "check_in_time": check_in_time,
+            }
+        )
+    return serialized
+
+
+@desktop_login_required
+@require_GET
+def nfc_attendance_status(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return JsonResponse({"error": "NFC attendance is not included in this plan."}, status=403)
+
+    try:
+        active_session = _get_active_attendance_session(request)
+        if not active_session:
+            return JsonResponse({"error": "Select an active attendance session first."}, status=400)
+        if not _session_method_enabled(active_session, request, "nfc"):
+            return JsonResponse({"error": "NFC check-in is turned off for this session."}, status=400)
+
+        method_context = _session_method_context(request, active_session)
+        recent_logs = _nfc_recent_logs(request, active_session.id)
+    except AttendanceApiError as exc:
+        auth_response = _redirect_if_auth_error(request, exc)
+        if auth_response:
+            return JsonResponse({"error": "Desktop session expired. Please sign in again."}, status=401)
+        return JsonResponse({"error": _friendly_api_error(exc)}, status=400)
+
+    return JsonResponse(
+        {
+            "runtime": _reader_runtime(request),
+            "settings": request.session.get(NFC_READER_SETTINGS_SESSION_KEY) or {},
+            "active_session": {
+                "id": getattr(active_session, "id", None),
+                "label": getattr(active_session, "session_name", None) or getattr(active_session, "event_name", None) or "",
+                "event_name": getattr(active_session, "event_name", None) or "",
+            },
+            "method_counts": method_context.get("method_counts", {}),
+            "recent_logs": _serialize_nfc_recent_logs(recent_logs),
+        }
     )
 
 
@@ -2935,6 +3330,7 @@ def register_user(request):
             "email": "",
             "phone": "",
             "nfc_uid": "",
+            "nfc_handoff_ready": False,
             "camera_configs": cams,
             "member_limit": member_limit,
             "integration_enabled": integration_enabled,
@@ -2983,6 +3379,9 @@ def register_user(request):
         email = request.GET.get("email", "")
         phone = request.GET.get("phone", "")
         nfc_uid = request.GET.get("nfc_uid", "")
+        reader_runtime = _reader_runtime(request)
+        if not nfc_uid:
+            nfc_uid = str(reader_runtime.get("pending_enrollment_uid") or "").strip()
         created_member_id = request.GET.get("created_member_id", "").strip()
         created_member_name = request.GET.get("created_member_name", "").strip()
         success_mode = request.GET.get("created") == "1"
@@ -2999,6 +3398,7 @@ def register_user(request):
                 email=email,
                 phone=phone,
                 nfc_uid=nfc_uid,
+                nfc_handoff_ready=bool(nfc_uid),
                 created_member_id=created_member_id,
                 created_member_name=created_member_name or name or "",
                 success_mode=success_mode,
@@ -3131,6 +3531,18 @@ def register_user(request):
                     "authorized": True,
                 }
             )
+            runtime_payload = _reader_runtime(request)
+            if nfc_uid and str(runtime_payload.get("pending_enrollment_uid") or "").strip().upper() == nfc_uid.strip().upper():
+                runtime_payload.update(
+                    {
+                        "pending_enrollment_uid": "",
+                        "pending_enrollment_url": "",
+                        "last_action": f"NFC tag {nfc_uid.strip().upper()} assigned during member registration.",
+                        "status": "Connected",
+                        "last_error": "",
+                    }
+                )
+                _store_reader_runtime(request, runtime_payload)
         except AttendanceApiError as exc:
             auth_response = _redirect_if_auth_error(request, exc)
             if auth_response:
@@ -3377,9 +3789,11 @@ def nfc_reader_setup(request):
         }
         request.session[NFC_READER_SETTINGS_SESSION_KEY] = settings_payload
         request.session.modified = True
+        _sync_reader_bridge_config(request, reader_settings=settings_payload)
         messages.success(request, "Reader setup saved for this desktop session.")
         return redirect("nfc_reader_setup")
     active_session = _get_active_attendance_session(request)
+    _sync_reader_bridge_config(request, active_session=active_session, reader_settings=settings_payload)
     return render(
         request,
         "nfc_reader_setup.html",
@@ -3387,6 +3801,7 @@ def nfc_reader_setup(request):
             "reader_settings": settings_payload,
             "desktop_can_view_audit": _desktop_can_view_audit(request),
             "reader_runtime": _reader_runtime(request),
+            "bridge_running": bool(_reader_bridge_running_pid()),
             "active_session": active_session,
         },
     )
@@ -3409,8 +3824,37 @@ def nfc_reader_status(request):
             }
             if active_session
             else None,
+            "bridge_running": bool(_reader_bridge_running_pid()),
         }
     )
+
+
+@desktop_login_required
+@require_POST
+def nfc_reader_bridge_start(request):
+    if not _desktop_plan_allows(request, "allow_nfc"):
+        return JsonResponse({"error": "NFC tools are not included in this plan."}, status=403)
+    try:
+        pid, started = _launch_reader_bridge()
+        runtime_payload = _reader_runtime(request)
+        runtime_payload.update(
+            {
+                "status": "Connected" if started else runtime_payload.get("status") or "Waiting",
+                "last_error": "",
+                "last_action": "Desktop bridge started from KairosTrack." if started else "Desktop bridge is already running.",
+            }
+        )
+        _store_reader_runtime(request, runtime_payload)
+        return JsonResponse(
+            {
+                "ok": True,
+                "started": started,
+                "pid": pid,
+                "message": "Desktop bridge started from KairosTrack." if started else "Desktop bridge is already running.",
+            }
+        )
+    except Exception as exc:
+        return JsonResponse({"error": f"Could not start the reader bridge: {exc}"}, status=500)
 
 
 @desktop_login_required
@@ -3466,10 +3910,10 @@ def nfc_reader_capture(request):
     }
 
     if capture_mode == "enroll":
-        enroll_url = f"{reverse('bulk_nfc_enrollment')}?{urlencode({'prefill_uid': uid})}"
+        enroll_url = f"{reverse('register_user')}?{urlencode({'nfc_uid': uid})}"
         runtime_payload.update(
             {
-                "last_action": "UID captured and ready for member enrollment.",
+                "last_action": "UID captured and ready for member registration.",
                 "pending_enrollment_uid": uid,
                 "pending_enrollment_url": enroll_url,
             }
@@ -4022,7 +4466,7 @@ def person_nfc_update(request, pk: int):
         messages.warning(request, "NFC member tags are available on the Professional plan and above.")
         return redirect("person_detail", pk=pk)
 
-    nfc_uid = request.POST.get("nfc_uid", "").strip()
+    nfc_uid = "" if request.POST.get("clear_nfc") else request.POST.get("nfc_uid", "").strip()
     try:
         _api_client(request).update_person(pk, {"nfc_uid": nfc_uid})
         if nfc_uid:
@@ -4464,12 +4908,37 @@ def attendance_today_api(request):
     try:
         params = {"limit": int(request.GET.get("limit", 60) or 60)}
         since = request.GET.get("since")
+        method_filter = (request.GET.get("method") or "").strip().lower()
+        face_only = (request.GET.get("face_only") or "").strip().lower() in {"1", "true", "yes"}
         if since:
             params["since"] = since
         attendance_session_id = request.GET.get("attendance_session_id") or _active_session_id(request)
         if attendance_session_id:
             params["attendance_session_id"] = attendance_session_id
-        return JsonResponse(_api_client(request).today(**params))
+        if method_filter:
+            params["method"] = method_filter
+        payload = _api_client(request).today(**params)
+        if face_only and isinstance(payload, dict):
+            allowed_methods = {"face", "facial_recognition"}
+            items = payload.get("items", []) or []
+            items = [
+                item
+                for item in items
+                if str(item.get("method") or item.get("source") or "").strip().lower() in allowed_methods
+            ]
+            payload["items"] = items
+            payload["count"] = len(items)
+            if items:
+                latest_item = max(
+                    items,
+                    key=lambda item: item.get("epoch_ms") or item.get("id") or 0,
+                )
+                payload["latest"] = latest_item.get("time") or payload.get("latest")
+                payload["latest_epoch_ms"] = latest_item.get("epoch_ms") or payload.get("latest_epoch_ms")
+            else:
+                payload["latest"] = None
+                payload["latest_epoch_ms"] = None
+        return JsonResponse(payload)
     except AttendanceApiError as exc:
         if _is_auth_api_error(exc):
             return _expire_desktop_session(request)

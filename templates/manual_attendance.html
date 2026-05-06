@@ -91,24 +91,31 @@
   .toolbar-card{
     padding:18px;
     display:grid;
-    gap:14px;
+    gap:10px;
   }
 
   .toolbar-row{
     display:flex;
-    gap:12px;
+    gap:8px;
     align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
   }
 
   .search-form,
-  .bulk-actions,
   .selection-bar{
     display:flex;
-    gap:10px;
+    gap:8px;
     align-items:center;
     flex-wrap:wrap;
+  }
+
+  .search-form{
+    margin-left:auto;
+    flex:1 1 auto;
+    justify-content:flex-end;
+    flex-wrap:nowrap;
+    min-width:0;
   }
 
   .search-box,
@@ -124,7 +131,10 @@
   }
 
   .search-box{
-    min-width:320px;
+    min-width:0;
+    width:100%;
+    max-width:560px;
+    flex:1 1 380px;
   }
 
   .search-box i{color:#98a2b3;}
@@ -139,7 +149,16 @@
     font-weight:700;
   }
 
-  .search-box input{width:100%;}
+  .search-box input{
+    width:100%;
+    direction:ltr;
+    text-align:left;
+    unicode-bidi:plaintext;
+  }
+
+  .search-submit{
+    display:none;
+  }
 
   .btnx{
     min-height:44px;
@@ -175,7 +194,10 @@
 
   .selection-bar{
     display:none;
-    padding-top:4px;
+    margin-left:4px;
+    flex:0 1 auto;
+    flex-wrap:nowrap;
+    min-width:0;
   }
 
   .selection-bar.active{
@@ -187,6 +209,19 @@
     font-size:12px;
     font-weight:800;
     padding:0 2px;
+    white-space:nowrap;
+  }
+
+  .selection-bar .btnx{
+    padding:10px 12px;
+  }
+
+  .search-form .select-wrap{
+    flex:0 0 auto;
+  }
+
+  .search-form .select-box{
+    min-width:128px;
   }
 
   .members-card{
@@ -429,14 +464,26 @@
     .summary-actions,
     .toolbar-row,
     .search-form,
-    .bulk-actions,
     .selection-bar{
       flex-direction:column;
       align-items:stretch;
     }
 
+    .toolbar-row{
+      flex-wrap:wrap;
+    }
+
     .search-box{
       min-width:100%;
+      max-width:none;
+    }
+
+    .search-form{
+      margin-left:0;
+    }
+
+    .selection-bar{
+      margin-left:0;
     }
 
     .stats-grid{
@@ -483,7 +530,7 @@
       <form class="search-form" method="get" id="manualSearch">
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input name="search" value="{{ search_query }}" placeholder="Search by name, email or member code..." autofocus>
+          <input name="search" value="{{ search_query }}" placeholder="Search by name, email or member code...">
         </div>
         <div class="select-wrap">
           <select class="select-box" name="status" onchange="this.form.submit()">
@@ -505,35 +552,10 @@
             <option value="geotracking" {% if method_filter == 'geotracking' %}selected{% endif %}>GeoTracking</option>
           </select>
         </div>
+        <button class="search-submit" type="submit" aria-hidden="true" tabindex="-1">Search</button>
       </form>
 
-      <div class="bulk-actions">
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="mark_pending">
-          <input type="hidden" name="status" value="present">
-          <input type="hidden" name="search" value="{{ search_query }}">
-          <input type="hidden" name="filter_status" value="{{ status_filter }}">
-          <input type="hidden" name="method" value="{{ method_filter }}">
-          <button class="btnx primary" type="submit">
-            <i class="fa-solid fa-bolt"></i> Mark Pending Present
-          </button>
-        </form>
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="mark_all">
-          <input type="hidden" name="status" value="absent">
-          <input type="hidden" name="search" value="{{ search_query }}">
-          <input type="hidden" name="filter_status" value="{{ status_filter }}">
-          <input type="hidden" name="method" value="{{ method_filter }}">
-          <button class="btnx danger" type="submit">
-            <i class="fa-solid fa-user-xmark"></i> Mark Filtered Absent
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <form method="post" id="selectedActionForm" class="selection-bar">
+      <form method="post" id="selectedActionForm" class="selection-bar">
       {% csrf_token %}
       <input type="hidden" name="action" value="mark_selected">
       <input type="hidden" name="search" value="{{ search_query }}">
@@ -542,15 +564,16 @@
       <div id="selectedIdsContainer"></div>
       <span class="selection-count" id="selectedCountLabel">0 selected</span>
       <button class="btnx primary" type="submit" name="status" value="present">
-        <i class="fa-solid fa-check"></i> Mark Selected Present
+        <i class="fa-solid fa-check"></i> Mark Present
       </button>
       <button class="btnx danger" type="submit" name="status" value="absent">
-        <i class="fa-solid fa-xmark"></i> Mark Selected Absent
+        <i class="fa-solid fa-xmark"></i> Mark Absent
       </button>
       <button class="btnx" type="button" id="clearSelectionBtn">
         <i class="fa-solid fa-broom"></i> Clear
       </button>
     </form>
+    </div>
   </section>
 
   <section class="cardx members-card">
@@ -670,17 +693,28 @@
 
 <script>
   const searchInput = document.querySelector('#manualSearch input[name="search"]');
+  const manualSearchForm = document.getElementById('manualSearch');
   const selectAllRows = document.getElementById('selectAllRows');
   const rowChecks = Array.from(document.querySelectorAll('.row-check'));
+  const toolbarCard = document.querySelector('.toolbar-card');
   const selectedActionForm = document.getElementById('selectedActionForm');
   const selectedIdsContainer = document.getElementById('selectedIdsContainer');
   const selectedCountLabel = document.getElementById('selectedCountLabel');
   const clearSelectionBtn = document.getElementById('clearSelectionBtn');
-  let searchTimer;
+  const initialSearchValue = searchInput?.value ?? '';
 
-  searchInput?.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => document.getElementById('manualSearch').submit(), 450);
+  searchInput?.addEventListener('blur', () => {
+    const nextValue = searchInput.value.trim();
+    if (nextValue !== initialSearchValue) {
+      manualSearchForm?.submit();
+    }
+  });
+
+  searchInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      searchInput.value = initialSearchValue;
+      searchInput.blur();
+    }
   });
 
   document.addEventListener('keydown', (event) => {
@@ -699,6 +733,7 @@
       selectedCountLabel.textContent = `${selected.length} selected`;
     }
     selectedActionForm?.classList.toggle('active', selected.length > 0);
+    toolbarCard?.classList.toggle('selection-mode', selected.length > 0);
     if (selectAllRows) {
       selectAllRows.checked = rowChecks.length > 0 && selected.length === rowChecks.length;
       selectAllRows.indeterminate = selected.length > 0 && selected.length < rowChecks.length;

@@ -94,6 +94,57 @@ class AttendanceApiClient:
         self._update_tokens(payload)
         return payload
 
+    def forgot_password(self, identifier: str, frontend_base_url: str | None = None):
+        url = self._auth_url("api/forgot-password/")
+        headers = {"Accept": "application/json"}
+        if frontend_base_url:
+            headers["X-Frontend-URL"] = frontend_base_url.rstrip("/")
+        try:
+            response = requests.post(
+                url,
+                json={"identifier": identifier},
+                headers=headers,
+                timeout=self.timeout,
+                verify=self.verify_ssl,
+            )
+        except RequestException as exc:
+            raise self._network_error(exc, url) from exc
+        if response.status_code >= 400:
+            try:
+                payload = response.json()
+            except Exception:
+                payload = response.text
+            raise AttendanceApiError(
+                f"{response.status_code} calling {response.url}: {payload}",
+                status_code=response.status_code,
+                payload=payload,
+            )
+        return response.json()
+
+    def reset_password(self, uid: str, token: str, new_password: str):
+        url = self._auth_url("api/reset-password/")
+        try:
+            response = requests.post(
+                url,
+                json={"uid": uid, "token": token, "new_password": new_password},
+                headers={"Accept": "application/json"},
+                timeout=self.timeout,
+                verify=self.verify_ssl,
+            )
+        except RequestException as exc:
+            raise self._network_error(exc, url) from exc
+        if response.status_code >= 400:
+            try:
+                payload = response.json()
+            except Exception:
+                payload = response.text
+            raise AttendanceApiError(
+                f"{response.status_code} calling {response.url}: {payload}",
+                status_code=response.status_code,
+                payload=payload,
+            )
+        return response.json()
+
     def refresh_access_token(self):
         if not self.refresh_token:
             raise AttendanceApiError("No refresh token available for the desktop session.")
@@ -184,6 +235,15 @@ class AttendanceApiClient:
 
     def request_upgrade(self, payload: dict[str, Any]):
         return self._request("POST", "billing/upgrade-request/", json=payload)
+
+    def list_upgrade_requests(self, **params):
+        return self._request("GET", "billing/upgrade-requests/", params=params)
+
+    def get_upgrade_request(self, request_id: int):
+        return self._request("GET", f"billing/upgrade-requests/{request_id}/")
+
+    def update_upgrade_request(self, request_id: int, payload: dict[str, Any]):
+        return self._request("PATCH", f"billing/upgrade-requests/{request_id}/", json=payload)
 
     def list_plans(self):
         return self._request("GET", "plans/")

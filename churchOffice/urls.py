@@ -9,6 +9,8 @@ urlpatterns = [
 
     # UI / Pages
     path('login/', views.desktop_login, name='desktop_login'),
+    path('forgot-password/', views.desktop_forgot_password, name='desktop_forgot_password'),
+    path('reset-password/', views.desktop_reset_password, name='desktop_reset_password'),
     path('signup/', views.desktop_signup, name='desktop_signup'),
     path('logout/', views.desktop_logout, name='desktop_logout'),
     path('getting-started/', views.getting_started, name='getting_started'),
@@ -25,6 +27,7 @@ urlpatterns = [
     path('members/nfc-enrollment/', views.bulk_nfc_enrollment, name='bulk_nfc_enrollment'),
     path('members/nfc-reader/', views.nfc_reader_setup, name='nfc_reader_setup'),
     path('members/nfc-reader/status/', views.nfc_reader_status, name='nfc_reader_status'),
+    path('members/nfc-reader/start/', views.nfc_reader_bridge_start, name='nfc_reader_bridge_start'),
     path('members/nfc-reader/capture/', views.nfc_reader_capture, name='nfc_reader_capture'),
     path('members/import/', views.member_import, name='member_import'),
     path('members/import/template/', views.member_import_template, name='member_import_template'),
@@ -45,6 +48,7 @@ urlpatterns = [
     path('attendance/sessions/<int:pk>/', views.attendance_session_detail, name='attendance_session_detail'),
     path('attendance/qr/', views.qr_attendance, name='qr_attendance'),
     path('attendance/nfc/', views.nfc_attendance, name='nfc_attendance'),
+    path('attendance/nfc/status/', views.nfc_attendance_status, name='nfc_attendance_status'),
     path('attendance/manual/', views.manual_attendance, name='manual_attendance'),
     path('attendance/swipe/', views.swipe_attendance, name='swipe_attendance'),
     path('attendance/geotracking/', views.geotracking_attendance, name='geotracking_attendance'),

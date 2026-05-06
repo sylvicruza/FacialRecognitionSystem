@@ -2,149 +2,510 @@
 
 {% block page_crumb %}Attendance{% endblock %}
 {% block page_title %}Event Sessions{% endblock %}
-{% block page_subtitle %}View, create, edit, activate, and delete attendance sessions from one list.{% endblock %}
+{% block page_subtitle %}View, create, manage, and choose which session this workstation is currently using.{% endblock %}
 
 {% block content %}
 <style>
-  .sessions-page{max-width:1120px;margin:0 auto;display:grid;gap:16px}
-  .surface{background:var(--paper);border:1px solid #dce8e0;border-radius:18px;box-shadow:0 14px 32px rgba(15,23,42,.05)}
-  .hero{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-  .hero-copy{display:grid;gap:4px}
-  .hero-copy h2,.section-head h3,.active-card h3{margin:0;color:#172033;font-size:17px;font-weight:800;letter-spacing:-.02em}
-  .hero-copy p,.section-head p,.active-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
-  .primary-btn,.light-btn,.danger-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #d9e3dd;background:#fff;color:#223246;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
-  .primary-btn{color:#fff;border-color:transparent;background:linear-gradient(135deg,#16a34a,#12853d);box-shadow:0 14px 28px rgba(15,143,61,.16)}
-  .danger-btn{color:#b42318;background:#fff5f5;border-color:#f4cccc}
-  .layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
-  .main-stack,.side-stack{display:grid;gap:16px}
-  .list-card,.active-card{padding:16px;display:grid;gap:12px}
-  .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .session-list{display:grid;gap:12px}
-  .session-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #e5ede8;border-radius:14px;background:#fff}
-  .session-row-main{display:grid;gap:5px}
-  .session-row-main b{display:block;color:#172033;font-size:14px;font-weight:700}
-  .session-row-main span{display:block;color:var(--muted);font-size:12px;line-height:1.45}
-  .session-row-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  .row-active-pill{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 14px;border-radius:12px;background:#eaf8ef;color:#0f7a38;border:1px solid #d6efdd;font-size:13px;font-weight:700}
-  .status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eaf8ef;color:#0f7a38;font-size:10px;font-weight:800;text-transform:uppercase}
-  .status-pill.scheduled{background:#fff7e8;color:#b45309}
-  .status-pill.closed,.status-pill.cancelled{background:#f2f4f7;color:#667085}
-  .empty{padding:16px;border:1px dashed #cfded5;border-radius:16px;background:#fbfdfc;color:var(--muted);font-size:13px}
-  .active-meta{display:grid;gap:10px}
-  .active-meta span{display:inline-flex;align-items:center;gap:9px;color:#344054;font-size:12px}
-  .active-meta i{color:#667085}
+  .sessions-shell{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    gap:18px;
+    padding:6px 0 30px;
+  }
+
+  .surface{
+    background:#fff;
+    border:1px solid #dce8e0;
+    border-radius:22px;
+    box-shadow:0 10px 24px rgba(15,23,42,.04);
+  }
+
+  .hero-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .hero-copy{
+    display:grid;
+    gap:4px;
+  }
+
+  .hero-copy h2{
+    margin:0;
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .hero-copy p{
+    margin:0;
+    color:#667085;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .danger-btn{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    padding:10px 16px;
+    border-radius:14px;
+    border:1px solid #dbe5df;
+    background:#fff;
+    color:#223246;
+    font-size:13px;
+    font-weight:800;
+    text-decoration:none;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .primary-btn{
+    border-color:transparent;
+    color:#fff;
+    background:linear-gradient(135deg,#16a34a,#14813d);
+    box-shadow:0 12px 24px rgba(22,163,74,.14);
+  }
+
+  .secondary-btn:hover{background:#f8fbf9;color:#172033;}
+
+  .danger-btn{
+    color:#dc2626;
+    background:#fff6f6;
+    border-color:#f2d1d1;
+    padding:10px 13px;
+  }
+
+  .page-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 310px;
+    gap:18px;
+    align-items:start;
+  }
+
+  .list-card,
+  .station-card{
+    padding:18px;
+  }
+
+  .section-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .section-copy{display:grid;gap:4px;}
+
+  .section-copy h2,
+  .station-card h3{
+    margin:0;
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+    letter-spacing:-.03em;
+  }
+
+  .section-copy p,
+  .station-card p{
+    margin:0;
+    color:#667085;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .search-shell{
+    min-width:260px;
+    max-width:360px;
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 14px;
+    border:1px solid #dbe5df;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .search-shell i{color:#98a2b3;}
+
+  .search-shell input{
+    width:100%;
+    border:0;
+    outline:0;
+    padding:0;
+    background:transparent;
+    color:#172033;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .search-shell input::placeholder{color:#98a2b3;}
+
+  .session-list{
+    margin-top:14px;
+    display:grid;
+    gap:14px;
+  }
+
+  .session-item{
+    border:1px solid #e3ece7;
+    border-radius:18px;
+    background:#fff;
+    padding:16px 18px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:18px;
+    align-items:center;
+  }
+
+  .session-item.station-active{
+    border-color:#8cd2a1;
+    box-shadow:inset 4px 0 0 #16a34a;
+  }
+
+  .session-main{
+    display:grid;
+    gap:12px;
+    min-width:0;
+  }
+
+  .session-title-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .session-title-stack{
+    display:grid;
+    gap:5px;
+    min-width:0;
+  }
+
+  .session-title-stack h3{
+    margin:0;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-.02em;
+  }
+
+  .session-subtitle{
+    color:#475467;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+
+  .pill.open{background:#ebf8ef;color:#11803b;}
+  .pill.scheduled{background:#fff5e6;color:#b45309;}
+  .pill.closed{background:#f3f4f6;color:#667085;}
+  .pill.cancelled{background:#fff3f2;color:#b42318;}
+  .pill.active{
+    background:#edf9f0;
+    color:#11803b;
+    border:1px solid #d7efde;
+    text-transform:none;
+    letter-spacing:0;
+  }
+
+  .session-meta{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .session-meta span{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .session-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .station-card{
+    display:grid;
+    gap:16px;
+    position:sticky;
+    top:16px;
+  }
+
+  .station-top{
+    display:grid;
+    gap:10px;
+  }
+
+  .station-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    color:#667085;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .station-badge .dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#16a34a;
+  }
+
+  .station-focus{
+    padding:16px;
+    border:1px solid #d9ece0;
+    border-radius:18px;
+    display:grid;
+    gap:8px;
+  }
+
+  .station-focus h4{
+    margin:0;
+    color:#172033;
+    font-size:17px;
+    font-weight:900;
+  }
+
+  .station-focus p{
+    margin:0;
+    color:#475467;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .station-info{
+    display:grid;
+    gap:12px;
+  }
+
+  .station-info-row{
+    display:grid;
+    grid-template-columns:112px minmax(0,1fr);
+    gap:12px;
+    align-items:start;
+    color:#344054;
+    font-size:13px;
+  }
+
+  .station-info-row label{
+    color:#667085;
+    font-weight:700;
+  }
+
+  .station-actions{
+    display:grid;
+    gap:10px;
+  }
+
+  .empty-state{
+    padding:22px;
+    border:1px dashed #d3e2d9;
+    border-radius:18px;
+    background:#fbfdfc;
+    color:#667085;
+    font-size:13px;
+  }
+
   .confirm-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.36);backdrop-filter:blur(6px);z-index:1200}
   .confirm-overlay.show{display:flex}
   .confirm-dialog{width:min(100%,420px);padding:20px;border:1px solid #dce8e0;border-radius:20px;background:#fff;box-shadow:0 28px 60px rgba(15,23,42,.18);display:grid;gap:14px}
   .confirm-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff4f3;color:#dc2626;font-size:18px}
   .confirm-dialog h3{margin:0;color:#172033;font-size:18px;font-weight:800}
-  .confirm-dialog p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+  .confirm-dialog p{margin:0;color:#667085;font-size:13px;line-height:1.55}
   .confirm-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
   form{margin:0}
+
   @media (max-width:980px){
-    .layout{grid-template-columns:1fr}
+    .page-layout{grid-template-columns:1fr;}
+    .station-card{position:static;}
   }
+
   @media (max-width:760px){
-    .session-row{grid-template-columns:1fr}
-    .session-row-actions{justify-content:flex-start}
+    .session-item{grid-template-columns:1fr;}
+    .session-actions{justify-content:flex-start;}
+    .search-shell{max-width:none;width:100%;}
+    .station-info-row{grid-template-columns:1fr;}
   }
 </style>
 
-<div class="sessions-page">
-  <section class="surface hero">
-    <div class="hero-copy">
-      <h2>Sessions</h2>
-      <p>Create, open, activate, or remove attendance sessions.</p>
+<div class="sessions-shell">
+  <section class="surface list-card">
+    <div class="hero-row">
+      <div class="hero-copy">
+        <h2>Sessions</h2>
+        <p>Manage sessions and choose which one this workstation should use.</p>
+      </div>
+      <a class="primary-btn" href="{% url 'attendance_session_create' %}">
+        <i class="fa-solid fa-plus"></i>
+        New Session
+      </a>
     </div>
-    <a class="primary-btn" href="{% url 'attendance_session_create' %}">
-      <i class="fa-solid fa-plus"></i> New Session
-    </a>
   </section>
 
-  <div class="layout">
-    <div class="main-stack">
-      <section class="surface list-card">
-        <div class="section-head">
-          <div>
-            <h3>All Sessions</h3>
-            <p>Use `Open` to manage a session or switch the active one here.</p>
-          </div>
+  <div class="page-layout">
+    <section class="surface list-card">
+      <div class="section-head">
+        <div class="section-copy">
+          <h2>All Sessions</h2>
+          <p>Choose which session this workstation should use.</p>
         </div>
 
-        {% if sessions %}
-          <div class="session-list">
-            {% for session in sessions %}
-              <div class="session-row">
-                <div class="session-row-main">
-                  <b>{{ session.session_name|default:session.event_name }}</b>
-                  <span>
-                    {{ session.event_name }}
-                    {% if session.starts_at %} | {{ session.starts_at }}{% endif %}
-                    {% if active_session and active_session.id == session.id %} | Currently active{% endif %}
-                  </span>
+        <div class="search-shell">
+          <input id="sessionSearchInput" type="text" placeholder="Search sessions...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+      </div>
+
+      {% if sessions %}
+        <div class="session-list" id="sessionList">
+          {% for session in sessions %}
+            <article
+              class="session-item {% if session.station_active %}station-active{% endif %}"
+              data-session-card
+              data-session-search="{{ session.session_name|default:session.event_name|lower }} {{ session.event_name|lower }} {{ session.status|default:'open'|lower }}">
+              <div class="session-main">
+                <div class="session-title-row">
+                  <div class="session-title-stack">
+                    <h3>{{ session.session_name|default:session.event_name }}</h3>
+                    <div class="session-subtitle">{{ session.event_name|default:"Attendance event" }}</div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <span class="pill {{ session.status_key }}">{{ session.status|default:"Open"|title }}</span>
+                    {% if session.station_active %}
+                      <span class="pill active"><i class="fa-solid fa-circle"></i> Active</span>
+                    {% endif %}
+                  </div>
                 </div>
 
-                <span class="status-pill {{ session.status|default:'open'|lower }}">
-                  {{ session.status|default:"Open"|title }}
-                </span>
-
-                <div class="session-row-actions">
-                  <a class="light-btn" href="{% url 'attendance_session_detail' session.id %}">Open</a>
-                  {% if active_session and active_session.id == session.id %}
-                    <span class="row-active-pill">Active Now</span>
-                    <form method="post">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="clear">
-                      <button class="light-btn" type="submit">Clear Active</button>
-                    </form>
-                  {% else %}
-                    <form method="post">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="select">
-                      <input type="hidden" name="session_id" value="{{ session.id }}">
-                      <button class="light-btn" type="submit">
-                        {% if session.status == "scheduled" %}Start Session{% else %}Make Active{% endif %}
-                      </button>
-                    </form>
-                  {% endif %}
-                  <form method="post" data-delete-session-form data-session-label="{{ session.session_name|default:session.event_name }}">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="session_id" value="{{ session.id }}">
-                    <button class="danger-btn" type="submit">Delete</button>
-                  </form>
+                <div class="session-meta">
+                  <span><i class="fa-regular fa-calendar"></i> {{ session.date_label }}</span>
+                  <span><i class="fa-regular fa-clock"></i> {{ session.time_label }}</span>
+                  <span><i class="fa-solid fa-wave-square"></i> {{ session.method_summary }}</span>
                 </div>
               </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="empty">No sessions yet. Create a session to begin taking attendance.</div>
-        {% endif %}
-      </section>
-    </div>
 
-    <aside class="side-stack">
-      <section class="surface active-card">
-        <h3>Active Session</h3>
+              <div class="session-actions">
+                <a class="secondary-btn" href="{% url 'attendance_session_detail' session.id %}">Manage</a>
+                {% if session.station_active %}
+                  <span class="primary-btn" style="pointer-events:none;opacity:.96;">In Use Here</span>
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear">
+                    <button class="secondary-btn" type="submit">Stop Using Here</button>
+                  </form>
+                {% else %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="select">
+                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                    <button class="secondary-btn" type="submit">
+                      {% if session.status == "scheduled" %}Start And Use Here{% else %}Use Here{% endif %}
+                    </button>
+                  </form>
+                {% endif %}
+                <form method="post" data-delete-session-form data-session-label="{{ session.session_name|default:session.event_name }}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="session_id" value="{{ session.id }}">
+                  <button class="danger-btn" type="submit" aria-label="Delete session">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+        <div class="empty-state" id="sessionSearchEmpty" style="display:none;">No sessions match your search.</div>
+      {% else %}
+        <div class="empty-state">No sessions yet. Create a session to begin taking attendance.</div>
+      {% endif %}
+    </section>
+
+    <aside class="surface station-card">
+      <div class="station-top">
+        <h3>Current Station Session</h3>
         {% if active_session %}
-          <p>{{ active_session.session_name|default:active_session.event_name }}</p>
-          <div class="active-meta">
-            <span><i class="fa-regular fa-calendar"></i> {{ active_session.event_name }}</span>
-            <span><i class="fa-regular fa-clock"></i> {{ active_session.starts_at|default:"Not started" }}</span>
-            <span><i class="fa-solid fa-circle-play"></i> {{ active_session.status|default:"Open"|title }}</span>
+          <div class="station-badge"><span class="dot"></span> This workstation is using:</div>
+          <div class="station-focus">
+            <h4>{{ active_session.session_name|default:active_session.event_name }}</h4>
+            <p>{{ active_session.event_name|default:"Attendance event" }}</p>
+            <div style="display:flex;justify-content:flex-start;">
+              <span class="pill {{ active_session.status_key|default:'open' }}">{{ active_session.status|default:"Open"|title }}</span>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a class="light-btn" href="{% url 'attendance_session_detail' active_session.id %}">Open</a>
+
+          <div class="station-info">
+            <div class="station-info-row">
+              <label>Date</label>
+              <div>{{ active_session.date_label|default:"Not scheduled" }}</div>
+            </div>
+            <div class="station-info-row">
+              <label>Time</label>
+              <div>{{ active_session.time_label|default:"—" }}</div>
+            </div>
+            <div class="station-info-row">
+              <label>Status</label>
+              <div>{{ active_session.status|default:"Open"|title }}</div>
+            </div>
+            <div class="station-info-row">
+              <label>Check-In Mode</label>
+              <div>{{ active_method_summary }}</div>
+            </div>
+          </div>
+
+          <div class="station-actions">
+            <a class="primary-btn" href="{% url 'attendance_session_detail' active_session.id %}">
+              <i class="fa-solid fa-gear"></i>
+              Manage Session
+            </a>
             <form method="post">
               {% csrf_token %}
               <input type="hidden" name="action" value="clear">
-              <button class="light-btn" type="submit">Clear Active</button>
+              <button class="secondary-btn" type="submit">
+                <i class="fa-solid fa-stop"></i>
+                Stop Using Here
+              </button>
             </form>
           </div>
         {% else %}
-          <p>No active session selected.</p>
+          <p>No session is currently selected for this workstation.</p>
+          <div class="empty-state">Choose any open or scheduled session and use `Use Here` to make it the station session.</div>
         {% endif %}
-      </section>
+      </div>
     </aside>
   </div>
 </div>
@@ -157,7 +518,7 @@
       <p id="deleteConfirmText">This session will be removed from the list.</p>
     </div>
     <div class="confirm-actions">
-      <button class="light-btn" type="button" id="deleteConfirmCancel">Cancel</button>
+      <button class="secondary-btn" type="button" id="deleteConfirmCancel">Cancel</button>
       <button class="danger-btn" type="button" id="deleteConfirmSubmit">Delete Session</button>
     </div>
   </div>
@@ -169,6 +530,9 @@
     const text = document.getElementById('deleteConfirmText');
     const cancelButton = document.getElementById('deleteConfirmCancel');
     const submitButton = document.getElementById('deleteConfirmSubmit');
+    const searchInput = document.getElementById('sessionSearchInput');
+    const cards = Array.from(document.querySelectorAll('[data-session-card]'));
+    const emptySearch = document.getElementById('sessionSearchEmpty');
     let activeForm = null;
 
     function closeDialog(){
@@ -183,6 +547,20 @@
       text.textContent = `Delete "${label}"? This action cannot be undone.`;
       overlay.classList.add('show');
       overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function applySearch(){
+      const query = (searchInput?.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const haystack = card.dataset.sessionSearch || '';
+        const visible = !query || haystack.includes(query);
+        card.style.display = visible ? '' : 'none';
+        if (visible) visibleCount += 1;
+      });
+      if (emptySearch) {
+        emptySearch.style.display = visibleCount === 0 ? '' : 'none';
+      }
     }
 
     document.querySelectorAll('[data-delete-session-form]').forEach((form) => {
@@ -205,10 +583,10 @@
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && overlay.classList.contains('show')) {
-        closeDialog();
-      }
+      if (event.key === 'Escape' && overlay.classList.contains('show')) closeDialog();
     });
+
+    searchInput?.addEventListener('input', applySearch);
   })();
 </script>
 {% endblock %}

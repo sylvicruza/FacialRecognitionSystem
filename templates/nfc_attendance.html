@@ -2,8 +2,8 @@
 {% load static %}
 
 {% block page_crumb %}Attendance{% endblock %}
-{% block page_title %}NFC Check-In{% endblock %}
-{% block page_subtitle %}Tap member cards or tags for the active event session.{% endblock %}
+{% block page_title %}NFC Attendance{% endblock %}
+{% block page_subtitle %}Use saved member tags for live session check-in.{% endblock %}
 
 {% block content %}
 <style>
@@ -15,6 +15,38 @@
     gap:20px;
     align-items:start;
     padding:8px 0 40px;
+  }
+
+  .nfc-tabs{
+    max-width:1180px;
+    margin:0 auto 14px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .nfc-tab{
+    min-height:42px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+    color:#475467;
+    font-size:13px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    box-shadow:0 10px 22px rgba(15,23,42,.04);
+  }
+
+  .nfc-tab.active{
+    border-color:transparent;
+    background:#16a34a;
+    color:#fff;
+    box-shadow:0 16px 28px rgba(22,163,74,.18);
   }
 
   .nfc-card{
@@ -260,6 +292,73 @@
     flex:0 0 auto;
   }
 
+  .bridge-card{
+    display:grid;
+    gap:14px;
+    padding:16px 18px;
+    border-radius:20px;
+    border:1px solid #dfe9e3;
+    background:#fff;
+  }
+
+  .bridge-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .bridge-top strong{
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+
+  .bridge-top span{
+    display:block;
+    margin-top:4px;
+    color:#667085;
+    font-size:12px;
+    font-weight:600;
+  }
+
+  .bridge-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .bridge-metric{
+    padding:12px;
+    border:1px solid #e7efe9;
+    border-radius:16px;
+    background:#fcfefd;
+  }
+
+  .bridge-metric small{
+    display:block;
+    color:#667085;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .bridge-metric strong{
+    display:block;
+    margin-top:6px;
+    color:#172033;
+    font-size:16px;
+    font-weight:900;
+  }
+
+  .bridge-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
   .tip-card{
     display:grid;
     grid-template-columns:40px minmax(0,1fr);
@@ -398,7 +497,8 @@
 
   @media (max-width: 720px){
     .session-stats,
-    .reader-actions{
+    .reader-actions,
+    .bridge-grid{
       grid-template-columns:1fr;
     }
 
@@ -411,6 +511,21 @@
     }
   }
 </style>
+
+<nav class="nfc-tabs" aria-label="NFC pages">
+  <a class="nfc-tab active" href="{% url 'nfc_attendance' %}">
+    <i class="fa-solid fa-id-card-clip"></i>
+    Attendance
+  </a>
+  <a class="nfc-tab" href="{% url 'nfc_reader_setup' %}">
+    <i class="fa-solid fa-tower-cell"></i>
+    Reader Station
+  </a>
+  <a class="nfc-tab" href="{% url 'bulk_nfc_enrollment' %}">
+    <i class="fa-solid fa-tags"></i>
+    Tag Enrollment
+  </a>
+</nav>
 
 <div class="nfc-shell">
   <section class="nfc-card nfc-main">
@@ -428,25 +543,58 @@
 
       <div class="session-stats">
         <div class="session-stat present">
-          <strong>{{ method_counts.present }}</strong>
-          <span>Present</span>
+          <strong id="countPresent">{{ method_counts.present }}</strong>
+          <span>Checked in</span>
         </div>
         <div class="session-stat absent">
-          <strong>{{ method_counts.absent }}</strong>
+          <strong id="countAbsent">{{ method_counts.absent }}</strong>
           <span>Absent</span>
         </div>
         <div class="session-stat pending">
-          <strong>{{ method_counts.pending }}</strong>
-          <span>Pending</span>
+          <strong id="countPending">{{ method_counts.pending }}</strong>
+          <span>Not checked in</span>
         </div>
+      </div>
+    </div>
+
+    <div class="bridge-card">
+      <div class="bridge-top">
+        <div>
+          <strong>Reader Station</strong>
+          <span>Use Reader Station for setup and live reader details.</span>
+        </div>
+        <a class="reader-btn" href="{% url 'nfc_reader_setup' %}">
+          <i class="fa-solid fa-sliders"></i>
+          Reader setup
+        </a>
+      </div>
+      <div class="bridge-grid">
+        <div class="bridge-metric">
+          <small>Reader state</small>
+          <strong id="bridgeStatus">{{ reader_runtime.status|default:"Waiting" }}</strong>
+        </div>
+        <div class="bridge-metric">
+          <small>Last tag</small>
+          <strong id="bridgeUid">{% if reader_runtime.last_uid %}{{ reader_runtime.last_uid }}{% else %}--{% endif %}</strong>
+        </div>
+      </div>
+      <div class="bridge-actions">
+        <button class="reader-btn" type="button" id="refreshBridge">
+          <i class="fa-solid fa-rotate"></i>
+          Refresh
+        </button>
+        <a class="reader-btn" href="{% url 'bulk_nfc_enrollment' %}">
+          <i class="fa-solid fa-user-plus"></i>
+          Open enrollment
+        </a>
       </div>
     </div>
 
     <div class="reader-stage">
       <div class="stage-copy">
-        <small>Ready to scan</small>
+        <small>Ready</small>
         <h3>Tap a member card or tag</h3>
-        <p>Hold the NFC card near the reader or enter the UID below.</p>
+        <p>Use the reader station, or enter a tag UID manually below.</p>
       </div>
 
       <div class="reader-visual" aria-hidden="true">
@@ -484,7 +632,7 @@
 
       <div class="reader-status" id="nfcResult">
         <span class="status-dot"></span>
-        <span>Waiting for card...</span>
+        <span>Waiting for tag...</span>
       </div>
     </div>
 
@@ -492,14 +640,14 @@
       <i class="fa-regular fa-lightbulb"></i>
       <div>
         <strong>Tip</strong>
-        <p>Only authorized members with a saved NFC UID can check in here.</p>
+        <p>Only authorized members with a saved NFC tag can check in here.</p>
       </div>
     </div>
   </section>
 
   <aside class="nfc-card nfc-side">
     <div class="recent-card">
-      <h3>Recent NFC scans</h3>
+      <h3>Recent NFC activity</h3>
       <p>This session only.</p>
 
       {% if recent_logs %}
@@ -533,6 +681,15 @@
   const uidInput = document.getElementById("nfcUid");
   const result = document.getElementById("nfcResult");
   const endpoint = "{% url 'nfc_check_in' %}";
+  const statusEndpoint = "{% url 'nfc_attendance_status' %}";
+  const refreshBridgeBtn = document.getElementById("refreshBridge");
+  const bridgeStatus = document.getElementById("bridgeStatus");
+  const bridgeUid = document.getElementById("bridgeUid");
+  const countPresent = document.getElementById("countPresent");
+  const countAbsent = document.getElementById("countAbsent");
+  const countPending = document.getElementById("countPending");
+  let pollId = null;
+  let lastRuntimeKey = "";
 
   function setResult(message, ok=false){
     result.innerHTML = `
@@ -555,6 +712,25 @@
     return getScanList();
   }
 
+  function escapeHtml(value){
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatTime(value){
+    if(!value) return "Never";
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleTimeString();
+  }
+
+  function formatStatus(value){
+    return String(value || "present").replaceAll("_", " ");
+  }
+
   function addScan(attendance){
     const target = ensureScanListContainer();
     const item = document.createElement("div");
@@ -569,10 +745,68 @@
     target.prepend(item);
   }
 
+  function renderRecentLogs(logs){
+    const current = getScanList();
+    if (!Array.isArray(logs) || !logs.length) {
+      if (current) {
+        current.outerHTML = `
+          <div class="empty-state" id="scanList">
+            <div>
+              <div class="empty-state-icon">
+                <i class="fa-solid fa-wifi"></i>
+              </div>
+              <strong>No NFC scans yet</strong>
+              <p>Scans will appear here.</p>
+            </div>
+          </div>
+        `;
+      }
+      return;
+    }
+    const target = ensureScanListContainer();
+    target.innerHTML = logs.map(record => `
+      <div class="scan-item">
+        <div>
+          <strong>${escapeHtml(record.person_name || "Member")}</strong>
+          <span>${escapeHtml(formatStatus(record.status))}${record.check_in_time ? ` | ${escapeHtml(formatTime(record.check_in_time))}` : ""}</span>
+        </div>
+        <i class="fa-solid fa-wifi"></i>
+      </div>
+    `).join("");
+  }
+
+  function syncBridgeState(payload){
+    const runtime = payload.runtime || {};
+    const settings = payload.settings || {};
+    const counts = payload.method_counts || {};
+    const runtimeKey = JSON.stringify([
+      runtime.status || "",
+      runtime.last_uid || "",
+      runtime.last_error || "",
+      runtime.last_action || ""
+    ]);
+    bridgeStatus.textContent = runtime.status || "Waiting";
+    bridgeUid.textContent = runtime.last_uid || "--";
+    countPresent.textContent = counts.present ?? countPresent.textContent;
+    countAbsent.textContent = counts.absent ?? countAbsent.textContent;
+    countPending.textContent = counts.pending ?? countPending.textContent;
+    renderRecentLogs(payload.recent_logs || []);
+    if (runtimeKey !== lastRuntimeKey) {
+      if (String(runtime.status || "").toLowerCase() === "error" && runtime.last_error) {
+        setResult(runtime.last_error);
+      } else if (runtime.last_action) {
+        setResult(runtime.last_action, String(runtime.status || "").toLowerCase() === "connected");
+      } else if (runtime.last_error) {
+        setResult(runtime.last_error);
+      }
+      lastRuntimeKey = runtimeKey;
+    }
+  }
+
   async function submitNfc(){
     const uid = uidInput.value.trim();
     if(!uid){
-      setResult("Tap a card or enter a UID first.");
+        setResult("Tap a tag or enter a UID first.");
       uidInput.focus();
       return;
     }
@@ -594,14 +828,30 @@
       uidInput.value = "";
       uidInput.focus();
     }catch(error){
-      setResult("Could not reach the NFC check-in service.");
+        setResult("Could not reach the NFC attendance service.");
+    }
+  }
+
+  async function refreshBridgeState(){
+    try{
+      const response = await fetch(statusEndpoint, {
+        headers: {"Accept": "application/json"}
+      });
+      const payload = await response.json();
+      if(!response.ok){
+      setResult(payload.error || "Could not refresh the reader station.");
+        return;
+      }
+      syncBridgeState(payload);
+    }catch(error){
+      setResult("Could not refresh the reader station.");
     }
   }
 
   document.getElementById("submitNfc").addEventListener("click", submitNfc);
   document.getElementById("clearNfc").addEventListener("click", () => {
     uidInput.value = "";
-    setResult("Waiting for card...");
+    setResult("Waiting for tag...");
     uidInput.focus();
   });
   uidInput.addEventListener("keydown", (event) => {
@@ -609,6 +859,17 @@
       event.preventDefault();
       submitNfc();
     }
+  });
+  refreshBridgeBtn?.addEventListener("click", refreshBridgeState);
+  refreshBridgeState();
+  pollId = window.setInterval(() => {
+    if (document.visibilityState === "visible") refreshBridgeState();
+  }, 2500);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshBridgeState();
+  });
+  window.addEventListener("beforeunload", () => {
+    if (pollId) window.clearInterval(pollId);
   });
   uidInput.focus();
 </script>

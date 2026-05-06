@@ -622,10 +622,10 @@
     <div class="dash-main">
       <section class="dash-panel overview-card">
         <div class="overview-head">
-          <h3>Overview</h3>
+          <h3>Workspace Snapshot</h3>
           <span class="overview-date">
             <i class="fa-regular fa-calendar"></i>
-            <span id="dashDate"></span>
+            <span>As of <span id="dashDate"></span></span>
           </span>
         </div>
 
@@ -643,27 +643,27 @@
             <div class="stat-top">
               <span class="stat-icon"><i class="fa-solid fa-calendar-check"></i></span>
             </div>
-            <div class="stat-label">Checked In Today</div>
+            <div class="stat-label">Recorded Check-Ins</div>
             <div class="stat-value" data-count="{{ total_check_ins }}">0</div>
-            <div class="stat-sub">Real-time</div>
+            <div class="stat-sub">Across recorded attendance</div>
           </a>
 
           <a class="stat-tile" href="{% url 'person_attendance_list' %}">
             <div class="stat-top">
               <span class="stat-icon red"><i class="fa-solid fa-user-xmark"></i></span>
             </div>
-            <div class="stat-label">Absent Today</div>
+            <div class="stat-label">Recorded Check-Outs</div>
             <div class="stat-value" data-count="{{ total_check_outs }}">0</div>
-            <div class="stat-sub">Today</div>
+            <div class="stat-sub">Across recorded attendance</div>
           </a>
 
           <a class="stat-tile" href="{% url 'attendance_sessions' %}">
             <div class="stat-top">
               <span class="stat-icon gold"><i class="fa-solid fa-hourglass-half"></i></span>
             </div>
-            <div class="stat-label">Pending</div>
+            <div class="stat-label">Session Pending</div>
             <div class="stat-value" data-count="{{ active_session_pending|default:0 }}">0</div>
-            <div class="stat-sub">Not checked in</div>
+            <div class="stat-sub">Not yet marked in the active session</div>
           </a>
         </div>
       </section>
@@ -680,6 +680,15 @@
             {% if active_session %}
               <div class="session-meta">
                 {{ active_session.session_name|default:active_session.event_name }}{% if active_session.event_name %} • {{ active_session.event_name }}{% endif %}{% if active_session.starts_at %} • Started at {{ active_session.starts_at }}{% endif %}
+              </div>
+              <div class="session-meta">
+                {% if active_session.check_in_closes_at %}
+                  Attendance closes {{ active_session.check_in_closes_at }}
+                {% elif active_session.ends_at %}
+                  Expected to end {{ active_session.ends_at }}
+                {% else %}
+                  No scheduled end time
+                {% endif %}
               </div>
             {% else %}
               <div class="session-meta">Choose a session to begin taking attendance.</div>
@@ -720,8 +729,16 @@
               <div class="title"><span class="dot"></span> Session is Live</div>
               <p>Members can now check in using the enabled methods.</p>
               <div class="live-time">
-                <strong>{{ active_session.starts_at|default:"Live now" }}</strong>
-                <span>Started at {{ active_session.starts_at|default:"Now" }}</span>
+                <strong>
+                  {% if active_session.check_in_closes_at %}
+                    Expected to end {{ active_session.check_in_closes_at }}
+                  {% elif active_session.ends_at %}
+                    Expected to end {{ active_session.ends_at }}
+                  {% else %}
+                    No scheduled end time
+                  {% endif %}
+                </strong>
+                <span>Started {{ active_session.starts_at|default:"Now" }}</span>
               </div>
               {% if session_methods.face %}
                 <a class="live-monitor-link" data-monitor-link="true" href="{% url 'stream_all_cameras' %}">
@@ -766,27 +783,27 @@
             <span class="status-count">{{ total_cameras }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-users"></i><span>Attendance Today</span></div>
+            <div class="status-left"><i class="fa-solid fa-users"></i><span>Attendance Records</span></div>
             <span class="status-count">{{ total_attendance }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-right-to-bracket"></i><span>Check-Ins</span></div>
+            <div class="status-left"><i class="fa-solid fa-right-to-bracket"></i><span>Recorded Check-Ins</span></div>
             <span class="status-value">{{ total_check_ins }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-right-from-bracket"></i><span>Check-Outs</span></div>
+            <div class="status-left"><i class="fa-solid fa-right-from-bracket"></i><span>Recorded Check-Outs</span></div>
             <span class="status-value">{{ total_check_outs }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-calendar-check"></i><span>Session Present</span></div>
+            <div class="status-left"><i class="fa-solid fa-calendar-check"></i><span>Active Session Present</span></div>
             <span class="status-value">{{ active_session_present|default:0 }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-user-xmark"></i><span>Session Absent</span></div>
+            <div class="status-left"><i class="fa-solid fa-user-xmark"></i><span>Active Session Absent</span></div>
             <span class="status-value">{{ active_session_absent|default:0 }}</span>
           </div>
           <div class="status-row">
-            <div class="status-left"><i class="fa-solid fa-hourglass-half"></i><span>Session Pending</span></div>
+            <div class="status-left"><i class="fa-solid fa-hourglass-half"></i><span>Active Session Pending</span></div>
             <span class="status-value">{{ active_session_pending|default:0 }}</span>
           </div>
         </div>
@@ -812,11 +829,11 @@
             <div class="activity-left">
               <span class="activity-icon"><i class="fa-solid fa-calendar-check"></i></span>
               <div class="activity-text">
-                <b>Attendance marked</b>
-                <span>{{ total_check_ins }} members checked in</span>
+                <b>Check-ins recorded</b>
+                <span>{{ total_check_ins }} total check-ins on record</span>
               </div>
             </div>
-            <span class="activity-time">Today</span>
+            <span class="activity-time">Total</span>
           </div>
           <div class="activity-row">
             <div class="activity-left">
@@ -832,11 +849,11 @@
             <div class="activity-left">
               <span class="activity-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
               <div class="activity-text">
-                <b>Check-out recorded</b>
-                <span>{{ total_check_outs }} members checked out</span>
+                <b>Check-outs recorded</b>
+                <span>{{ total_check_outs }} total check-outs on record</span>
               </div>
             </div>
-            <span class="activity-time">Today</span>
+            <span class="activity-time">Total</span>
           </div>
         </div>
       </section>

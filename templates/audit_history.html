@@ -1,15 +1,21 @@
 {% extends "base.html" %}
 {% block page_crumb %}Operations{% endblock %}
 {% block page_title %}Audit History{% endblock %}
-{% block page_subtitle %}Review member, session, NFC, and public check-in activity across KairosTrack.{% endblock %}
+{% block page_subtitle %}Trace member, session, NFC, and public check-in changes across the workspace.{% endblock %}
 {% block content %}
 <style>
   .audit-shell{max-width:1100px;margin:0 auto;display:grid;gap:16px}
+  .oversight-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .oversight-tab{min-height:42px;padding:0 16px;border-radius:14px;border:1px solid #dfe9e3;background:#fff;color:#475467;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:8px;text-decoration:none;box-shadow:0 10px 22px rgba(15,23,42,.04)}
+  .oversight-tab.active{border-color:transparent;background:#16a34a;color:#fff;box-shadow:0 16px 28px rgba(22,163,74,.18)}
   .audit-card{background:#fff;border:1px solid #dfe9e3;border-radius:20px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
-  .audit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .audit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
   .audit-metric{padding:16px;background:#fff;border:1px solid #dfe9e3;border-radius:18px;box-shadow:0 14px 34px rgba(15,23,42,.05)}
   .audit-metric span{display:block;color:#667085;font-size:12px;font-weight:800}
   .audit-metric strong{display:block;margin-top:6px;color:#172033;font-size:24px;font-weight:900}
+  .audit-note{padding:16px 18px;border:1px solid #dfe9e3;border-radius:18px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.05)}
+  .audit-note strong{display:block;color:#172033;font-size:16px;font-weight:900}
+  .audit-note p{margin:6px 0 0;color:#667085;font-size:13px;line-height:1.6}
   .audit-head{padding:16px 18px;border-bottom:1px solid #edf2ef;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
   .audit-head h2{margin:0;color:#172033;font-size:18px;font-weight:900}
   .audit-head p{margin:6px 0 0;color:#667085;font-size:13px}
@@ -17,8 +23,13 @@
   .audit-filter input,.audit-filter select,.audit-filter button{min-height:42px;padding:10px 12px;border-radius:12px;border:1px solid #dfe9e3;background:#fff}
   .audit-list{padding:0 18px 18px;display:grid;gap:12px}
   .audit-item{padding:14px 16px;border:1px solid #e5ede8;border-radius:16px;background:#fff}
+  .audit-item.success{background:#f0fdf4;border-color:#bbf7d0}
+  .audit-item.warning{background:#fffbeb;border-color:#fde68a}
   .audit-item strong{display:block;color:#172033;font-size:14px}
   .audit-meta{margin-top:6px;color:#667085;font-size:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .audit-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid #dfe9e3;background:#f8fafc;color:#344054}
+  .audit-badge.success{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+  .audit-badge.warning{background:#fffbeb;border-color:#fde68a;color:#b45309}
   .audit-data{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f8fafc;color:#526070;font-size:12px;white-space:pre-wrap;word-break:break-word}
   .pager{padding:0 18px 18px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
   .pager a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:10px 12px;border-radius:12px;border:1px solid #dfe9e3;background:#fff;color:#172033;font-size:13px;font-weight:800}
@@ -26,17 +37,32 @@
 </style>
 
 <div class="audit-shell">
+  <nav class="oversight-tabs" aria-label="Oversight pages">
+    <a class="oversight-tab active" href="{% url 'audit_history' %}">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      History
+    </a>
+    <a class="oversight-tab" href="{% url 'anomaly_summary' %}">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Anomalies
+    </a>
+  </nav>
+
+  <section class="audit-note">
+    <strong>What this page shows</strong>
+    <p>Use this page to answer who changed what and when. It is a timeline of actions, not a health dashboard.</p>
+  </section>
+
   <div class="audit-grid">
-    <div class="audit-metric"><span>Today events</span><strong>{{ summary.today.total|default:0 }}</strong></div>
+    <div class="audit-metric"><span>Today changes</span><strong>{{ summary.today.total|default:0 }}</strong></div>
     <div class="audit-metric"><span>Member changes</span><strong>{{ summary.today.member_changes|default:0 }}</strong></div>
     <div class="audit-metric"><span>Session changes</span><strong>{{ summary.today.session_changes|default:0 }}</strong></div>
-    <div class="audit-metric"><span>Today anomalies</span><strong>{{ summary.today.anomalies|default:0 }}</strong></div>
   </div>
   <section class="audit-card">
     <div class="audit-head">
       <div>
         <h2>Recent Activity</h2>
-        <p>Use this to trace member changes, session controls, kiosk activity, and public registration check-ins.</p>
+        <p>Trace member changes, session controls, reader activity, and public registration events.</p>
       </div>
       <form method="get" class="audit-filter">
         <input type="text" name="actor" value="{{ actor }}" placeholder="Actor">
@@ -56,7 +82,7 @@
     </div>
     <div class="audit-list">
       {% for item in audit_page.object_list %}
-        <article class="audit-item">
+        <article class="audit-item {% if 'authorize' in item.action or 'assign' in item.action or 'create' in item.action %}success{% elif 'pause' in item.action or 'close' in item.action or 'deauthorize' in item.action or 'remove' in item.action %}warning{% endif %}">
           {% if item.target_link %}
             <strong><a href="{{ item.target_link }}">{{ item.summary }}</a></strong>
           {% else %}
@@ -64,7 +90,7 @@
           {% endif %}
           <div class="audit-meta">
             <span>{{ item.created_at }}</span>
-            <span>{{ item.action }}</span>
+            <span class="audit-badge {% if 'authorize' in item.action or 'assign' in item.action or 'create' in item.action %}success{% elif 'pause' in item.action or 'close' in item.action or 'deauthorize' in item.action or 'remove' in item.action %}warning{% endif %}">{{ item.action }}</span>
             {% if item.actor_label %}<span>{{ item.actor_label }}</span>{% endif %}
             {% if item.target_type %}<span>{{ item.target_type }} #{{ item.target_id }}</span>{% endif %}
           </div>

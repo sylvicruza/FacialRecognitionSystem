@@ -474,7 +474,7 @@
     <section class="login-wrap">
       <div class="login-card">
         <h2>Welcome back!</h2>
-        <p class="lede">Sign in to access your KairosTrack workspace.</p>
+        <p class="lede">Sign in with your staff or superadmin account to access your KairosTrack workspace.</p>
 
         <div class="secure">
           <i class="fa-solid fa-shield-halved"></i>
@@ -502,7 +502,7 @@
           <div class="field">
             <div class="field-head">
               <label for="password">Password</label>
-              <a class="soft-link" href="{% url 'upgrade_request' %}?plan=Support">Forgot password?</a>
+              <a class="soft-link" href="{% url 'desktop_forgot_password' %}">Forgot password?</a>
             </div>
             <div class="input-shell">
               <i class="fa-solid fa-lock"></i>
@@ -520,7 +520,7 @@
 
         <a class="org-button" href="{% url 'desktop_signup' %}">
           <i class="fa-regular fa-building"></i>
-          Sign in with Organisation ID
+          Create Workspace
         </a>
 
         <div class="card-note">

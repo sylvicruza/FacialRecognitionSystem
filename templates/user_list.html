@@ -151,29 +151,31 @@
   .toolbar{
     display:grid;
     grid-template-columns:minmax(0,1fr) auto;
-    gap:12px;
+    gap:10px;
     align-items:center;
   }
 
   .filter-rail{
     display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+    gap:8px;
+    flex-wrap:nowrap;
+    min-width:0;
   }
 
   .filter-pill{
     display:inline-flex;
     align-items:center;
-    gap:8px;
+    gap:7px;
     min-height:40px;
-    padding:8px 12px;
+    padding:8px 10px;
     border-radius:12px;
     border:1px solid #dfe9e3;
     background:#fff;
     color:#172033;
-    font-size:13px;
+    font-size:12px;
     font-weight:800;
     text-decoration:none;
+    white-space:nowrap;
   }
 
   .filter-pill span{
@@ -203,20 +205,22 @@
 
   .search-actions{
     display:flex;
-    gap:12px;
-    flex-wrap:wrap;
+    gap:10px;
+    flex-wrap:nowrap;
     align-items:center;
     justify-content:flex-end;
+    min-width:0;
   }
 
   .search-form{
     display:flex;
-    gap:10px;
+    gap:8px;
     align-items:center;
+    flex-wrap:nowrap;
   }
 
   .search-box{
-    min-width:280px;
+    min-width:240px;
     min-height:42px;
     display:flex;
     align-items:center;
@@ -503,9 +507,18 @@
 
   @media (max-width:1120px){
     .members-overview,
-    .registration-strip,
-    .toolbar{
+    .registration-strip{
       grid-template-columns:1fr 1fr;
+    }
+
+    .toolbar{
+      grid-template-columns:minmax(0,1fr) auto;
+    }
+
+    .filter-rail,
+    .search-actions,
+    .search-form{
+      flex-wrap:wrap;
     }
   }
 
@@ -642,10 +655,10 @@
 
       <div class="table-head-actions">
         <a class="btn-soft" href="{% url 'nfc_reader_setup' %}">
-          <i class="fa-solid fa-tower-cell"></i> Reader Setup
+          <i class="fa-solid fa-tower-cell"></i> NFC Reader Station
         </a>
         <a class="btn-soft" href="{% url 'bulk_nfc_enrollment' %}">
-          <i class="fa-solid fa-id-card"></i> Bulk NFC
+          <i class="fa-solid fa-tags"></i> NFC Tag Enrollment
         </a>
         {% if request.session.attendance_desktop_role == "owner" or request.session.attendance_desktop_role == "admin" or request.session.attendance_desktop_user.is_superuser %}
           <a class="btn-soft" href="{% url 'audit_history' %}">

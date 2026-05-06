@@ -462,20 +462,40 @@
       background:#fff;
     }
 
-    .stream-toolbar{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
     .stream-buttons,
     .stream-toggles{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
+    }
+
+    .stream-settings{
+      border-top:1px solid #eef2f7;
+      padding-top:10px;
+    }
+
+    .stream-settings summary{
+      list-style:none;
+      cursor:pointer;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .stream-settings summary::-webkit-details-marker{
+      display:none;
+    }
+
+    .stream-settings[open] summary{
+      color:#0f172a;
+    }
+
+    .stream-toggles{
+      margin-top:10px;
     }
 
     .btn.small{
@@ -865,9 +885,9 @@
   <div class="page">
     <div class="header">
       <div>
-        <h1>Face Recognition Attendance</h1>
+        <h1>Face Recognition</h1>
         {% if active_session %}
-          <p><strong>{{ active_session.session_name|default:active_session.event_name }}</strong> is active.</p>
+          <p>Monitoring <strong>{{ active_session.session_name|default:active_session.event_name }}</strong>.</p>
         {% else %}
           <p>No active session selected.</p>
         {% endif %}
@@ -904,7 +924,7 @@
         </div>
 
         <div class="tab-row">
-          <span class="tab active">Live Attendance</span>
+          <span class="tab active">Live Monitoring</span>
           <a class="tab" href="{% url 'attendance_sessions' %}">Event Session</a>
           <a class="tab" href="{{ session_report_url }}">Attendance Report</a>
         </div>
@@ -912,19 +932,19 @@
 
       <div class="hero-stats">
         <div class="mini-stat">
-          <div class="label">Present</div>
+          <div class="label">Recognized</div>
           <div class="value" id="summaryPresent">{{ method_counts.present|default:0 }}</div>
-          <div class="sub">Recognized today</div>
+          <div class="sub">Face matches today</div>
         </div>
         <div class="mini-stat">
-          <div class="label">Pending</div>
-          <div class="value" id="summaryPending">{{ method_counts.pending|default:0 }}</div>
-          <div class="sub">Not yet captured</div>
+          <div class="label">Absent</div>
+          <div class="value" id="summaryPending">{{ method_counts.absent|default:0 }}</div>
+          <div class="sub">Face-based absences</div>
         </div>
         <div class="mini-stat">
-          <div class="label">Marked</div>
+          <div class="label">Captured</div>
           <div class="value" id="summaryMarked">{{ method_counts.marked|default:0 }}</div>
-          <div class="sub">Members processed</div>
+          <div class="sub">Face records today</div>
         </div>
       </div>
     </div>
@@ -935,7 +955,7 @@
           <div class="panel-head">
             <div>
               <h2>Camera Streams</h2>
-              <p>Monitor live camera feeds.</p>
+              <p>Monitor live recognition feeds.</p>
             </div>
             <div class="bulk-actions">
               <button class="btn primary" type="button" id="toggleAllBtn" onclick="toggleAllStreams()">Resume All</button>
@@ -950,7 +970,7 @@
                   <div class="stream-head">
                     <div class="stream-name">
                       <span>{{ c.name }}</span>
-                      <span class="stream-source" title="{{ c.camera_source }}">Source</span>
+                      <span class="stream-source" title="{{ c.camera_source }}">Camera</span>
                     </div>
                     <div class="pill paused" id="pill-{{ c.id }}">
                       <span class="dot"></span>
@@ -975,13 +995,13 @@
                   </div>
 
                   <div class="stream-foot">
-                    <div class="stream-toolbar">
-                      <div class="stream-buttons">
-                        <button class="btn primary small" id="btnToggle-{{ c.id }}" type="button" onclick="toggleStream({{ c.id }})">Resume</button>
-                        <button class="btn small" type="button" onclick="refreshStream({{ c.id }})">Refresh</button>
-                        <button class="btn small" type="button" onclick="fullscreenStream({{ c.id }})">Fullscreen</button>
-                      </div>
-
+                    <div class="stream-buttons">
+                      <button class="btn primary small" id="btnToggle-{{ c.id }}" type="button" onclick="toggleStream({{ c.id }})">Resume</button>
+                      <button class="btn small" type="button" onclick="refreshStream({{ c.id }})">Refresh</button>
+                      <button class="btn small" type="button" onclick="fullscreenStream({{ c.id }})">Fullscreen</button>
+                    </div>
+                    <details class="stream-settings">
+                      <summary>Stream options</summary>
                       <div class="stream-toggles">
                         <label class="toggle">
                           <input type="checkbox" checked onchange="setOption({{ c.id }}, 'boxes', this.checked)">
@@ -996,7 +1016,7 @@
                           Sound
                         </label>
                       </div>
-                    </div>
+                    </details>
                   </div>
                 </div>
               {% endfor %}
@@ -1014,8 +1034,8 @@
         <div class="recognitions card">
           <div class="recognitions-head">
             <div>
-              <h2>Recent Recognitions</h2>
-              <p>Latest facial attendance activity.</p>
+              <h2>Face Captures</h2>
+              <p>Recent face-based attendance records.</p>
             </div>
           </div>
 
@@ -1026,14 +1046,12 @@
                   <th>Member</th>
                   <th>Time</th>
                   <th>Camera</th>
-                  <th>Status</th>
                   <th>Confidence</th>
-                  <th>Source</th>
                 </tr>
               </thead>
               <tbody id="recognitionRows">
                 <tr id="recognitionEmpty">
-                  <td colspan="6" class="empty-note">No recognitions yet for this session.</td>
+                  <td colspan="4" class="empty-note">No face captures yet for this session.</td>
                 </tr>
               </tbody>
             </table>
@@ -1045,10 +1063,9 @@
         <div class="side-card card">
           <div class="side-head">
             <div>
-              <h3>Today's Attendance</h3>
-              <p>Live summary.</p>
+              <h3>Today's Face Activity</h3>
+              <p>Live face summary.</p>
             </div>
-            <span class="status-badge"><span class="dot"></span>Live</span>
           </div>
 
           <div class="kpi-grid">
@@ -1063,23 +1080,13 @@
               <div class="sub" id="kpiOnline">Online: 0</div>
             </div>
           </div>
-
-          <div class="progress-wrap">
-            <div class="progress-meta">
-              <span>Attendance Progress</span>
-              <span id="progressLabel">{{ method_counts.marked|default:0 }}/{{ method_counts.members|default:0 }}</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" id="progressFill"></div>
-            </div>
-          </div>
         </div>
 
         <div class="side-card card">
           <div class="side-head">
             <div>
-              <h3>Live Log</h3>
-              <p>Recognition updates.</p>
+              <h3>Recognition Feed</h3>
+              <p>Latest face events.</p>
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
               <span class="pill paused" id="logPill"><span class="dot"></span><span id="logStatusText">Connecting...</span></span>
@@ -1347,7 +1354,6 @@
       event.className = "event" + (isNew ? " new" : "");
       event.dataset.id = item.id;
 
-      const method = item.method || item.source || "Face";
       const camera = item.camera || "Camera stream";
       const detail = status === "absent" ? "Marked absent" : "Recognized";
 
@@ -1359,7 +1365,7 @@
         </div>
         <div class="event-side">
           <div class="event-time">${formatTime(item.time)}</div>
-          <span class="method-badge">${method}</span>
+          <span class="method-badge">Face recognition</span>
         </div>
       `;
 
@@ -1399,7 +1405,6 @@
         row.dataset.recognitionRow = "1";
 
         const confidence = Math.min(99, Math.max(72, 86 + (Number(item.id || 0) % 11)));
-        const method = item.method || "Face";
         const camera = item.camera || "Camera stream";
 
         row.innerHTML = `
@@ -1408,35 +1413,22 @@
               <div class="person-mini">${initials(item.name)}</div>
               <div class="person-text">
                 <strong>${item.name || "Unknown member"}</strong>
-                <span>${status === "absent" ? "Marked absent" : "Recognized in frame"}</span>
+                <span>${status === "absent" ? "Marked absent" : "Face matched"}</span>
               </div>
             </div>
           </td>
           <td>${formatTime(item.time)}</td>
           <td>${camera}</td>
-          <td><span class="status-tag ${status}"><span class="dot"></span>${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
           <td>
             <div style="display:grid;gap:6px;">
               <span style="font-size:12px;color:var(--muted);">${confidence}%</span>
               <div class="confidence-bar"><span style="width:${confidence}%;"></span></div>
             </div>
           </td>
-          <td>${method}</td>
         `;
 
         body.appendChild(row);
       });
-    }
-
-    function updateProgress(captured){
-      const total = summaryMembers || captured || 0;
-      const fill = document.getElementById("progressFill");
-      const label = document.getElementById("progressLabel");
-      if(!fill || !label) return;
-
-      const percent = total > 0 ? Math.min(100, (captured / total) * 100) : 0;
-      fill.style.width = `${percent}%`;
-      label.textContent = `${captured}/${total}`;
     }
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -1466,7 +1458,11 @@
 
       updateOnlineCount();
       updateToggleAllButton();
-      updateProgress(Number("{{ method_counts.marked|default:0 }}") || 0);
+      const initialCaptured = Number("{{ method_counts.marked|default:0 }}") || 0;
+      document.getElementById("kpiCaptured").textContent = initialCaptured;
+      document.getElementById("summaryPresent").textContent = Number("{{ method_counts.present|default:0 }}") || 0;
+      document.getElementById("summaryPending").textContent = Number("{{ method_counts.absent|default:0 }}") || 0;
+      document.getElementById("summaryMarked").textContent = initialCaptured;
     });
 
     window.addEventListener("keydown", (event) => {
@@ -1476,10 +1472,11 @@
     });
 
     const ACTIVE_SESSION_ID = "{% if active_session %}{{ active_session.id }}{% endif %}";
-    const LOG_ENDPOINT = `/api/attendance/today/?limit=60${ACTIVE_SESSION_ID ? `&attendance_session_id=${ACTIVE_SESSION_ID}` : ""}`;
+    const LOG_ENDPOINT = `/api/attendance/today/?limit=60&face_only=1${ACTIVE_SESSION_ID ? `&attendance_session_id=${ACTIVE_SESSION_ID}` : ""}`;
     let lastSeenIds = new Set();
     let lastSince = null;
     let pollingTimer = null;
+    let logHydrated = false;
 
     const logPill = document.getElementById("logPill");
     const logStatusText = document.getElementById("logStatusText");
@@ -1518,15 +1515,20 @@
         const data = await response.json();
         setLogState("live");
 
-        const captured = Number(data.count ?? 0);
-        document.getElementById("kpiCaptured").textContent = captured;
+        const items = data.items || [];
+        const captured = Number(data.count ?? items.length ?? 0);
+        const absentCount = items.filter(item => normalizeStatus(item.status) === "absent").length;
+        const recognizedCount = Math.max(0, captured - absentCount);
+        if(!logHydrated){
+          document.getElementById("kpiCaptured").textContent = captured;
+          document.getElementById("summaryPresent").textContent = recognizedCount;
+          document.getElementById("summaryPending").textContent = absentCount;
+          document.getElementById("summaryMarked").textContent = captured;
+        }
         if(data.latest){
           document.getElementById("kpiLast").textContent = `Last: ${formatTime(data.latest)}`;
         }
         if(data.latest_epoch_ms) lastSince = data.latest_epoch_ms;
-        updateProgress(captured);
-
-        const items = data.items || [];
         const timeline = document.getElementById("timeline");
         const empty = timeline.querySelector(".empty-note");
         if(empty && items.length > 0) empty.remove();
@@ -1551,8 +1553,23 @@
         }
 
         if(newItems.length){
+          if(logHydrated){
+            const newAbsent = newItems.filter(item => normalizeStatus(item.status) === "absent").length;
+            const newRecognized = newItems.length - newAbsent;
+            document.getElementById("kpiCaptured").textContent = Number(document.getElementById("kpiCaptured").textContent || 0) + newItems.length;
+            document.getElementById("summaryPresent").textContent = Number(document.getElementById("summaryPresent").textContent || 0) + newRecognized;
+            document.getElementById("summaryPending").textContent = Number(document.getElementById("summaryPending").textContent || 0) + newAbsent;
+            document.getElementById("summaryMarked").textContent = Number(document.getElementById("summaryMarked").textContent || 0) + newItems.length;
+          }
           upsertRecentRecognitions(newItems);
           renderRecognitionTable();
+        }
+
+        if(!logHydrated){
+          items.forEach(item => lastSeenIds.add(item.id));
+          upsertRecentRecognitions(items);
+          renderRecognitionTable();
+          logHydrated = true;
         }
 
         if(added > 0){

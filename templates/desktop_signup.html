@@ -659,13 +659,13 @@
             </div>
 
             <div>
-              <label for="plan_tier">Plan</label>
+              <label for="plan_tier">Starting Plan</label>
               <div class="field-shell select-shell">
                 <i class="fa-regular fa-crown"></i>
                 <select id="plan_tier" name="plan_tier">
                   {% for plan in plans %}
                     <option value="{{ plan.tier }}" {% if form.plan_tier == plan.tier or not form.plan_tier and plan.tier == "starter" %}selected{% endif %}>
-                      {{ plan.name }} - £{{ plan.monthly_price_gbp|default:"0.00" }}
+                      {{ plan.name }} - {% if plan.monthly_price_gbp %}£{{ plan.monthly_price_gbp }}{% else %}Custom pricing{% endif %}
                     </option>
                   {% endfor %}
                 </select>

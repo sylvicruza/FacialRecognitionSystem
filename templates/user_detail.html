@@ -650,13 +650,18 @@
                 </div>
                 <div class="nfc-status" id="nfcScanStatus">
                   <i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i>
-                  <span>Use an NFC-enabled Android device here, or paste the UID manually.</span>
+                  <span>Use Android Chrome here, use the desktop reader station, or paste the UID manually. You can replace or remove the assigned tag at any time.</span>
                 </div>
-                <button type="submit" class="btnx primary" style="width:100%;">
-                  <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
-                </button>
+                <div class="nfc-actions">
+                  <button type="submit" class="btnx primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save NFC Tag
+                  </button>
+                  <button type="submit" class="btnx danger" name="clear_nfc" value="1" id="clearNfcAssignmentBtn">
+                    <i class="fa-solid fa-link-slash"></i> Remove Tag
+                  </button>
+                </div>
               </form>
-              <div class="info-meta">This UID is used by the NFC check-in screen.</div>
+              <div class="info-meta">This UID is used by NFC attendance. Saving a new UID reassigns the tag for this member.</div>
             </div>
           </div>
         {% endif %}
