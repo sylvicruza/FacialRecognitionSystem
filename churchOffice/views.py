@@ -433,6 +433,9 @@ def _normalize_backend_url(url: str | None) -> str:
     value = (url or "").strip().rstrip("/")
     if value in {
         "https://heavensconnect.onrender.com/api/attendance",
+        "http://192.168.1.138:8085/api/attendance",
+        "http://127.0.0.1:8085/api/attendance",
+        "http://localhost:8085/api/attendance",
     }:
         return settings.ATTENDANCE_API_BASE_URL.rstrip("/")
     return value

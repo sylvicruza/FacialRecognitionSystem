@@ -13,6 +13,20 @@ ACCESS_TOKEN_SESSION_KEY = "attendance_api_access_token"
 REFRESH_TOKEN_SESSION_KEY = "attendance_api_refresh_token"
 API_BASE_URL_SESSION_KEY = "attendance_api_base_url"
 
+_LEGACY_API_BASE_URLS = {
+    "https://heavensconnect.onrender.com/api/attendance",
+    "http://192.168.1.138:8085/api/attendance",
+    "http://127.0.0.1:8085/api/attendance",
+    "http://localhost:8085/api/attendance",
+}
+
+
+def normalize_api_base_url(url: str | None) -> str:
+    value = (url or "").strip().rstrip("/")
+    if value in _LEGACY_API_BASE_URLS:
+        return settings.ATTENDANCE_API_BASE_URL.rstrip("/")
+    return value
+
 
 def get_client(request=None, token_updater=None, token: str | None = None, refresh_token: str | None = None) -> AttendanceApiClient:
     access_token = token if token is not None else settings.ATTENDANCE_API_TOKEN
@@ -21,7 +35,12 @@ def get_client(request=None, token_updater=None, token: str | None = None, refre
     if request is not None:
         access_token = request.session.get(ACCESS_TOKEN_SESSION_KEY) or access_token
         session_refresh_token = request.session.get(REFRESH_TOKEN_SESSION_KEY)
-        base_url = request.session.get(API_BASE_URL_SESSION_KEY) or base_url
+        session_base_url = normalize_api_base_url(request.session.get(API_BASE_URL_SESSION_KEY))
+        if session_base_url:
+            if session_base_url != request.session.get(API_BASE_URL_SESSION_KEY):
+                request.session[API_BASE_URL_SESSION_KEY] = session_base_url
+                request.session.modified = True
+            base_url = session_base_url
     if refresh_token is None:
         refresh_token = session_refresh_token
     return AttendanceApiClient(
